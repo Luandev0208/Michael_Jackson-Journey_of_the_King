@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://kjiydpxp1sao"]
+
+[node name="Créditos" type="Control" unique_id=1022816825]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="." unique_id=1074617081]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.4826389
+anchor_top = 0.4691358
+anchor_right = 0.5173611
+anchor_bottom = 0.5308642
+offset_left = -556.0
+offset_top = -304.0
+offset_right = 556.0
+offset_bottom = 304.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Panel" unique_id=1980579132]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -12.5
+offset_right = 20.0
+offset_bottom = 12.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "O vagabundo do Mateus fez os sprites junto com o chatgpt
+E o inteligentissimo e lindo do Luan fez o resto e ainda pediu
+pro chat fazer o fundo"
