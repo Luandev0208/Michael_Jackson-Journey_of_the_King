@@ -35,15 +35,21 @@ func update_animation(direction: Vector2):
 
 		if direction.x > 0:
 			sprite.play("Direita")
+		elif direction.x == 0:
+			sprite.play("Parado")
 		else:
 			sprite.play("Esquerda")
-
+		
 	else:
 
 		if direction.y > 0:
 			sprite.play("Baixo")
+		elif direction.y == 0:
+			sprite.play("Parado")
 		else:
 			sprite.play("Cima")
+	
+	
 
 
 func play_idle_animation():
@@ -60,4 +66,5 @@ func play_idle_animation():
 		if last_direction.y > 0:
 			sprite.play("Baixo")
 		else:
-			sprite.play("CIma")
+			sprite.play("Cima")
+	
