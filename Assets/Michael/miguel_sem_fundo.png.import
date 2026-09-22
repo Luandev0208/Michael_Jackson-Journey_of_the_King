@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://t36s34fim1v1"
-path="res://.godot/imported/MJ_32x32_MASTER.png-88835b63988cd5c07fa2275e00d65b91.ctex"
+uid="uid://bhflr51yhnvlm"
+path="res://.godot/imported/miguel_sem_fundo.png-05e00702f0424b3b512e0c99063d3a20.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Michael/MJ_32x32_MASTER.png"
-dest_files=["res://.godot/imported/MJ_32x32_MASTER.png-88835b63988cd5c07fa2275e00d65b91.ctex"]
+source_file="res://Assets/Michael/miguel_sem_fundo.png"
+dest_files=["res://.godot/imported/miguel_sem_fundo.png-05e00702f0424b3b512e0c99063d3a20.ctex"]
 
 [params]
 
