@@ -1,0 +1,221 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/camarim.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scenes/michael.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/camarim_tileset.png" id="3"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/porta_fechada.png" id="porta_fechada"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/passagem.png" id="passagem"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/espelho_magico.png" id="espelho_magico"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/arara.png" id="arara"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/mesa.png" id="mesa"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/cadeira_frente.png" id="cadeira_frente"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/caixa_som.png" id="caixa_som"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/planta.png" id="planta"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/flores.png" id="flores"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/luminaria_mesa.png" id="luminaria_mesa"]
+[ext_resource type="Texture2D" path="res://Assets/Camarim/tapete_vermelho.png" id="tapete_vermelho"]
+
+[sub_resource type="TileSetAtlasSource" id="Atlas"]
+texture = ExtResource("3")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:1/0 = 0
+0:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+1:1/0 = 0
+1:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+2:1/0 = 0
+2:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+3:1/0 = 0
+3:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+6:1/0 = 0
+6:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+8:1/0 = 0
+8:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(-16, -16, 16, -16, 16, 16, -16, 16)
+
+[sub_resource type="TileSet" id="Tiles"]
+tile_size = Vector2i(32, 32)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("Atlas")
+
+[sub_resource type="RectangleShape2D" id="Limite"]
+size = Vector2(640, 32)
+
+[sub_resource type="StyleBoxFlat" id="FundoMensagem"]
+bg_color = Color(0.09, 0.05, 0.12, 0.96)
+border_color = Color(0.79, 0.57, 0.34, 1)
+border_width_bottom = 2
+content_margin_left = 18.0
+content_margin_right = 18.0
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+
+[sub_resource type="RectangleShape2D" id="espelho_magico"]
+size = Vector2(116, 12)
+
+[sub_resource type="RectangleShape2D" id="arara"]
+size = Vector2(104, 12)
+
+[sub_resource type="RectangleShape2D" id="mesa"]
+size = Vector2(96, 16)
+
+[sub_resource type="RectangleShape2D" id="cadeira_frente"]
+size = Vector2(34, 14)
+
+[sub_resource type="RectangleShape2D" id="caixa_som"]
+size = Vector2(36, 14)
+
+[sub_resource type="RectangleShape2D" id="planta"]
+size = Vector2(30, 13)
+
+[sub_resource type="RectangleShape2D" id="flores"]
+size = Vector2(25, 12)
+
+[node name="Camarim" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Piso" type="TileMapLayer" parent="."]
+tile_set = SubResource("Tiles")
+
+[node name="Paredes" type="TileMapLayer" parent="."]
+tile_set = SubResource("Tiles")
+
+[node name="LimiteInferior" type="StaticBody2D" parent="."]
+position = Vector2(320, 464)
+
+[node name="Colisor" type="CollisionShape2D" parent="LimiteInferior"]
+shape = SubResource("Limite")
+
+[node name="porta_fechada" type="Sprite2D" parent="."]
+position = Vector2(32, 32)
+centered = false
+texture = ExtResource("porta_fechada")
+
+[node name="passagem" type="Sprite2D" parent="."]
+position = Vector2(512, 32)
+centered = false
+texture = ExtResource("passagem")
+
+[node name="tapete_vermelho" type="Sprite2D" parent="."]
+position = Vector2(240, 272)
+centered = false
+texture = ExtResource("tapete_vermelho")
+
+[node name="Moveis" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="espelho_magico" type="StaticBody2D" parent="Moveis"]
+position = Vector2(320, 194)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/espelho_magico"]
+position = Vector2(-80, -178)
+centered = false
+texture = ExtResource("espelho_magico")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/espelho_magico"]
+position = Vector2(0, 6.0)
+shape = SubResource("espelho_magico")
+
+[node name="arara" type="StaticBody2D" parent="Moveis"]
+position = Vector2(128, 226)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/arara"]
+position = Vector2(-64, -82)
+centered = false
+texture = ExtResource("arara")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/arara"]
+position = Vector2(0, 6.0)
+shape = SubResource("arara")
+
+[node name="mesa" type="StaticBody2D" parent="Moveis"]
+position = Vector2(496, 226)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/mesa"]
+position = Vector2(-64, -82)
+centered = false
+texture = ExtResource("mesa")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/mesa"]
+position = Vector2(0, 4.0)
+shape = SubResource("mesa")
+
+[node name="cadeira_frente" type="StaticBody2D" parent="Moveis"]
+position = Vector2(480, 322)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/cadeira_frente"]
+position = Vector2(-32, -82)
+centered = false
+texture = ExtResource("cadeira_frente")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/cadeira_frente"]
+position = Vector2(0, 5.0)
+shape = SubResource("cadeira_frente")
+
+[node name="caixa_som" type="StaticBody2D" parent="Moveis"]
+position = Vector2(96, 290)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/caixa_som"]
+position = Vector2(-32, -50)
+centered = false
+texture = ExtResource("caixa_som")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/caixa_som"]
+position = Vector2(0, 5.0)
+shape = SubResource("caixa_som")
+
+[node name="planta" type="StaticBody2D" parent="Moveis"]
+position = Vector2(576, 386)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/planta"]
+position = Vector2(-48, -82)
+centered = false
+texture = ExtResource("planta")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/planta"]
+position = Vector2(0, 5.5)
+shape = SubResource("planta")
+
+[node name="flores" type="StaticBody2D" parent="Moveis"]
+position = Vector2(112, 386)
+
+[node name="Arte" type="Sprite2D" parent="Moveis/flores"]
+position = Vector2(-32, -50)
+centered = false
+texture = ExtResource("flores")
+
+[node name="Base" type="CollisionShape2D" parent="Moveis/flores"]
+position = Vector2(0, 6.0)
+shape = SubResource("flores")
+
+[node name="luminaria_mesa" type="Sprite2D" parent="Moveis/mesa"]
+position = Vector2(16, -114)
+centered = false
+texture = ExtResource("luminaria_mesa")
+
+[node name="Michael_Player" parent="Moveis" instance=ExtResource("2")]
+position = Vector2(320, 340)
+
+[node name="FrenteDoEspelho" type="Marker2D" parent="."]
+position = Vector2(320, 231)
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="Mensagem" type="PanelContainer" parent="Interface"]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -208.0
+offset_top = -69.0
+offset_right = 208.0
+offset_bottom = -14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("FundoMensagem")
+
+[node name="Texto" type="Label" parent="Interface/Mensagem"]
+mouse_filter = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 14
