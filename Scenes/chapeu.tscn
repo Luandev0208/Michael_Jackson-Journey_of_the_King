@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/chapeu.gd" id="1"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_chapeu"]
+radius = 6.0
+
+[node name="Chapeu" type="CharacterBody2D"]
+collision_layer = 0
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1")
+
+[node name="Colisor" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_chapeu")
+
+[node name="Alcance" type="ShapeCast2D" parent="."]
+shape = SubResource("CircleShape2D_chapeu")
+collision_mask = 4
+enabled = false
+
+[node name="Visual" type="Node2D" parent="."]
+
+[node name="Contorno" type="Polygon2D" parent="Visual"]
+color = Color(0.96, 0.84, 0.50, 1)
+polygon = PackedVector2Array(-9, 1, -6, 0, -5, -6, 5, -6, 6, 0, 9, 1, 9, 4, -9, 4)
+
+[node name="Copa" type="Polygon2D" parent="Visual"]
+color = Color(0.14, 0.10, 0.22, 1)
+polygon = PackedVector2Array(-8, 2, -5, 1, -4, -5, 4, -5, 5, 1, 8, 2, 8, 3, -8, 3)
+
+[node name="Faixa" type="Polygon2D" parent="Visual"]
+color = Color(0.74, 0.34, 0.35, 1)
+polygon = PackedVector2Array(-5, -1, 5, -1, 5, 1, -5, 1)

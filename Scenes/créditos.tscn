@@ -1,5 +1,8 @@
 [gd_scene format=3 uid="uid://kjiydpxp1sao"]
 
+[ext_resource type="Script" uid="uid://5sprtthy5u6l" path="res://Scripts/creditos.gd" id="1_cred"]
+[ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="2_tema"]
+
 [node name="Créditos" type="Control" unique_id=1022816825]
 layout_mode = 3
 anchors_preset = 15
@@ -7,34 +10,94 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_tema")
+script = ExtResource("1_cred")
 
-[node name="Panel" type="Panel" parent="." unique_id=1074617081]
+[node name="Fundo" type="ColorRect" parent="." unique_id=200000030]
 layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.4826389
-anchor_top = 0.4691358
-anchor_right = 0.5173611
-anchor_bottom = 0.5308642
-offset_left = -556.0
-offset_top = -304.0
-offset_right = 556.0
-offset_bottom = 304.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.02, 0.02, 0.08, 1)
 
-[node name="Label" type="Label" parent="Panel" unique_id=1980579132]
+[node name="Painel" type="Panel" parent="." unique_id=1074617081]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -12.5
-offset_right = 20.0
-offset_bottom = 12.5
+offset_left = -200.0
+offset_top = -170.0
+offset_right = 200.0
+offset_bottom = 170.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "O vagabundo do Mateus fez os sprites junto com o chatgpt
-E o inteligentissimo e lindo do Luan fez o resto e ainda pediu
-pro chat fazer o fundo"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Painel" unique_id=300000001]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -170.0
+offset_top = -150.0
+offset_right = 170.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 9
+alignment = 1
+
+[node name="LabelTitulo" type="Label" parent="Painel/VBoxContainer" unique_id=1980579132]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0, 1)
+theme_override_font_sizes/font_size = 22
+text = "✦  CRÉDITOS  ✦"
+horizontal_alignment = 1
+
+[node name="Separador" type="HSeparator" parent="Painel/VBoxContainer" unique_id=300000002]
+layout_mode = 2
+
+[node name="LabelProjeto" type="Label" parent="Painel/VBoxContainer" unique_id=300000003]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "Michael Jackson: Journey of the King"
+horizontal_alignment = 1
+
+[node name="LabelEquipe" type="Label" parent="Painel/VBoxContainer" unique_id=300000004]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 0, 1)
+theme_override_font_sizes/font_size = 14
+text = "— Equipe —"
+horizontal_alignment = 1
+
+[node name="LabelMateus" type="Label" parent="Painel/VBoxContainer" unique_id=300000005]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+text = "Mateus  —  Arte & Sprites"
+horizontal_alignment = 1
+
+[node name="LabelLuan" type="Label" parent="Painel/VBoxContainer" unique_id=300000006]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+text = "Luan  —  Programação & Design"
+horizontal_alignment = 1
+
+[node name="Separador2" type="HSeparator" parent="Painel/VBoxContainer" unique_id=300000011]
+layout_mode = 2
+
+[node name="BotaoVoltar" type="Button" parent="Painel/VBoxContainer" unique_id=300000008]
+custom_minimum_size = Vector2(200, 34)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "← Voltar ao Menu"
+
+[connection signal="pressed" from="Painel/VBoxContainer/BotaoVoltar" to="." method="_on_botao_voltar_pressed"]
