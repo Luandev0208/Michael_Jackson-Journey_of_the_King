@@ -2,7 +2,7 @@ extends Node
 
 const Zumbi := preload("res://Scripts/zumbi.gd")
 const CENA_ZUMBI := preload("res://Scenes/zumbi.tscn")
-const LIMITE_VIVOS := 11
+const LIMITE_VIVOS := 8
 const DISTANCIA_MINIMA := 104.0
 const DISTANCIA_ATIVACAO := 352.0
 const DISTANCIA_REMOCAO := 450.0
@@ -35,7 +35,7 @@ func iniciar(fase: Node2D, camera: Camera2D) -> void:
 	_forma.radius = 10.0
 
 func _physics_process(delta: float) -> void:
-	if not is_instance_valid(_fase) or _fase.concluida:
+	if not is_instance_valid(_fase) or _fase.concluida or _fase.batalhas.ativa:
 		return
 	var celula: Vector2i = _fase.piso.local_to_map(_fase.pes.global_position)
 	if setor < 2 and celula.y <= 33:
@@ -56,7 +56,9 @@ func _physics_process(delta: float) -> void:
 			if vivos.size() >= LIMITE_VIVOS:
 				_liberar_vaga(vivos)
 				return
-			_criar_zumbi(local, encontro.z, regiao)
+			var zumbi := _criar_zumbi(local, encontro.z, regiao)
+			if gerados % 6 == 5:
+				zumbi.derrotado.connect(_fase.jogador.recuperar_uma_vida, CONNECT_ONE_SHOT)
 			_pendentes[regiao].erase(encontro)
 			gerados += 1
 			_intervalo = INTERVALO
@@ -66,7 +68,7 @@ func _liberar_vaga(vivos: Array[Node]) -> void:
 	var tela := _camera.get_viewport_rect().size / _camera.zoom
 	var visivel := Rect2(_camera.get_screen_center_position() - tela * 0.5, tela).grow(32.0)
 	for zumbi: Inimigo in vivos:
-		if int(zumbi.get_meta("regiao", setor)) >= setor:
+		if zumbi.has_meta("obrigatorio") or int(zumbi.get_meta("regiao", setor)) >= setor:
 			continue
 		if zumbi.global_position.distance_to(_fase.pes.global_position) < DISTANCIA_REMOCAO:
 			continue
@@ -90,7 +92,7 @@ func _local_seguro(celula: Vector2i, limite: float) -> bool:
 	consulta.transform = Transform2D(0.0, posicao)
 	return _fase.get_world_2d().direct_space_state.intersect_shape(consulta, 1).is_empty()
 
-func _criar_zumbi(celula: Vector2i, tipo: Zumbi.Tipo, regiao: int) -> void:
+func _criar_zumbi(celula: Vector2i, tipo: Zumbi.Tipo, regiao: int) -> Inimigo:
 	var zumbi := CENA_ZUMBI.instantiate()
 	zumbi.position = _fase.piso.map_to_local(celula)
 	zumbi.alvo = _fase.pes
@@ -99,6 +101,7 @@ func _criar_zumbi(celula: Vector2i, tipo: Zumbi.Tipo, regiao: int) -> void:
 	zumbi.set_meta("regiao", regiao)
 	zumbi.configurar_tipo(tipo)
 	_fase.atores.add_child(zumbi)
+	return zumbi
 
 func gerar_onda_teste() -> void:
 	var vagas := mini(3, LIMITE_VIVOS - get_tree().get_nodes_in_group("inimigos").size())
@@ -111,3 +114,13 @@ func gerar_onda_teste() -> void:
 		if _local_seguro(celula, 176.0):
 			_criar_zumbi(celula, Zumbi.Tipo.COMUM, setor)
 			vagas -= 1
+func gerar_da_sepultura(origem: Vector2i) -> bool:
+	if _fase.batalhas.ativa or get_tree().get_nodes_in_group("inimigos").size() >= LIMITE_VIVOS:
+		return false
+	for deslocamento in [Vector2i(3, 0), Vector2i(-3, 0), Vector2i(0, 3), Vector2i(0, -3),
+			Vector2i(3, 2), Vector2i(-3, 2), Vector2i(3, -2), Vector2i(-3, -2)]:
+		var celula: Vector2i = origem + deslocamento
+		if _local_seguro(celula, 230.0) and _fase.batalhas.mesma_regiao(celula, origem):
+			_criar_zumbi(celula, Zumbi.Tipo.COMUM, setor)
+			return true
+	return false

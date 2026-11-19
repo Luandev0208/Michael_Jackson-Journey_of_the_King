@@ -1,6 +1,8 @@
 class_name Inimigo
 extends CharacterBody2D
 
+signal derrotado
+
 @export var distancia_patrulha := 28.0
 @export var velocidade_patrulha := 25.0
 @export var preparacao_contato := 0.0
@@ -85,6 +87,7 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
 	_tempo_contato = maxf(_tempo_contato, _tempo_impacto)
 	_mostrar_impacto()
 	if vida <= 0:
+		derrotado.emit()
 		queue_free()
 
 

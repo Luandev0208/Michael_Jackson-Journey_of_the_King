@@ -42,8 +42,8 @@ func _physics_process(delta: float) -> void:
 	alcance.target_position = destino - origem
 	alcance.force_shapecast_update()
 	for indice in alcance.get_collision_count():
-		var inimigo := alcance.get_collider(indice) as Inimigo
-		if inimigo == null or inimigo.vida <= 0:
+		var inimigo := alcance.get_collider(indice) as CollisionObject2D
+		if inimigo == null or not inimigo.has_method("receber_dano") or inimigo.vida <= 0:
 			continue
 		var raio := PhysicsRayQueryParameters2D.create(origem, inimigo.global_position, collision_mask)
 		raio.hit_from_inside = true

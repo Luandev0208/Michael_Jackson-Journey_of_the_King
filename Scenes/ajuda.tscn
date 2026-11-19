@@ -8,16 +8,16 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -272.0
-offset_top = -151.0
+offset_top = -172.0
 offset_right = 272.0
-offset_bottom = 151.0
+offset_bottom = 172.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1")
 
 [node name="Conteudo" type="VBoxContainer" parent="."]
 layout_mode = 2
-theme_override_constants/separation = 8
+theme_override_constants/separation = 5
 alignment = 1
 
 [node name="Titulo" type="Label" parent="Conteudo"]
@@ -29,7 +29,7 @@ text = "Ajuda"
 [node name="Comandos" type="GridContainer" parent="Conteudo"]
 layout_mode = 2
 theme_override_constants/h_separation = 12
-theme_override_constants/v_separation = 5
+theme_override_constants/v_separation = 1
 columns = 2
 
 [node name="TeclasMover" type="Label" parent="Conteudo/Comandos"]
@@ -40,7 +40,16 @@ text = "WASD ou setas"
 
 [node name="Mover" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
-text = "Mova Michael e escolha para onde olhar."
+text = "Mova Michael."
+
+[node name="TeclaMouse" type="Label" parent="Conteudo/Comandos"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.79, 0.49, 1)
+text = "Mouse"
+
+[node name="Mouse" type="Label" parent="Conteudo/Comandos"]
+layout_mode = 2
+text = "Direcione o chute e o chapéu."
 
 [node name="TeclaChute" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
@@ -49,7 +58,7 @@ text = "Clique esquerdo"
 
 [node name="Chute" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
-text = "Chute e empurre inimigos próximos à sua frente."
+text = "Chute e empurre inimigos na direção da mira."
 
 [node name="TeclaChapeu" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
@@ -58,7 +67,16 @@ text = "Espaço"
 
 [node name="Chapeu" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
-text = "Lance o chapéu para acertar inimigos. Ele volta sozinho."
+text = "Lance o chapéu na direção do cursor."
+
+[node name="TeclaDash" type="Label" parent="Conteudo/Comandos"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.79, 0.49, 1)
+text = "Ctrl esquerdo"
+
+[node name="Dash" type="Label" parent="Conteudo/Comandos"]
+layout_mode = 2
+text = "Avance rapidamente na direção do movimento."
 
 [node name="TeclaMoonwalk" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
@@ -67,7 +85,7 @@ text = "Shift"
 
 [node name="Moonwalk" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
-text = "Use o moonwalk para recuar e evitar dano por instantes."
+text = "Recue com invulnerabilidade breve."
 
 [node name="TeclaInteragir" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
@@ -76,7 +94,16 @@ text = "E"
 
 [node name="Interagir" type="Label" parent="Conteudo/Comandos"]
 layout_mode = 2
-text = "Interaja quando o aviso aparecer perto do espelho."
+text = "Interaja quando o aviso aparecer."
+
+[node name="TeclaPausa" type="Label" parent="Conteudo/Comandos"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.79, 0.49, 1)
+text = "Esc"
+
+[node name="Pausa" type="Label" parent="Conteudo/Comandos"]
+layout_mode = 2
+text = "Pause ou retome a partida."
 
 [node name="TituloObjetivo" type="Label" parent="Conteudo"]
 layout_mode = 2
@@ -87,7 +114,7 @@ text = "Objetivo"
 [node name="Objetivo" type="Label" parent="Conteudo"]
 layout_mode = 2
 autowrap_mode = 2
-text = "Explore o camarim e atravesse o espelho. A aventura de Michael é recuperar suas memórias."
+text = "Atravesse o espelho do camarim. Em Thriller, vença as batalhas das passagens para liberar o espelho final."
 
 [node name="BotaoVoltar" type="Button" parent="Conteudo"]
 custom_minimum_size = Vector2(112, 34)

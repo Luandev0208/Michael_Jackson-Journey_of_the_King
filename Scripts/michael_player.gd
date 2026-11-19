@@ -5,6 +5,7 @@ signal vida_alterada(restantes: int)
 
 const VIDA_MAXIMA := 3
 const CENA_CHAPEU := preload("res://Scenes/chapeu.tscn")
+const Pausa := preload("res://Scripts/pausa.gd")
 const CAMADA_CENARIO := 1
 const CAMADA_INIMIGO := 4
 
@@ -24,6 +25,11 @@ const CAMADA_INIMIGO := 4
 @export var invulnerabilidade_moonwalk := 0.30
 @export var recarga_moonwalk := 1.5
 
+@export_group("Dash")
+@export var velocidade_dash := 400.0
+@export var duracao_dash := 0.18
+@export var recarga_dash := 1.2
+
 var vida := VIDA_MAXIMA
 var posicao_inicial := Vector2.ZERO
 var invencivel_dev := false
@@ -36,6 +42,10 @@ var _atingidos_chute: Dictionary[int, bool] = {}
 var _protecao_esquiva := 0.0
 var _ultima_sombra := Vector2.ZERO
 var _tempo_moonwalk := 0.0
+var _tempo_dash := 0.0
+var _recarga_dash := 0.0
+var _direcao_dash := Vector2.ZERO
+var _tempo_mira := 0.0
 var _tempo_recarga := 0.0
 var _tempo_protecao := 0.0
 var _chapeu: Chapeu
@@ -47,6 +57,7 @@ var _forma_chute := CircleShape2D.new()
 
 func _ready() -> void:
 	posicao_inicial = global_position
+	add_child(Pausa.new())
 
 
 func _physics_process(delta: float) -> void:
@@ -54,29 +65,41 @@ func _physics_process(delta: float) -> void:
 	_tempo_recarga = maxf(0.0, _tempo_recarga - delta)
 	_tempo_protecao = maxf(0.0, _tempo_protecao - delta)
 	_protecao_esquiva = maxf(0.0, _protecao_esquiva - delta)
+	_recarga_dash = maxf(0.0, _recarga_dash - delta)
+	_tempo_mira = maxf(0.0, _tempo_mira - delta)
 
 	if _tempo_moonwalk > 0.0:
 		_deslizar(delta)
+	elif _tempo_dash > 0.0:
+		_avancar_dash(delta)
 	else:
 		var direcao := Input.get_vector("Esquerda", "Direita", "Cima", "Baixo")
 		if Input.is_action_just_pressed("Moonwalk") and _tempo_recarga <= 0.0:
 			_tempo_recarga = recarga_moonwalk
 			_tempo_moonwalk = duracao_moonwalk
 			_protecao_esquiva = invulnerabilidade_moonwalk
-			_janela_chute = 0.0
-			efeito_chute.hide()
+			_cancelar_ataque()
 			_ultima_sombra = global_position
 			sprite.stop()
 			sprite.play(_animacao, -2.0, true)
 			_deslizar(delta)
+		elif Input.is_action_just_pressed("Dash") and _recarga_dash <= 0.0 and _protecao_esquiva <= 0.0 and not direcao.is_zero_approx():
+			_tempo_dash = duracao_dash
+			_recarga_dash = recarga_dash
+			_direcao_dash = direcao
+			_cancelar_ataque()
+			_ultima_sombra = global_position
+			_virar(direcao)
+			sprite.play(_animacao, 1.6)
+			_avancar_dash(delta)
 		else:
-			if not direcao.is_zero_approx():
+			if _tempo_mira <= 0.0 and not direcao.is_zero_approx():
 				_virar(direcao)
-			_andar(direcao)
 			if Input.is_action_just_pressed("Chute") and _tempo_chute <= 0.0:
 				_chutar()
 			if Input.is_action_just_pressed("Chapeu") and not is_instance_valid(_chapeu):
 				_arremessar()
+			_andar(direcao)
 
 	_atualizar_chute(delta)
 	sprite.modulate = Color.WHITE
@@ -84,6 +107,27 @@ func _physics_process(delta: float) -> void:
 		sprite.modulate = Color(0.55, 0.86, 1.0)
 	elif _tempo_protecao > 0.0:
 		sprite.modulate = Color(1.0, 0.5, 0.5)
+
+func direcao_da_mira() -> Vector2:
+	var vetor := get_global_mouse_position() - global_position
+	return frente if vetor.is_zero_approx() else vetor.normalized()
+
+func _cancelar_ataque() -> void:
+	_janela_chute = 0.0
+	_tempo_mira = 0.0
+	efeito_chute.hide()
+
+func _avancar_dash(delta: float) -> void:
+	# Limita o último passo à duração restante, inclusive com outro tickrate.
+	velocity = _direcao_dash * velocidade_dash * minf(1.0, _tempo_dash / delta)
+	move_and_slide()
+	_rastro(Color(1.0, 0.82, 0.55, 0.26))
+	_tempo_dash = maxf(0.0, _tempo_dash - delta)
+	if _tempo_dash <= 0.0:
+		sprite.stop()
+
+func tempo_dash() -> float:
+	return _recarga_dash
 
 func _andar(direcao: Vector2) -> void:
 	velocity = direcao * velocidade_movimento
@@ -102,23 +146,25 @@ func _virar(direcao: Vector2) -> void:
 	else:
 		frente = Vector2(signf(direcao.x), 0)
 		_animacao = &"Esquerda" if frente.x < 0.0 else &"Direita"
+	sprite.animation = _animacao
 
 func _deslizar(delta: float) -> void:
 	velocity = -frente * velocidade_moonwalk
 	move_and_slide()
-	if global_position.distance_squared_to(_ultima_sombra) >= 12.0 * 12.0:
-		_criar_sombra()
-		_ultima_sombra = global_position
+	_rastro(Color(0.44, 0.76, 1.0, 0.30))
 	_tempo_moonwalk = maxf(0.0, _tempo_moonwalk - delta)
 	if _tempo_moonwalk <= 0.0001:
 		_tempo_moonwalk = 0.0
 		sprite.stop()
 
-func _criar_sombra() -> void:
+func _rastro(tom: Color) -> void:
+	if global_position.distance_squared_to(_ultima_sombra) < 12.0 * 12.0:
+		return
+	_ultima_sombra = global_position
 	var sombra := Sprite2D.new()
 	sombra.texture = sprite.sprite_frames.get_frame_texture(sprite.animation, sprite.frame)
 	sombra.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sombra.modulate = Color(0.44, 0.76, 1.0, 0.30)
+	sombra.modulate = tom
 	get_parent().add_child(sombra)
 	sombra.global_transform = sprite.global_transform
 	var transicao := sombra.create_tween()
@@ -128,7 +174,9 @@ func _criar_sombra() -> void:
 func _chutar() -> void:
 	_tempo_chute = recarga_chute
 	_janela_chute = duracao_chute
-	_direcao_chute = frente
+	_direcao_chute = direcao_da_mira()
+	_tempo_mira = duracao_chute
+	_virar(_direcao_chute)
 	_atingidos_chute.clear()
 	_forma_chute.radius = alcance_chute
 	var arco := PackedVector2Array([Vector2.ZERO])
@@ -153,8 +201,8 @@ func _atualizar_chute(delta: float) -> void:
 	var espaco := get_world_2d().direct_space_state
 	var limite_angular := cos(deg_to_rad(semiabertura_chute))
 	for resultado in espaco.intersect_shape(consulta):
-		var inimigo := resultado.collider as Inimigo
-		if inimigo == null or inimigo.vida <= 0 or _atingidos_chute.has(inimigo.get_instance_id()):
+		var inimigo := resultado.collider as CollisionObject2D
+		if inimigo == null or not inimigo.has_method("receber_dano") or inimigo.vida <= 0 or _atingidos_chute.has(inimigo.get_instance_id()):
 			continue
 		var deslocamento := inimigo.global_position - origem
 		if deslocamento.length_squared() > alcance_chute * alcance_chute:
@@ -177,7 +225,10 @@ func em_moonwalk() -> bool:
 func _arremessar() -> void:
 	_chapeu = CENA_CHAPEU.instantiate() as Chapeu
 	get_parent().add_child(_chapeu)
-	_chapeu.iniciar(colisor, frente)
+	var mira := direcao_da_mira()
+	_virar(mira)
+	_tempo_mira = maxf(_tempo_mira, 0.15)
+	_chapeu.iniciar(colisor, mira)
 
 func receber_dano() -> void:
 	if invencivel_dev or _protecao_esquiva > 0.0 or _tempo_protecao > 0.0 or vida <= 0:
@@ -188,11 +239,17 @@ func receber_dano() -> void:
 	if vida == 0:
 		get_tree().call_deferred("reload_current_scene")
 
+func recuperar_uma_vida() -> void:
+	if vida > 0 and vida < VIDA_MAXIMA:
+		vida += 1
+		vida_alterada.emit(vida)
+
 func restaurar_vida() -> void:
 	vida = VIDA_MAXIMA
 	vida_alterada.emit(vida)
 
 func restaurar_recargas() -> void:
+	_recarga_dash = 0.0
 	_tempo_chute = 0.0
 	_tempo_recarga = 0.0
 
@@ -200,9 +257,9 @@ func teletransportar(destino: Vector2) -> void:
 	global_position = destino
 	velocity = Vector2.ZERO
 	_tempo_moonwalk = 0.0
+	_tempo_dash = 0.0
 	_protecao_esquiva = 0.0
-	_janela_chute = 0.0
-	efeito_chute.hide()
+	_cancelar_ataque()
 	var camera: Camera2D = $Camera2D
 	camera.reset_smoothing()
 	camera.force_update_scroll()

@@ -8,6 +8,7 @@ const NOTAS: Array[Vector2i] = [
 ]
 const MARCO_CENTRAL := Vector2i(24, 45)
 
+const Sepultura := preload("res://Scripts/sepultura_corrompida.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const TAMANHO := 32
 const ALCANCE_ESPELHO := 57.0
@@ -29,10 +30,14 @@ var _efeito_pontuacao: Tween
 @onready var jogador: MichaelJogador = $Atores/Michael_Player
 @onready var pes: CollisionShape2D = $Atores/Michael_Player/Michael_Colisor
 @onready var encontros: Node = $Encontros
+@onready var batalhas: Node = $Batalhas
 @onready var espelho: StaticBody2D = $Atores/Espelho
 @onready var contador: Label = $Interface/HUD/Conteudo/Notas
 @onready var vidas: Label = $Interface/HUD/Conteudo/Vidas
 @onready var moonwalk: Label = $Interface/HUD/Conteudo/Moonwalk
+@onready var dash: Label = $Interface/HUD/Conteudo/Dash
+@onready var texto_aviso: Label = $Interface/Aviso/Texto
+@onready var aviso_batalha: Label = $Interface/Batalha/Texto
 @onready var aviso: PanelContainer = $Interface/Aviso
 @onready var conclusao: PanelContainer = $Interface/Conclusao
 @onready var resultado: Label = $Interface/Conclusao/Conteudo/Resultado
@@ -55,7 +60,13 @@ func _ready() -> void:
 	muros.update_internals()
 	await get_tree().physics_frame
 	_montar_navegacao(mapa)
+	batalhas.iniciar(self, aviso_batalha)
 	encontros.iniciar(self, camera)
+	for celula in [Vector2i(11, 46), Vector2i(38, 23)]:
+		var sepultura := Sepultura.new()
+		sepultura.position = piso.map_to_local(celula)
+		sepultura.iniciar(self)
+		atores.add_child(sepultura)
 
 func _montar_navegacao(mapa: Rect2i) -> void:
 	caminhos.region = mapa
@@ -128,10 +139,14 @@ func _physics_process(_delta: float) -> void:
 	_atualizar_moonwalk()
 	var frente_do_espelho := espelho.global_position + Vector2(0, 60)
 	aviso.visible = pes.global_position.distance_to(frente_do_espelho) <= ALCANCE_ESPELHO
+	if aviso.visible:
+		texto_aviso.text = "E — Interagir com o espelho" if batalhas.espelho_liberado() else "Derrote os zumbis das passagens"
 	if aviso.visible and Input.is_action_just_pressed("Interagir"):
 		concluir()
 
 func _atualizar_moonwalk() -> void:
+	var recarga_dash := jogador.tempo_dash()
+	dash.text = "Dash  ·  %.1f s" % (ceilf(recarga_dash * 10.0) / 10.0) if recarga_dash > 0.0 else "Dash  ·  Pronto"
 	var restante := jogador.tempo_moonwalk()
 	if jogador.em_moonwalk():
 		moonwalk.text = "Moonwalk  ·  Esquiva"
@@ -144,7 +159,7 @@ func _atualizar_moonwalk() -> void:
 		moonwalk.modulate = Color(1.0, 0.86, 0.62)
 
 func concluir() -> void:
-	if concluida or jogador.vida <= 0:
+	if concluida or jogador.vida <= 0 or not batalhas.espelho_liberado():
 		return
 	concluida = true
 	atores.process_mode = Node.PROCESS_MODE_DISABLED
@@ -171,6 +186,9 @@ func dev_posicao_central() -> Vector2:
 func dev_gerar_onda() -> void:
 	if not concluida:
 		encontros.gerar_onda_teste()
+
+func dev_espelho_liberado() -> bool:
+	return batalhas.espelho_liberado()
 
 func dev_progresso() -> String:
 	return "Notas %d/%d  ·  Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]

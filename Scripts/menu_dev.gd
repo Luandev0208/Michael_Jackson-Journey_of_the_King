@@ -59,7 +59,7 @@ func _abrir() -> void:
 	_teleporte_final.disabled = not _fase.has_method("dev_posicao_final")
 	_teleporte_central.visible = _fase.has_method("dev_posicao_central")
 	_nota.disabled = not _fase.has_method("dev_coletar_nota")
-	_concluir.disabled = not _fase.has_method("concluir")
+	_concluir.disabled = not _fase.has_method("concluir") or (_fase.has_method("dev_espelho_liberado") and not _fase.dev_espelho_liberado())
 	_painel.show()
 	set_process(true)
 	_process(0.0)
