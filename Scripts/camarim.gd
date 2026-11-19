@@ -1,5 +1,6 @@
 extends Node2D
 
+const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const TAMANHO_SALA := Vector2i(20, 14)
 const ALCANCE_ESPELHO := 52.0
 
@@ -38,10 +39,13 @@ func _physics_process(_delta: float) -> void:
 
 	if Input.is_action_just_pressed("Interagir"):
 		if _espelho_revelado:
-			get_tree().change_scene_to_file("res://Scenes/jogo.tscn")
+			get_tree().change_scene_to_file(PROGRESSAO.apos_camarim())
 			return
 		_espelho_revelado = true
 
 	texto.text = "E — Interagir"
 	if _espelho_revelado:
 		texto.text = "As lembranças de Michael estão desaparecendo.\nE — Atravessar"
+
+func dev_posicao_final() -> Vector2:
+	return frente_do_espelho.global_position + Vector2(0, 10)

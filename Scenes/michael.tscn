@@ -5,7 +5,7 @@
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_240_120"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(240, 120, 40, 40)
+region = Rect2(240, 118, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_280_120"]
 atlas = ExtResource("3_rokwo")
@@ -17,27 +17,27 @@ region = Rect2(320, 120, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_240_160"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(240, 160, 40, 40)
+region = Rect2(240, 158, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_280_160"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(280, 160, 40, 40)
+region = Rect2(280, 158, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_320_160"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(320, 160, 40, 40)
+region = Rect2(320, 158, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_240_80"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(240, 80, 40, 40)
+region = Rect2(240, 78, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_280_80"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(280, 80, 40, 40)
+region = Rect2(280, 78, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_320_80"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(320, 80, 40, 40)
+region = Rect2(320, 79, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_320_40"]
 atlas = ExtResource("3_rokwo")
@@ -45,7 +45,7 @@ region = Rect2(320, 40, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_240_40"]
 atlas = ExtResource("3_rokwo")
-region = Rect2(240, 40, 40, 40)
+region = Rect2(240, 41, 40, 40)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_280_40"]
 atlas = ExtResource("3_rokwo")
@@ -235,15 +235,16 @@ animations = [{
 }]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(14, 20)
+size = Vector2(18, 20)
 
-[node name="Michael_Player" type="CharacterBody2D" unique_id=599410979]
+[node name="Michael_Player" type="CharacterBody2D" unique_id=599410979 groups=["jogador"]]
 collision_layer = 2
 motion_mode = 1
 script = ExtResource("1_h60hs")
 
 [node name="Michael_Sprite" type="AnimatedSprite2D" parent="." unique_id=623894854]
-scale = Vector2(1, 1)
+position = Vector2(0, -17)
+scale = Vector2(2, 2)
 sprite_frames = SubResource("SpriteFrames_ay0fq")
 animation = &"Parado"
 
