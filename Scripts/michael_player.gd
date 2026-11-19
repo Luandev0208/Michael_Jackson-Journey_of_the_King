@@ -3,7 +3,7 @@ extends CharacterBody2D
 
 signal vida_alterada(restantes: int)
 
-const VIDA_MAXIMA := 3
+const VIDA_MAXIMA := 4
 const CENA_CHAPEU := preload("res://Scenes/chapeu.tscn")
 const Pausa := preload("res://Scripts/pausa.gd")
 const CAMADA_CENARIO := 1
@@ -239,10 +239,12 @@ func receber_dano() -> void:
 	if vida == 0:
 		get_tree().call_deferred("reload_current_scene")
 
-func recuperar_uma_vida() -> void:
-	if vida > 0 and vida < VIDA_MAXIMA:
-		vida += 1
-		vida_alterada.emit(vida)
+func recuperar_uma_vida() -> bool:
+	if vida <= 0 or vida >= VIDA_MAXIMA:
+		return false
+	vida += 1
+	vida_alterada.emit(vida)
+	return true
 
 func restaurar_vida() -> void:
 	vida = VIDA_MAXIMA

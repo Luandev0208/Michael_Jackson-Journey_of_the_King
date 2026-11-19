@@ -21,7 +21,10 @@ const ENCONTROS := [
 	 Vector3i(28, 16, Zumbi.Tipo.RAPIDO), Vector3i(24, 15, Zumbi.Tipo.COMUM)],
 ]
 
+@export_range(0.0, 1.0, 0.01) var chance_drop_cura := 0.12
+
 var gerados := 0
+var _regioes_com_drop: Dictionary[int, bool] = {}
 var setor := 0
 var _pendentes: Array = ENCONTROS.duplicate(true)
 var _intervalo := 0.0
@@ -57,12 +60,18 @@ func _physics_process(delta: float) -> void:
 				_liberar_vaga(vivos)
 				return
 			var zumbi := _criar_zumbi(local, encontro.z, regiao)
-			if gerados % 6 == 5:
-				zumbi.derrotado.connect(_fase.jogador.recuperar_uma_vida, CONNECT_ONE_SHOT)
+			if encontro.z == Zumbi.Tipo.COMUM:
+				zumbi.derrotado.connect(_sortear_cura.bind(zumbi, regiao), CONNECT_ONE_SHOT)
 			_pendentes[regiao].erase(encontro)
 			gerados += 1
 			_intervalo = INTERVALO
 			return
+
+func _sortear_cura(zumbi: Inimigo, regiao: int) -> void:
+	if _regioes_com_drop.has(regiao) or randf() >= chance_drop_cura:
+		return
+	if _fase.adicionar_cura(zumbi.global_position):
+		_regioes_com_drop[regiao] = true
 
 func _liberar_vaga(vivos: Array[Node]) -> void:
 	var tela := _camera.get_viewport_rect().size / _camera.zoom

@@ -6,6 +6,9 @@ const NOTAS: Array[Vector2i] = [
 	Vector2i(14, 37), Vector2i(37, 39), Vector2i(24, 31),
 	Vector2i(9, 24), Vector2i(38, 20), Vector2i(24, 16), Vector2i(28, 13),
 ]
+const CURAS_FIXAS: Array[Vector2i] = [Vector2i(24, 42), Vector2i(24, 23)]
+const CENA_CURA := preload("res://Scenes/cura_thriller.tscn")
+const CORACAO := preload("res://Assets/Thriller/coracao.png")
 const MARCO_CENTRAL := Vector2i(24, 45)
 
 const Sepultura := preload("res://Scripts/sepultura_corrompida.gd")
@@ -34,6 +37,8 @@ var _efeito_pontuacao: Tween
 @onready var espelho: StaticBody2D = $Atores/Espelho
 @onready var contador: Label = $Interface/HUD/Conteudo/Notas
 @onready var vidas: Label = $Interface/HUD/Conteudo/Vidas
+@onready var coracoes: HBoxContainer = $Interface/HUD/Conteudo/Vidas/Coracoes
+@onready var curas: Node2D = $Atores/Curas
 @onready var moonwalk: Label = $Interface/HUD/Conteudo/Moonwalk
 @onready var dash: Label = $Interface/HUD/Conteudo/Dash
 @onready var texto_aviso: Label = $Interface/Aviso/Texto
@@ -43,11 +48,19 @@ var _efeito_pontuacao: Tween
 @onready var resultado: Label = $Interface/Conclusao/Conteudo/Resultado
 
 func _ready() -> void:
+	for i in MichaelJogador.VIDA_MAXIMA:
+		var icone := TextureRect.new()
+		icone.texture = CORACAO
+		icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		coracoes.add_child(icone)
 	jogador.vida_alterada.connect(_atualizar_vidas)
 	_atualizar_vidas(jogador.vida)
 	_atualizar_pontos()
 	for celula in NOTAS:
 		_adicionar_nota(celula)
+	for celula in CURAS_FIXAS:
+		adicionar_cura(piso.map_to_local(celula))
 
 	var camera: Camera2D = jogador.get_node("Camera2D")
 	var mapa := piso.get_used_rect()
@@ -87,6 +100,17 @@ func _montar_navegacao(mapa: Rect2i) -> void:
 			var exterior := x <= 2 or x >= 45 or y <= 3 or y >= 61
 			consulta.transform = Transform2D(0.0, piso.map_to_local(celula))
 			caminhos.set_point_solid(celula, exterior or not espaco.intersect_shape(consulta, 1).is_empty())
+
+func adicionar_cura(posicao: Vector2) -> bool:
+	if concluida:
+		return false
+	for item: Area2D in curas.get_children():
+		if not item.is_queued_for_deletion() and item.global_position.distance_squared_to(posicao) < 18.0 * 18.0:
+			return false
+	var cura := CENA_CURA.instantiate() as Area2D
+	cura.position = curas.to_local(posicao)
+	curas.add_child(cura)
+	return true
 
 func _adicionar_nota(celula: Vector2i) -> void:
 	var nota := Area2D.new()
@@ -131,7 +155,10 @@ func _atualizar_pontos() -> void:
 	contador.text = "Notas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
 
 func _atualizar_vidas(restantes: int) -> void:
-	vidas.text = "Vidas  %d" % restantes
+	vidas.text = "Vidas  %d/%d" % [restantes, MichaelJogador.VIDA_MAXIMA]
+	for i in coracoes.get_child_count():
+		var icone: TextureRect = coracoes.get_child(i)
+		icone.modulate = Color.WHITE if i < restantes else Color(0.50, 0.43, 0.53, 0.48)
 
 func _physics_process(_delta: float) -> void:
 	if concluida or jogador.vida <= 0:

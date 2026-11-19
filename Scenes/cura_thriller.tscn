@@ -1,0 +1,28 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/cura_thriller.gd" id="1"]
+[ext_resource type="Texture2D" path="res://Assets/Thriller/coracao.png" id="2"]
+
+[sub_resource type="CircleShape2D" id="Alcance"]
+radius = 10.0
+
+[node name="CuraThriller" type="Area2D"]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("1")
+
+[node name="Alcance" type="CollisionShape2D" parent="."]
+shape = SubResource("Alcance")
+
+[node name="Contorno" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-12, 0, 0, -12, 12, 0, 0, 12)
+color = Color(0.79, 0.54, 0.35, 1)
+
+[node name="Fundo" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-10, 0, 0, -10, 10, 0, 0, 10)
+color = Color(0.18, 0.09, 0.2, 1)
+
+[node name="Coracao" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2")
