@@ -11,6 +11,9 @@ var _ia: CheckButton
 var _velocidade: SpinBox
 var _teleporte_final: Button
 var _teleporte_central: Button
+var _teleporte_praca: Button
+var _restaurar_pontos: Button
+var _completar_testes: Button
 var _nota: Button
 var _concluir: Button
 var _fases: Dictionary
@@ -58,6 +61,9 @@ func _abrir() -> void:
 	_velocidade.set_value_no_signal(_jogador.velocidade_movimento)
 	_teleporte_final.disabled = not _fase.has_method("dev_posicao_final")
 	_teleporte_central.visible = _fase.has_method("dev_posicao_central")
+	_teleporte_praca.visible = _fase.has_method("dev_posicao_regiao_3")
+	_restaurar_pontos.visible = _fase.has_method("dev_restaurar_pontos")
+	_completar_testes.visible = _fase.has_method("dev_completar_objetivos")
 	_nota.disabled = not _fase.has_method("dev_coletar_nota")
 	_concluir.disabled = not _fase.has_method("concluir") or (_fase.has_method("dev_espelho_liberado") and not _fase.dev_espelho_liberado())
 	_painel.show()
@@ -125,6 +131,7 @@ func _criar_painel() -> void:
 	_botao(personagem, "Restaurar recargas", func(): _jogador.restaurar_recargas())
 	_botao(personagem, "Ir para o início", _ir_para_inicio)
 	_teleporte_central = _botao(personagem, "Ir à região central", _ir_para_centro)
+	_teleporte_praca = _botao(personagem, "Ir à região 3", _ir_para_praca)
 	_teleporte_final = _botao(personagem, "Ir ao espelho / final", _ir_para_final)
 	var linha := HBoxContainer.new()
 	personagem.add_child(linha)
@@ -144,6 +151,8 @@ func _criar_painel() -> void:
 	_ia = _check(testes, "IA ativa", _definir_ia)
 	_rotulo(testes, "Progressão", 14)
 	_nota = _botao(testes, "Coletar uma nota", func(): _fase.dev_coletar_nota())
+	_restaurar_pontos = _botao(testes, "Restaurar pontos", func(): _fase.dev_restaurar_pontos())
+	_completar_testes = _botao(testes, "Completar objetivos de teste", _completar_objetivos_teste)
 	_concluir = _botao(testes, "Concluir objetivo", _concluir_objetivo)
 	_painel.hide()
 
@@ -196,9 +205,17 @@ func _ir_para_centro() -> void:
 	_jogador.teletransportar(_fase.dev_posicao_central())
 	_fechar()
 
+func _ir_para_praca() -> void:
+	_jogador.teletransportar(_fase.dev_posicao_regiao_3())
+	_fechar()
+
 func _ir_para_final() -> void:
 	_jogador.teletransportar(_fase.dev_posicao_final())
 	_fechar()
+
+func _completar_objetivos_teste() -> void:
+	_fase.dev_completar_objetivos()
+	_concluir.disabled = not _fase.dev_espelho_liberado()
 
 func _concluir_objetivo() -> void:
 	_fechar()

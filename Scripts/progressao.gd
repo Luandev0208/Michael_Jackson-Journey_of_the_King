@@ -7,9 +7,6 @@ const SMOOTH_CRIMINAL := "res://Scenes/smooth_criminal.tscn"
 const MAPA_DE_TESTE := "res://Scenes/jogo.tscn"
 const MENU := "res://Scenes/interface.tscn"
 
-static func apos_camarim() -> String:
-	return BILLIE_JEAN if ResourceLoader.exists(BILLIE_JEAN, "PackedScene") else THRILLER
-
 static func fases_disponiveis() -> Dictionary:
 	var cenas := {
 		"Camarim": CAMARIM,

@@ -8,14 +8,13 @@ const NOTAS: Array[Vector2i] = [
 ]
 const CURAS_FIXAS: Array[Vector2i] = [Vector2i(24, 42), Vector2i(24, 23)]
 const CENA_CURA := preload("res://Scenes/cura_thriller.tscn")
-const CORACAO := preload("res://Assets/Thriller/coracao.png")
+const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
 const MARCO_CENTRAL := Vector2i(24, 45)
 
 const Sepultura := preload("res://Scripts/sepultura_corrompida.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const TAMANHO := 32
 const ALCANCE_ESPELHO := 57.0
-const CAMADA_JOGADOR := 2
 const CAMADA_CENARIO := 1
 
 var caminhos := AStarGrid2D.new()
@@ -25,7 +24,6 @@ var pontuacao: int:
 
 var _notas_coletadas := 0
 var concluida := false
-var _efeito_pontuacao: Tween
 
 @onready var piso: TileMapLayer = $Piso
 @onready var muros: TileMapLayer = $Muros
@@ -35,6 +33,7 @@ var _efeito_pontuacao: Tween
 @onready var encontros: Node = $Encontros
 @onready var batalhas: Node = $Batalhas
 @onready var espelho: StaticBody2D = $Atores/Espelho
+@onready var hud = $Interface/HUD
 @onready var contador: Label = $Interface/HUD/Conteudo/Notas
 @onready var vidas: Label = $Interface/HUD/Conteudo/Vidas
 @onready var coracoes: HBoxContainer = $Interface/HUD/Conteudo/Vidas/Coracoes
@@ -48,14 +47,7 @@ var _efeito_pontuacao: Tween
 @onready var resultado: Label = $Interface/Conclusao/Conteudo/Resultado
 
 func _ready() -> void:
-	for i in MichaelJogador.VIDA_MAXIMA:
-		var icone := TextureRect.new()
-		icone.texture = CORACAO
-		icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		coracoes.add_child(icone)
-	jogador.vida_alterada.connect(_atualizar_vidas)
-	_atualizar_vidas(jogador.vida)
+	hud.iniciar(jogador)
 	_atualizar_pontos()
 	for celula in NOTAS:
 		_adicionar_nota(celula)
@@ -113,31 +105,10 @@ func adicionar_cura(posicao: Vector2) -> bool:
 	return true
 
 func _adicionar_nota(celula: Vector2i) -> void:
-	var nota := Area2D.new()
-	nota.name = "Nota_%d_%d" % [celula.x, celula.y]
-	nota.position = piso.map_to_local(celula)
-	nota.collision_layer = 0
-	nota.collision_mask = CAMADA_JOGADOR
-	nota.monitorable = false
-	var colisor := CollisionShape2D.new()
-	var forma := CircleShape2D.new()
-	forma.radius = 10.0
-	colisor.shape = forma
-	nota.add_child(colisor)
-	var brilho := Polygon2D.new()
-	brilho.polygon = PackedVector2Array([Vector2(0, -13), Vector2(12, 0),
-		Vector2(0, 13), Vector2(-12, 0)])
-	brilho.color = Color(0.38, 0.28, 0.53, 0.85)
-	nota.add_child(brilho)
-	var simbolo := Label.new()
-	simbolo.text = "♪"
-	simbolo.add_theme_font_size_override("font_size", 20)
-	simbolo.add_theme_color_override("font_color", Color(1.0, 0.86, 0.54))
-	simbolo.position = Vector2(-7, -15)
-	simbolo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nota.add_child(simbolo)
+	var nota := NOTA_MUSICAL.criar(celula, piso.map_to_local(celula))
 	nota.body_entered.connect(_coletar_nota.bind(nota), CONNECT_ONE_SHOT)
 	atores.add_child(nota)
+
 
 func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 	if concluida or nota.is_queued_for_deletion():
@@ -145,25 +116,16 @@ func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 	nota.queue_free()
 	_notas_coletadas += 1
 	_atualizar_pontos()
-	if _efeito_pontuacao != null:
-		_efeito_pontuacao.kill()
-	contador.modulate = Color(1.0, 0.76, 0.32)
-	_efeito_pontuacao = create_tween()
-	_efeito_pontuacao.tween_property(contador, "modulate", Color.WHITE, 0.55)
+	hud.destacar_pontos()
 
 func _atualizar_pontos() -> void:
-	contador.text = "Notas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
+	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), pontuacao)
 
-func _atualizar_vidas(restantes: int) -> void:
-	vidas.text = "Vidas  %d/%d" % [restantes, MichaelJogador.VIDA_MAXIMA]
-	for i in coracoes.get_child_count():
-		var icone: TextureRect = coracoes.get_child(i)
-		icone.modulate = Color.WHITE if i < restantes else Color(0.50, 0.43, 0.53, 0.48)
 
 func _physics_process(_delta: float) -> void:
 	if concluida or jogador.vida <= 0:
 		return
-	_atualizar_moonwalk()
+	hud.atualizar_recargas(jogador)
 	var frente_do_espelho := espelho.global_position + Vector2(0, 60)
 	aviso.visible = pes.global_position.distance_to(frente_do_espelho) <= ALCANCE_ESPELHO
 	if aviso.visible:
@@ -171,19 +133,6 @@ func _physics_process(_delta: float) -> void:
 	if aviso.visible and Input.is_action_just_pressed("Interagir"):
 		concluir()
 
-func _atualizar_moonwalk() -> void:
-	var recarga_dash := jogador.tempo_dash()
-	dash.text = "Dash  ·  %.1f s" % (ceilf(recarga_dash * 10.0) / 10.0) if recarga_dash > 0.0 else "Dash  ·  Pronto"
-	var restante := jogador.tempo_moonwalk()
-	if jogador.em_moonwalk():
-		moonwalk.text = "Moonwalk  ·  Esquiva"
-		moonwalk.modulate = Color(0.64, 0.90, 1.0)
-	elif restante > 0.0:
-		moonwalk.text = "Moonwalk  ·  %.1f s" % (ceilf(restante * 10.0) / 10.0)
-		moonwalk.modulate = Color(0.72, 0.75, 0.79)
-	else:
-		moonwalk.text = "Moonwalk  ·  Pronto"
-		moonwalk.modulate = Color(1.0, 0.86, 0.62)
 
 func concluir() -> void:
 	if concluida or jogador.vida <= 0 or not batalhas.espelho_liberado():
