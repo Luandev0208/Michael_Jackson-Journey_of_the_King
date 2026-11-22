@@ -2,8 +2,8 @@ extends Node2D
 
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
-const SOMBRA := preload("res://Scenes/sombra.tscn")
-const TIPO := preload("res://Scripts/sombra.gd").Tipo
+const DETETIVE := preload("res://Scenes/detetive.tscn")
+const TIPO := preload("res://Scripts/detetive.gd").Tipo
 const Barreira := preload("res://Scripts/barreira_memoria.gd")
 const HALO_POSTE := preload("res://Assets/BillieJean/halo_poste.png")
 
@@ -17,7 +17,7 @@ const REGIOES := [
 		"pisos": Rect2i(12, 35, 7, 2),
 		"cota": 4,
 		"guia": "Acenda os pisos junto ao relógio, no fim da rua à esquerda.",
-		"sombras": [Vector2i(27, 38), Vector2i(17, 37)],
+		"detetives": [Vector2i(27, 38), Vector2i(17, 37)],
 		"tipos": [TIPO.COMUM, TIPO.COMUM],
 	},
 	{
@@ -28,8 +28,8 @@ const REGIOES := [
 		"pisos": Rect2i(38, 23, 2, 10),
 		"cota": 5,
 		"guia": "Acenda os pisos da calçada direita para restaurar a jukebox.",
-		"sombras": [Vector2i(35, 30), Vector2i(31, 26)],
-		"tipos": [TIPO.COMUM, TIPO.VELOZ],
+		"detetives": [Vector2i(35, 30), Vector2i(31, 26)],
+		"tipos": [TIPO.COMUM, TIPO.RAPIDO],
 	},
 	{
 		"nome": "Praça da memória",
@@ -38,9 +38,9 @@ const REGIOES := [
 		"barreira": 352,
 		"pisos": Rect2i(29, 17, 5, 5),
 		"cota": 6,
-		"guia": "Acenda o mosaico da praça e derrote o guardião para restaurar a fonte.",
-		"sombras": [Vector2i(34, 19), Vector2i(31, 16)],
-		"tipos": [TIPO.COMUM, TIPO.GUARDIAO],
+		"guia": "Acenda o mosaico da praça e derrote o detetive especial para restaurar a fonte.",
+		"detetives": [Vector2i(34, 19), Vector2i(31, 16)],
+		"tipos": [TIPO.COMUM, TIPO.ESPECIAL],
 	},
 ]
 const NOTAS: Array[Vector2i] = [
@@ -57,7 +57,7 @@ var _barreiras: Array[Barreira] = []
 var _restauradas := [false, false, false]
 var _regiao := 0
 var _pisos_da_regiao := 0
-var _sombras_restantes := 0
+var _detetives_restantes := 0
 var _encontro_iniciado := false
 var _inicio_pronto := false
 var _notas_coletadas := 0
@@ -111,8 +111,8 @@ func _ready() -> void:
 		barreira.montar(camera.limit_right)
 		add_child(barreira)
 		_barreiras.append(barreira)
-	_gerar_sombra(TIPO.VELOZ, chao.map_to_local(Vector2i(7, 39)))
-	_gerar_sombra(TIPO.COMUM, chao.map_to_local(Vector2i(52, 31)))
+	_gerar_detetive(TIPO.RAPIDO, chao.map_to_local(Vector2i(7, 39)))
+	_gerar_detetive(TIPO.COMUM, chao.map_to_local(Vector2i(52, 31)))
 	_inicio_pronto = true
 
 
@@ -169,7 +169,7 @@ func _acender_piso(celula: Vector2i) -> void:
 func _tentar_iniciar_encontro() -> void:
 	var regiao: Dictionary = REGIOES[_regiao]
 	var vagas: Array[Vector2] = []
-	for ancora: Vector2i in regiao.sombras:
+	for ancora: Vector2i in regiao.detetives:
 		var vaga := _achar_vaga(ancora, vagas)
 		if vaga == Vector2.INF:
 			# Um corpo pode ocupar a vaga neste quadro. Tenta de novo sem avançar o encontro.
@@ -178,10 +178,10 @@ func _tentar_iniciar_encontro() -> void:
 		vagas.append(vaga)
 
 	_encontro_iniciado = true
-	_sombras_restantes = vagas.size()
+	_detetives_restantes = vagas.size()
 	for i in vagas.size():
-		var sombra := _gerar_sombra(regiao.tipos[i], vagas[i], true)
-		sombra.derrotado.connect(_ao_derrotar_sombra)
+		var detetive := _gerar_detetive(regiao.tipos[i], vagas[i], true)
+		detetive.derrotado.connect(_ao_derrotar_detetive)
 	_atualizar_objetivo()
 
 
@@ -209,24 +209,24 @@ func _achar_vaga(ancora: Vector2i, reservadas: Array[Vector2]) -> Vector2:
 	return Vector2.INF
 
 
-func _gerar_sombra(tipo: int, posicao: Vector2, obrigatoria := false) -> Inimigo:
-	var sombra = SOMBRA.instantiate()
-	sombra.position = posicao
-	sombra.configurar(tipo, obrigatoria)
-	sombra.alvo = pes
-	sombra.caminhos = caminhos
-	sombra.atraso_aparicao = 0.42
-	atores.add_child(sombra)
-	return sombra
+func _gerar_detetive(tipo: int, posicao: Vector2, obrigatoria := false) -> Inimigo:
+	var detetive = DETETIVE.instantiate()
+	detetive.position = posicao
+	detetive.configurar(tipo, obrigatoria)
+	detetive.alvo = pes
+	detetive.caminhos = caminhos
+	detetive.atraso_aparicao = 0.42
+	atores.add_child(detetive)
+	return detetive
 
 
-func _ao_derrotar_sombra() -> void:
-	_sombras_restantes -= 1
+func _ao_derrotar_detetive() -> void:
+	_detetives_restantes -= 1
 	_atualizar_objetivo()
 
 
 func _verificar_passagem() -> void:
-	if _encontro_iniciado and _sombras_restantes == 0 and _pisos_da_regiao >= REGIOES[_regiao].cota:
+	if _encontro_iniciado and _detetives_restantes == 0 and _pisos_da_regiao >= REGIOES[_regiao].cota:
 		_liberar_passagem()
 
 
@@ -263,7 +263,7 @@ func _liberar_passagem() -> void:
 	_barreiras[_regiao].dissipar()
 	_regiao += 1
 	_encontro_iniciado = false
-	_sombras_restantes = 0
+	_detetives_restantes = 0
 	_pisos_da_regiao = 0
 	_espera_spawn = 0.0
 	_avanco = "Memória restaurada · Passagem liberada"
@@ -286,7 +286,7 @@ func _atualizar_objetivo() -> void:
 	titulo.text = "%s · %d/3" % [regiao.nome, _regiao]
 	var progresso := "Pisos %d/%d" % [mini(_pisos_da_regiao, regiao.cota), regiao.cota]
 	if _encontro_iniciado:
-		progresso += "   ·   Sombras restantes %d" % _sombras_restantes
+		progresso += "   ·   Detetives restantes %d" % _detetives_restantes
 	detalhe.text = "%s\n%s" % [_avanco if _tempo_avanco > 0.0 else regiao.guia, progresso]
 
 
@@ -336,9 +336,9 @@ func dev_restaurar_pontos() -> void:
 func dev_completar_objetivos() -> void:
 	if not _inicio_pronto:
 		return
-	for sombra: Inimigo in get_tree().get_nodes_in_group("inimigos"):
-		if sombra.has_meta("obrigatorio") and sombra.vida > 0:
-			sombra.receber_dano(sombra.vida)
+	for detetive: Inimigo in get_tree().get_nodes_in_group("inimigos"):
+		if detetive.has_meta("obrigatorio") and detetive.vida > 0:
+			detetive.receber_dano(detetive.vida)
 	dev_restaurar_pontos()
 	while not dev_espelho_liberado():
 		_liberar_passagem()
@@ -358,7 +358,7 @@ func dev_gerar_onda() -> void:
 		if caminhos.is_in_boundsv(vaga) and not caminhos.is_point_solid(vaga):
 			consulta.transform.origin = chao.map_to_local(vaga)
 			if get_world_2d().direct_space_state.intersect_shape(consulta, 1).is_empty():
-				_gerar_sombra(TIPO.COMUM, consulta.transform.origin)
+				_gerar_detetive(TIPO.COMUM, consulta.transform.origin)
 				return
 
 

@@ -17,9 +17,12 @@ var _empurrao := Vector2.ZERO
 var _tempo_impacto := 0.0
 var _tempo_contato := 0.0
 var _preparacao_restante := -1.0
+var _direcao_visual := "down"
+var _animando_ataque := false
 
 @onready var visual: Node2D = $Visual
 @onready var contato: Area2D = $Contato
+@onready var _sprite := visual as AnimatedSprite2D
 
 func _ready() -> void:
 	_origem = global_position.x
@@ -35,6 +38,7 @@ func _physics_process(delta: float) -> void:
 		atraso_aparicao = maxf(0.0, atraso_aparicao - delta)
 		visual.modulate.a = clampf(1.0 - atraso_aparicao, 0.3, 1.0)
 		return
+	var posicao_anterior := global_position
 	if not _empurrao.is_zero_approx():
 		velocity = _empurrao
 		_empurrao = _empurrao.move_toward(Vector2.ZERO, 680.0 * delta)
@@ -48,6 +52,7 @@ func _physics_process(delta: float) -> void:
 		_atacar_por_contato(delta)
 	else:
 		_preparacao_restante = -1.0
+	_atualizar_animacao(global_position - posicao_anterior)
 
 func _atacar_por_contato(delta: float) -> void:
 	for jogador in contato.get_overlapping_bodies():
@@ -58,14 +63,20 @@ func _atacar_por_contato(delta: float) -> void:
 		raio.hit_from_inside = true
 		if not get_world_2d().direct_space_state.intersect_ray(raio).is_empty():
 			continue
-		if _preparacao_restante < 0.0:
+		var iniciando := _preparacao_restante < 0.0
+		if iniciando:
 			_preparacao_restante = preparacao_contato
+			_animando_ataque = false
 		_preparacao_restante -= delta
+		_olhar_para(colisor.global_position - global_position)
 		if _preparacao_restante > 0.0:
 			visual.modulate = Color(1.0, 0.71, 0.47)
+			_animar("prepare", _preparacao_restante + delta, iniciando)
 			return
 		_tempo_contato = recarga_contato
 		_preparacao_restante = -1.0
+		_animando_ataque = _animar("attack", 0.0, true)
+		_efeito_ataque()
 		jogador.receber_dano()
 		return
 	_preparacao_restante = -1.0
@@ -77,6 +88,45 @@ func _mover(_delta: float) -> void:
 	if move_and_slide():
 		_lado *= -1
 
+func _olhar_para(direcao: Vector2) -> void:
+	if direcao.is_zero_approx():
+		return
+	if absf(direcao.x) > absf(direcao.y):
+		_direcao_visual = "left" if direcao.x < 0.0 else "right"
+	else:
+		_direcao_visual = "up" if direcao.y < 0.0 else "down"
+
+func _animar(estado: String, duracao := 0.0, reiniciar := false) -> bool:
+	if _sprite == null:
+		return false
+	var nome := StringName(estado if estado == "death" else estado + "_" + _direcao_visual)
+	if not _sprite.sprite_frames.has_animation(nome):
+		return false
+	if reiniciar:
+		_sprite.stop()
+	elif _sprite.animation == nome:
+		return true
+	var velocidade := 1.0
+	if duracao > 0.0:
+		var quadros := _sprite.sprite_frames
+		velocidade = quadros.get_frame_count(nome) / (quadros.get_animation_speed(nome) * duracao)
+	_sprite.play(nome, velocidade)
+	return true
+
+func _atualizar_animacao(movimento: Vector2) -> void:
+	if _sprite == null or _tempo_impacto > 0.0 or _preparacao_restante > 0.0:
+		return
+	if _animando_ataque and _sprite.is_playing():
+		return
+	_animando_ataque = false
+	var andando := movimento.length_squared() > 0.01
+	if andando:
+		_olhar_para(movimento)
+	_animar("walk" if andando else "idle")
+
+func _efeito_ataque() -> void:
+	pass
+
 func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
 	if vida <= 0:
 		return
@@ -87,8 +137,26 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
 	_tempo_contato = maxf(_tempo_contato, _tempo_impacto)
 	_mostrar_impacto()
 	if vida <= 0:
-		derrotado.emit()
+		_derrotar()
+	else:
+		_animando_ataque = false
+		_olhar_para(-empurrao)
+		_animar("hurt", _tempo_impacto, true)
+
+func _derrotar() -> void:
+	velocity = Vector2.ZERO
+	set_physics_process(false)
+	set_deferred("collision_layer", 0)
+	set_deferred("collision_mask", 0)
+	contato.set_deferred("monitoring", false)
+	remove_from_group("inimigos")
+	visual.modulate = Color.WHITE
+	if _animar("death", 0.0, true):
+		_sprite.animation_finished.connect(queue_free, CONNECT_ONE_SHOT)
+	else:
 		queue_free()
+	# Barreiras, vagas de spawn e recompensas contam a derrota no golpe final.
+	derrotado.emit()
 
 
 func _mostrar_impacto() -> void:

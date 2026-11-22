@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ba3ol074lhpf4"
-path="res://.godot/imported/billie_jean_inimigos.png-d420923d38455fd00156298e7fe0a8cd.ctex"
+uid="uid://eqpjdesgex0i"
+path="res://.godot/imported/sprites.png-cad10fd050de9c670795f5ef60dfa44f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/BillieJean/billie_jean_inimigos.png"
-dest_files=["res://.godot/imported/billie_jean_inimigos.png-d420923d38455fd00156298e7fe0a8cd.ctex"]
+source_file="res://Assets/Inimigos/Thriller/ZumbiComum/sprites.png"
+dest_files=["res://.godot/imported/sprites.png-cad10fd050de9c670795f5ef60dfa44f.ctex"]
 
 [params]
 
