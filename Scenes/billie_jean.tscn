@@ -5,7 +5,9 @@
 [ext_resource type="TileSet" path="res://Assets/BillieJean/billie_jean_pisos_luminosos.tres" id="pisos"]
 [ext_resource type="Texture2D" path="res://Assets/BillieJean/billie_jean_objetos.png" id="objetos"]
 [ext_resource type="PackedScene" path="res://Scenes/michael.tscn" id="michael"]
-[ext_resource type="SpriteFrames" path="res://Assets/Michael/Variantes/michael_terno_escuro_com_chapeu_spriteframes.tres" id="figurino"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/BillieJean/michael_terno_escuro_com_chapeu.tres" id="figurino"]
+[ext_resource type="Texture2D" path="res://Assets/Michael/Animacoes/Efeitos/chapeu_em_voo_preto.png" id="chapeu_visual"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/BillieJean/michael_terno_escuro_sem_chapeu.tres" id="sem_chapeu"]
 [ext_resource type="PackedScene" path="res://Scenes/hud_memoria.tscn" id="hud"]
 [ext_resource type="PackedScene" path="res://Scenes/cura_thriller.tscn" id="cura"]
 [ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="tema"]
@@ -1619,6 +1621,8 @@ region_filter_clip_enabled = true
 
 [node name="Michael_Player" parent="Atores" instance=ExtResource("michael")]
 position = Vector2(992, 1472)
+textura_chapeu = ExtResource("chapeu_visual")
+figurino_sem_chapeu = ExtResource("sem_chapeu")
 
 [node name="Michael_Sprite" parent="Atores/Michael_Player" index="0"]
 sprite_frames = ExtResource("figurino")

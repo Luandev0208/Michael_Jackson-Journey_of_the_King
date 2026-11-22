@@ -1,6 +1,8 @@
 class_name Chapeu
 extends CharacterBody2D
 
+signal recolhido
+
 @export var velocidade := 270.0
 @export var distancia_maxima := 160.0
 @export var multiplicador_retorno := 1.55
@@ -14,10 +16,17 @@ var _distancia := 0.0
 @onready var visual: Node2D = $Visual
 @onready var alcance: ShapeCast2D = $Alcance
 
-func iniciar(alvo: Node2D, direcao: Vector2) -> void:
+func iniciar(alvo: Node2D, direcao: Vector2, textura: Texture2D = null) -> void:
 	_alvo = alvo
 	_direcao = direcao
 	global_position = alvo.global_position
+	if textura != null:
+		for parte: CanvasItem in visual.get_children():
+			parte.hide()
+		var arte := Sprite2D.new()
+		arte.texture = textura
+		arte.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		visual.add_child(arte)
 
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(_alvo):
@@ -27,11 +36,11 @@ func _physics_process(delta: float) -> void:
 	visual.rotation += TAU * 2.5 * delta
 	var origem := global_position
 	var limite := velocidade * delta
+	var voltou := false
 	if retornando:
 		# O retorno busca Michael mesmo se ele mudar de lado de um obstáculo.
 		global_position = origem.move_toward(_alvo.global_position, limite * multiplicador_retorno)
-		if global_position.is_equal_approx(_alvo.global_position):
-			queue_free()
+		voltou = global_position.is_equal_approx(_alvo.global_position)
 	else:
 		var colisao := move_and_collide(_direcao * minf(limite, distancia_maxima - _distancia))
 		_distancia += origem.distance_to(global_position)
@@ -52,3 +61,6 @@ func _physics_process(delta: float) -> void:
 		alcance.add_exception(inimigo)
 		inimigo.receber_dano(dano)
 	alcance.position = Vector2.ZERO
+	if voltou:
+		queue_free()
+		recolhido.emit()
