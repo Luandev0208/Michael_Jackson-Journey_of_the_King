@@ -29,6 +29,7 @@
 [ext_resource type="Script" uid="uid://c21mq547bty8k" path="res://Scripts/batalhas_thriller.gd" id="batalhas"]
 [ext_resource type="Script" uid="uid://bl02dc2pg4f2f" path="res://Scripts/thriller.gd" id="fase"]
 [ext_resource type="PackedScene" path="res://Scenes/michael.tscn" id="michael"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Variantes/michael_terno_escuro_sem_chapeu_spriteframes.tres" id="figurino"]
 [ext_resource type="Texture2D" uid="uid://bq2kakn16g2fj" path="res://Assets/Thriller/objetos/cerca_decorativa.png" id="objeto_cerca_decorativa"]
 [ext_resource type="Texture2D" uid="uid://cfha1qkap7lag" path="res://Assets/Thriller/objetos/portao_fechado.png" id="objeto_portao_fechado"]
 
@@ -1950,6 +1951,9 @@ centered = false
 [node name="Michael_Player" parent="Atores" unique_id=971367929 instance=ExtResource("michael")]
 position = Vector2(768, 1920)
 
+[node name="Michael_Sprite" parent="Atores/Michael_Player" index="0"]
+sprite_frames = ExtResource("figurino")
+
 [node name="IluminacaoOpcional" type="Node2D" parent="." unique_id=2008521930]
 modulate = Color(1, 1, 1, 0.62)
 z_index = 1
@@ -2153,3 +2157,5 @@ layout_mode = 2
 text = "Voltar ao menu"
 
 [connection signal="pressed" from="Interface/Conclusao/Conteudo/Voltar" to="." method="_avancar"]
+
+[editable path="Atores/Michael_Player"]

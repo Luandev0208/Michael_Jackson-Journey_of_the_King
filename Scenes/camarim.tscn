@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/camarim.gd" id="1"]
 [ext_resource type="PackedScene" path="res://Scenes/michael.tscn" id="2"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Variantes/michael_terno_claro_sem_chapeu_spriteframes.tres" id="figurino"]
 [ext_resource type="Texture2D" path="res://Assets/Camarim/camarim_tileset.png" id="3"]
 [ext_resource type="Texture2D" path="res://Assets/Camarim/porta_fechada.png" id="porta_fechada"]
 [ext_resource type="Texture2D" path="res://Assets/Camarim/passagem.png" id="passagem"]
@@ -195,6 +196,9 @@ texture = ExtResource("luminaria_mesa")
 [node name="Michael_Player" parent="Moveis" instance=ExtResource("2")]
 position = Vector2(320, 340)
 
+[node name="Michael_Sprite" parent="Moveis/Michael_Player" index="0"]
+sprite_frames = ExtResource("figurino")
+
 [node name="FrenteDoEspelho" type="Marker2D" parent="."]
 position = Vector2(320, 231)
 
@@ -219,3 +223,5 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 theme_override_font_sizes/font_size = 14
+
+[editable path="Moveis/Michael_Player"]

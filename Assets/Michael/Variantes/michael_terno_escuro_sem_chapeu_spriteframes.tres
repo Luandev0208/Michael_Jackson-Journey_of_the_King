@@ -1,0 +1,203 @@
+[gd_resource type="SpriteFrames" load_steps=28 format=3]
+
+[ext_resource type="Texture2D" path="res://Assets/Michael/Variantes/michael_terno_escuro_sem_chapeu.png" id="1_tex"]
+
+[sub_resource type="AtlasTexture" id="Frame_0_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 0, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_0_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 0, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_1_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 40, 40, 40)
+margin = Rect2(0, -1, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_1_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 40, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_1_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 40, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_2_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 80, 40, 40)
+margin = Rect2(0, 2, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_2_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 80, 40, 40)
+margin = Rect2(0, 2, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_2_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 80, 40, 40)
+margin = Rect2(0, 1, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_3_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 120, 40, 40)
+margin = Rect2(0, 2, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_3_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 120, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_3_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 120, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_4_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 160, 40, 40)
+margin = Rect2(0, 2, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_4_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 160, 40, 40)
+margin = Rect2(0, 2, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_4_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 160, 40, 40)
+margin = Rect2(0, 2, 0, 0)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_5_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 200, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_5_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 200, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_5_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 200, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_6_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 240, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_6_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 240, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_6_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 240, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_7_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 280, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_7_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 280, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_7_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 280, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_8_0"]
+atlas = ExtResource("1_tex")
+region = Rect2(0, 320, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_8_1"]
+atlas = ExtResource("1_tex")
+region = Rect2(40, 320, 40, 40)
+filter_clip = true
+
+[sub_resource type="AtlasTexture" id="Frame_8_2"]
+atlas = ExtResource("1_tex")
+region = Rect2(80, 320, 40, 40)
+filter_clip = true
+
+[resource]
+animations = [{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_3_0")}, {"duration": 1.0, "texture": SubResource("Frame_3_1")}, {"duration": 1.0, "texture": SubResource("Frame_3_0")}, {"duration": 1.0, "texture": SubResource("Frame_3_2")}],
+"loop": true,
+"name": &"Baixo",
+"speed": 5
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_4_0")}, {"duration": 1.0, "texture": SubResource("Frame_4_1")}, {"duration": 1.0, "texture": SubResource("Frame_4_0")}, {"duration": 1.0, "texture": SubResource("Frame_4_2")}],
+"loop": true,
+"name": &"Cima",
+"speed": 5
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_2_0")}, {"duration": 1.0, "texture": SubResource("Frame_2_1")}, {"duration": 1.0, "texture": SubResource("Frame_2_0")}, {"duration": 1.0, "texture": SubResource("Frame_2_2")}],
+"loop": true,
+"name": &"Direita",
+"speed": 5
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_1_2")}, {"duration": 1.0, "texture": SubResource("Frame_1_0")}, {"duration": 1.0, "texture": SubResource("Frame_1_2")}, {"duration": 1.0, "texture": SubResource("Frame_1_1")}],
+"loop": true,
+"name": &"Esquerda",
+"speed": 5
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_3_0")}],
+"loop": false,
+"name": &"Parado",
+"speed": 5
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_7_1")}, {"duration": 1.0, "texture": SubResource("Frame_7_0")}, {"duration": 1.0, "texture": SubResource("Frame_7_2")}],
+"loop": false,
+"name": &"Pular_Baixo",
+"speed": 6
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_8_1")}, {"duration": 1.0, "texture": SubResource("Frame_8_0")}, {"duration": 1.0, "texture": SubResource("Frame_8_2")}],
+"loop": false,
+"name": &"Pular_Cima",
+"speed": 6
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_5_1")}, {"duration": 1.0, "texture": SubResource("Frame_5_0")}, {"duration": 1.0, "texture": SubResource("Frame_5_2")}],
+"loop": false,
+"name": &"Pular_Direita",
+"speed": 6
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_6_1")}, {"duration": 1.0, "texture": SubResource("Frame_6_0")}, {"duration": 1.0, "texture": SubResource("Frame_6_2")}],
+"loop": false,
+"name": &"Pular_Esquerda",
+"speed": 6
+},
+{
+"frames": [{"duration": 1.0, "texture": SubResource("Frame_0_0")}, {"duration": 1.0, "texture": SubResource("Frame_0_1")}],
+"loop": false,
+"name": &"Morte",
+"speed": 3
+}]
