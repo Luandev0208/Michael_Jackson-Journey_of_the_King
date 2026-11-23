@@ -1,0 +1,199 @@
+[gd_resource type="SpriteFrames" format=3]
+[ext_resource type="Texture2D" path="res://Assets/SmoothCriminal/Inimigos/Seguranca/sprites.png" id="T"]
+[sub_resource type="AtlasTexture" id="F0"]
+atlas = ExtResource("T")
+region = Rect2(0, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F1"]
+atlas = ExtResource("T")
+region = Rect2(40, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F2"]
+atlas = ExtResource("T")
+region = Rect2(80, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F3"]
+atlas = ExtResource("T")
+region = Rect2(120, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F4"]
+atlas = ExtResource("T")
+region = Rect2(160, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F5"]
+atlas = ExtResource("T")
+region = Rect2(200, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F6"]
+atlas = ExtResource("T")
+region = Rect2(240, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F7"]
+atlas = ExtResource("T")
+region = Rect2(280, 0, 40, 40)
+[sub_resource type="AtlasTexture" id="F8"]
+atlas = ExtResource("T")
+region = Rect2(0, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F9"]
+atlas = ExtResource("T")
+region = Rect2(40, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F10"]
+atlas = ExtResource("T")
+region = Rect2(80, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F11"]
+atlas = ExtResource("T")
+region = Rect2(120, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F12"]
+atlas = ExtResource("T")
+region = Rect2(160, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F13"]
+atlas = ExtResource("T")
+region = Rect2(200, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F14"]
+atlas = ExtResource("T")
+region = Rect2(240, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F15"]
+atlas = ExtResource("T")
+region = Rect2(280, 40, 40, 40)
+[sub_resource type="AtlasTexture" id="F16"]
+atlas = ExtResource("T")
+region = Rect2(0, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F17"]
+atlas = ExtResource("T")
+region = Rect2(40, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F18"]
+atlas = ExtResource("T")
+region = Rect2(80, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F19"]
+atlas = ExtResource("T")
+region = Rect2(120, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F20"]
+atlas = ExtResource("T")
+region = Rect2(160, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F21"]
+atlas = ExtResource("T")
+region = Rect2(200, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F22"]
+atlas = ExtResource("T")
+region = Rect2(240, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F23"]
+atlas = ExtResource("T")
+region = Rect2(280, 80, 40, 40)
+[sub_resource type="AtlasTexture" id="F24"]
+atlas = ExtResource("T")
+region = Rect2(0, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F25"]
+atlas = ExtResource("T")
+region = Rect2(40, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F26"]
+atlas = ExtResource("T")
+region = Rect2(80, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F27"]
+atlas = ExtResource("T")
+region = Rect2(120, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F28"]
+atlas = ExtResource("T")
+region = Rect2(160, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F29"]
+atlas = ExtResource("T")
+region = Rect2(200, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F30"]
+atlas = ExtResource("T")
+region = Rect2(240, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F31"]
+atlas = ExtResource("T")
+region = Rect2(280, 120, 40, 40)
+[sub_resource type="AtlasTexture" id="F32"]
+atlas = ExtResource("T")
+region = Rect2(0, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F33"]
+atlas = ExtResource("T")
+region = Rect2(40, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F34"]
+atlas = ExtResource("T")
+region = Rect2(80, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F35"]
+atlas = ExtResource("T")
+region = Rect2(120, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F36"]
+atlas = ExtResource("T")
+region = Rect2(160, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F37"]
+atlas = ExtResource("T")
+region = Rect2(200, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F38"]
+atlas = ExtResource("T")
+region = Rect2(240, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F39"]
+atlas = ExtResource("T")
+region = Rect2(280, 160, 40, 40)
+[sub_resource type="AtlasTexture" id="F40"]
+atlas = ExtResource("T")
+region = Rect2(0, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F41"]
+atlas = ExtResource("T")
+region = Rect2(40, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F42"]
+atlas = ExtResource("T")
+region = Rect2(80, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F43"]
+atlas = ExtResource("T")
+region = Rect2(120, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F44"]
+atlas = ExtResource("T")
+region = Rect2(160, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F45"]
+atlas = ExtResource("T")
+region = Rect2(200, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F46"]
+atlas = ExtResource("T")
+region = Rect2(240, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F47"]
+atlas = ExtResource("T")
+region = Rect2(280, 200, 40, 40)
+[sub_resource type="AtlasTexture" id="F48"]
+atlas = ExtResource("T")
+region = Rect2(0, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F49"]
+atlas = ExtResource("T")
+region = Rect2(40, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F50"]
+atlas = ExtResource("T")
+region = Rect2(80, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F51"]
+atlas = ExtResource("T")
+region = Rect2(120, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F52"]
+atlas = ExtResource("T")
+region = Rect2(160, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F53"]
+atlas = ExtResource("T")
+region = Rect2(200, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F54"]
+atlas = ExtResource("T")
+region = Rect2(240, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F55"]
+atlas = ExtResource("T")
+region = Rect2(280, 240, 40, 40)
+[sub_resource type="AtlasTexture" id="F56"]
+atlas = ExtResource("T")
+region = Rect2(0, 280, 40, 40)
+[sub_resource type="AtlasTexture" id="F57"]
+atlas = ExtResource("T")
+region = Rect2(40, 280, 40, 40)
+[resource]
+animations = [{"name":&"idle_down","frames":[{"duration":1.0,"texture":SubResource("F0")}],"speed":5.0,"loop":true},
+{"name":&"walk_down","frames":[{"duration":1.0,"texture":SubResource("F1")}, {"duration":1.0,"texture":SubResource("F2")}, {"duration":1.0,"texture":SubResource("F3")}, {"duration":1.0,"texture":SubResource("F4")}],"speed":4.0,"loop":true},
+{"name":&"prepare_down","frames":[{"duration":1.0,"texture":SubResource("F5")}, {"duration":1.0,"texture":SubResource("F6")}],"speed":10.0,"loop":false},
+{"name":&"attack_down","frames":[{"duration":1.0,"texture":SubResource("F7")}, {"duration":1.0,"texture":SubResource("F8")}, {"duration":1.0,"texture":SubResource("F9")}, {"duration":1.0,"texture":SubResource("F10")}],"speed":12.0,"loop":false},
+{"name":&"hurt_down","frames":[{"duration":1.0,"texture":SubResource("F11")}, {"duration":1.0,"texture":SubResource("F12")}],"speed":9.0,"loop":false},
+{"name":&"idle_up","frames":[{"duration":1.0,"texture":SubResource("F13")}],"speed":5.0,"loop":true},
+{"name":&"walk_up","frames":[{"duration":1.0,"texture":SubResource("F14")}, {"duration":1.0,"texture":SubResource("F15")}, {"duration":1.0,"texture":SubResource("F16")}, {"duration":1.0,"texture":SubResource("F17")}],"speed":4.0,"loop":true},
+{"name":&"prepare_up","frames":[{"duration":1.0,"texture":SubResource("F18")}, {"duration":1.0,"texture":SubResource("F19")}],"speed":10.0,"loop":false},
+{"name":&"attack_up","frames":[{"duration":1.0,"texture":SubResource("F20")}, {"duration":1.0,"texture":SubResource("F21")}, {"duration":1.0,"texture":SubResource("F22")}, {"duration":1.0,"texture":SubResource("F23")}],"speed":12.0,"loop":false},
+{"name":&"hurt_up","frames":[{"duration":1.0,"texture":SubResource("F24")}, {"duration":1.0,"texture":SubResource("F25")}],"speed":9.0,"loop":false},
+{"name":&"idle_left","frames":[{"duration":1.0,"texture":SubResource("F26")}],"speed":5.0,"loop":true},
+{"name":&"walk_left","frames":[{"duration":1.0,"texture":SubResource("F27")}, {"duration":1.0,"texture":SubResource("F28")}, {"duration":1.0,"texture":SubResource("F29")}, {"duration":1.0,"texture":SubResource("F30")}],"speed":4.0,"loop":true},
+{"name":&"prepare_left","frames":[{"duration":1.0,"texture":SubResource("F31")}, {"duration":1.0,"texture":SubResource("F32")}],"speed":10.0,"loop":false},
+{"name":&"attack_left","frames":[{"duration":1.0,"texture":SubResource("F33")}, {"duration":1.0,"texture":SubResource("F34")}, {"duration":1.0,"texture":SubResource("F35")}, {"duration":1.0,"texture":SubResource("F36")}],"speed":12.0,"loop":false},
+{"name":&"hurt_left","frames":[{"duration":1.0,"texture":SubResource("F37")}, {"duration":1.0,"texture":SubResource("F38")}],"speed":9.0,"loop":false},
+{"name":&"idle_right","frames":[{"duration":1.0,"texture":SubResource("F39")}],"speed":5.0,"loop":true},
+{"name":&"walk_right","frames":[{"duration":1.0,"texture":SubResource("F40")}, {"duration":1.0,"texture":SubResource("F41")}, {"duration":1.0,"texture":SubResource("F42")}, {"duration":1.0,"texture":SubResource("F43")}],"speed":4.0,"loop":true},
+{"name":&"prepare_right","frames":[{"duration":1.0,"texture":SubResource("F44")}, {"duration":1.0,"texture":SubResource("F45")}],"speed":10.0,"loop":false},
+{"name":&"attack_right","frames":[{"duration":1.0,"texture":SubResource("F46")}, {"duration":1.0,"texture":SubResource("F47")}, {"duration":1.0,"texture":SubResource("F48")}, {"duration":1.0,"texture":SubResource("F49")}],"speed":12.0,"loop":false},
+{"name":&"hurt_right","frames":[{"duration":1.0,"texture":SubResource("F50")}, {"duration":1.0,"texture":SubResource("F51")}],"speed":9.0,"loop":false},
+{"name":&"hurt","frames":[{"duration":1.0,"texture":SubResource("F52")}, {"duration":1.0,"texture":SubResource("F53")}],"speed":9.0,"loop":false},
+{"name":&"death","frames":[{"duration":1.0,"texture":SubResource("F54")}, {"duration":1.0,"texture":SubResource("F55")}, {"duration":1.0,"texture":SubResource("F56")}, {"duration":1.0,"texture":SubResource("F57")}],"speed":7.0,"loop":false}]
