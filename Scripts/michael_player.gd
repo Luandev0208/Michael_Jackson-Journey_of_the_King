@@ -22,12 +22,20 @@ const CAMADA_INIMIGO := 4
 @export var duracao_chute := 0.10
 @export var recarga_chute := 0.45
 @export var empurrao_chute := 130.0
+@export var janela_combo := 0.9
+@export var dano_golpe_final := 2
+@export var multiplicador_alcance_final := 1.20
+@export var multiplicador_empurrao_final := 1.35
 
 @export_group("Moonwalk")
 @export var velocidade_moonwalk := 300.0
 @export var duracao_moonwalk := 0.25
 @export var invulnerabilidade_moonwalk := 0.30
 @export var recarga_moonwalk := 1.5
+@export var janela_esquiva_perfeita := 0.15
+@export var recarga_apos_esquiva_perfeita := 0.35
+@export var raio_onda_moonwalk := 24.0
+@export var empurrao_onda_moonwalk := 140.0
 
 @export_group("Dash")
 @export var velocidade_dash := 400.0
@@ -43,7 +51,14 @@ var _tempo_chute := 0.0
 var _janela_chute := 0.0
 var _direcao_chute := Vector2.DOWN
 var _atingidos_chute: Dictionary[int, bool] = {}
+var _passo_combo := 0
+var _tempo_combo := 0.0
+var _golpe_final := false
 var _protecao_esquiva := 0.0
+var _janela_perfeita := 0.0
+var _brilho_esquiva := 0.0
+var _forma_moonwalk := CircleShape2D.new()
+var _empurrados_moonwalk: Dictionary[int, bool] = {}
 var _ultima_sombra := Vector2.ZERO
 var _tempo_moonwalk := 0.0
 var _tempo_dash := 0.0
@@ -56,11 +71,14 @@ var _chapeu: Chapeu
 var _forma_chute := CircleShape2D.new()
 var _acao_visual := false
 var _recuperacao_pendente := false
+var _tremor: Tween
 
 @onready var sprite: AnimatedSprite2D = $Michael_Sprite
 @onready var colisor: CollisionShape2D = $Michael_Colisor
 @onready var efeito_chute: Polygon2D = $EfeitoChute
 @onready var _figurino: SpriteFrames = sprite.sprite_frames
+@onready var _camera: Camera2D = $Camera2D
+@onready var _offset_camera := _camera.offset
 
 func _ready() -> void:
 	posicao_inicial = global_position
@@ -75,6 +93,11 @@ func _physics_process(delta: float) -> void:
 	_tempo_recarga = maxf(0.0, _tempo_recarga - delta)
 	_tempo_protecao = maxf(0.0, _tempo_protecao - delta)
 	_protecao_esquiva = maxf(0.0, _protecao_esquiva - delta)
+	_janela_perfeita = maxf(0.0, _janela_perfeita - delta)
+	_brilho_esquiva = maxf(0.0, _brilho_esquiva - delta)
+	_tempo_combo = maxf(0.0, _tempo_combo - delta)
+	if _tempo_combo <= 0.0:
+		_passo_combo = 0
 	_recarga_dash = maxf(0.0, _recarga_dash - delta)
 	_tempo_mira = maxf(0.0, _tempo_mira - delta)
 
@@ -88,8 +111,12 @@ func _physics_process(delta: float) -> void:
 			_tempo_recarga = recarga_moonwalk
 			_tempo_moonwalk = duracao_moonwalk
 			_protecao_esquiva = invulnerabilidade_moonwalk
+			_janela_perfeita = minf(janela_esquiva_perfeita, invulnerabilidade_moonwalk)
+			_forma_moonwalk.radius = raio_onda_moonwalk
+			_empurrados_moonwalk.clear()
 			_cancelar_ataque()
 			_ultima_sombra = global_position
+			_levantar_poeira()
 			if not _tocar_acao("Moonwalk", _quadros_atuais(), duracao_moonwalk):
 				sprite.stop()
 				sprite.play(_animacao, -2.0, true)
@@ -101,6 +128,7 @@ func _physics_process(delta: float) -> void:
 			_cancelar_ataque()
 			_ultima_sombra = global_position
 			_virar(direcao)
+			_levantar_poeira()
 			if not _tocar_acao("Dash", _quadros_atuais(), duracao_dash):
 				sprite.play(_animacao, 1.6)
 			_avancar_dash(delta)
@@ -115,7 +143,9 @@ func _physics_process(delta: float) -> void:
 
 	_atualizar_chute(delta)
 	sprite.modulate = Color.WHITE
-	if _tempo_moonwalk > 0.0:
+	if _brilho_esquiva > 0.0:
+		sprite.modulate = Color(0.73, 0.96, 1.0)
+	elif _tempo_moonwalk > 0.0:
 		sprite.modulate = Color(0.55, 0.86, 1.0)
 	elif _tempo_protecao > 0.0:
 		sprite.modulate = Color(1.0, 0.5, 0.5)
@@ -209,6 +239,7 @@ func _deslizar(delta: float) -> void:
 	velocity = -frente * velocidade_moonwalk
 	move_and_slide()
 	_rastro(Color(0.44, 0.76, 1.0, 0.30))
+	_empurrar_no_moonwalk()
 	_tempo_moonwalk = maxf(0.0, _tempo_moonwalk - delta)
 	if _tempo_moonwalk <= 0.0001:
 		_tempo_moonwalk = 0.0
@@ -229,21 +260,26 @@ func _rastro(tom: Color) -> void:
 	transicao.tween_callback(sombra.queue_free)
 
 func _chutar() -> void:
-	_tempo_chute = recarga_chute
-	_janela_chute = duracao_chute
+	_passo_combo += 1
+	_golpe_final = _passo_combo == 3
+	_tempo_combo = 0.0 if _golpe_final else janela_combo
+	if _golpe_final:
+		_passo_combo = 0
+	_tempo_chute = recarga_chute * (1.2 if _golpe_final else 1.0)
+	_janela_chute = duracao_chute * (1.35 if _golpe_final else 1.0)
 	_direcao_chute = direcao_da_mira()
-	_tempo_mira = duracao_chute
+	_tempo_mira = _janela_chute
 	_virar(_direcao_chute)
-	# A pose de impacto cai dentro da janela de acerto já usada pelo combate.
-	_tocar_acao("Chute", _quadros_atuais(), duracao_chute * 1.5, 1)
+	# O golpe final começa na pose de impacto, no mesmo passo que ativa o arco.
+	_tocar_acao("Chute", _quadros_atuais(), _janela_chute * 1.5, 2 if _golpe_final else 1)
 	_atingidos_chute.clear()
-	_forma_chute.radius = alcance_chute
+	_forma_chute.radius = alcance_chute * (multiplicador_alcance_final if _golpe_final else 1.0)
 	var arco := PackedVector2Array([Vector2.ZERO])
 	for segmento in range(13):
 		var angulo := deg_to_rad(lerpf(-semiabertura_chute, semiabertura_chute, float(segmento) / 12.0))
-		arco.append(Vector2.from_angle(angulo) * alcance_chute)
+		arco.append(Vector2.from_angle(angulo) * _forma_chute.radius)
 	efeito_chute.polygon = arco
-	efeito_chute.color = Color(1.0, 0.74, 0.38, 0.20)
+	efeito_chute.color = Color(1.0, 0.53, 0.29, 0.32) if _golpe_final else Color(1.0, 0.74, 0.38, 0.20)
 	efeito_chute.show()
 
 func _atualizar_chute(delta: float) -> void:
@@ -264,16 +300,69 @@ func _atualizar_chute(delta: float) -> void:
 		if inimigo == null or not inimigo.has_method("receber_dano") or inimigo.vida <= 0 or _atingidos_chute.has(inimigo.get_instance_id()):
 			continue
 		var deslocamento := inimigo.global_position - origem
-		if deslocamento.length_squared() > alcance_chute * alcance_chute:
+		if deslocamento.length_squared() > _forma_chute.radius * _forma_chute.radius:
 			continue
 		var sentido := _direcao_chute if deslocamento.is_zero_approx() else deslocamento.normalized()
 		if sentido.dot(_direcao_chute) < limite_angular:
 			continue
 		var raio := PhysicsRayQueryParameters2D.create(origem, inimigo.global_position, CAMADA_CENARIO)
 		if espaco.intersect_ray(raio).is_empty():
+			if _golpe_final and _atingidos_chute.is_empty():
+				_tremer_camera(2.0)
 			_atingidos_chute[inimigo.get_instance_id()] = true
-			inimigo.receber_dano(1, sentido * empurrao_chute)
-			efeito_chute.color = Color(1.0, 0.79, 0.42, 0.36)
+			var empurrao := empurrao_chute * (multiplicador_empurrao_final if _golpe_final else 1.0)
+			inimigo.receber_dano(dano_golpe_final if _golpe_final else 1, sentido * empurrao)
+			efeito_chute.color = Color(1.0, 0.60, 0.31, 0.48) if _golpe_final else Color(1.0, 0.79, 0.42, 0.36)
+
+func _empurrar_no_moonwalk() -> void:
+	var origem := colisor.global_position
+	var consulta := PhysicsShapeQueryParameters2D.new()
+	consulta.shape = _forma_moonwalk
+	consulta.transform = Transform2D(0.0, origem)
+	consulta.collision_mask = CAMADA_INIMIGO
+	var espaco := get_world_2d().direct_space_state
+	for resultado in espaco.intersect_shape(consulta):
+		var inimigo := resultado.collider as Inimigo
+		if inimigo == null or inimigo.vida <= 0 or _empurrados_moonwalk.has(inimigo.get_instance_id()):
+			continue
+		var raio := PhysicsRayQueryParameters2D.create(origem, inimigo.global_position, CAMADA_CENARIO)
+		if not espaco.intersect_ray(raio).is_empty():
+			continue
+		_empurrados_moonwalk[inimigo.get_instance_id()] = true
+		var sentido := origem.direction_to(inimigo.global_position)
+		inimigo.empurrar((frente if sentido.is_zero_approx() else sentido) * empurrao_onda_moonwalk)
+
+func _levantar_poeira() -> void:
+	var poeira := CPUParticles2D.new()
+	poeira.emitting = false
+	poeira.amount = 4
+	poeira.one_shot = true
+	poeira.lifetime = 0.25
+	poeira.explosiveness = 1.0
+	poeira.direction = Vector2.UP
+	poeira.spread = 65.0
+	poeira.initial_velocity_min = 12.0
+	poeira.initial_velocity_max = 32.0
+	poeira.gravity = Vector2(0.0, 32.0)
+	poeira.scale_amount_min = 1.5
+	poeira.scale_amount_max = 2.5
+	poeira.color = Color(0.84, 0.79, 0.72, 0.49)
+	poeira.finished.connect(poeira.queue_free, CONNECT_ONE_SHOT)
+	get_parent().add_child(poeira)
+	poeira.global_position = colisor.global_position
+	poeira.emitting = true
+
+func _tremer_camera(forca: float) -> void:
+	_encerrar_tremor()
+	_tremor = create_tween()
+	_tremor.tween_property(_camera, "offset", _offset_camera + Vector2(1.0, -0.5) * forca, 0.035)
+	_tremor.tween_property(_camera, "offset", _offset_camera + Vector2(-0.65, 0.25) * forca, 0.035)
+	_tremor.tween_property(_camera, "offset", _offset_camera, 0.065)
+
+func _encerrar_tremor() -> void:
+	if _tremor != null and _tremor.is_valid():
+		_tremor.kill()
+	_camera.offset = _offset_camera
 
 func tempo_moonwalk() -> float:
 	return _tempo_recarga
@@ -297,8 +386,16 @@ func _recolher_chapeu() -> void:
 	_chapeu = null
 	_recuperacao_pendente = vida > 0
 
-func receber_dano() -> void:
-	if invencivel_dev or _protecao_esquiva > 0.0 or _tempo_protecao > 0.0 or vida <= 0:
+func receber_dano(ataque_confirmado := false) -> void:
+	if invencivel_dev or _tempo_protecao > 0.0 or vida <= 0:
+		return
+	if _protecao_esquiva > 0.0:
+		if ataque_confirmado and _janela_perfeita > 0.0:
+			_janela_perfeita = 0.0
+			_brilho_esquiva = 0.25
+			_tempo_recarga = minf(_tempo_recarga, recarga_apos_esquiva_perfeita)
+			_recarga_dash = 0.0
+			_tremer_camera(1.0)
 		return
 	_tempo_protecao = protecao_apos_dano
 	vida -= 1
@@ -309,6 +406,9 @@ func receber_dano() -> void:
 		_tempo_moonwalk = 0.0
 		_acao_visual = false
 		_recuperacao_pendente = false
+		_passo_combo = 0
+		_tempo_combo = 0.0
+		_encerrar_tremor()
 		_cancelar_ataque()
 		if is_instance_valid(_chapeu):
 			_chapeu.queue_free()
@@ -353,8 +453,12 @@ func teletransportar(destino: Vector2) -> void:
 	_tempo_moonwalk = 0.0
 	_tempo_dash = 0.0
 	_protecao_esquiva = 0.0
+	_janela_perfeita = 0.0
+	_brilho_esquiva = 0.0
+	_passo_combo = 0
+	_tempo_combo = 0.0
 	_acao_visual = false
 	_cancelar_ataque()
-	var camera: Camera2D = $Camera2D
-	camera.reset_smoothing()
-	camera.force_update_scroll()
+	_encerrar_tremor()
+	_camera.reset_smoothing()
+	_camera.force_update_scroll()

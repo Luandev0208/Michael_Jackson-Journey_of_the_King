@@ -77,7 +77,7 @@ func _atacar_por_contato(delta: float) -> void:
 		_preparacao_restante = -1.0
 		_animando_ataque = _animar("attack", 0.0, true)
 		_efeito_ataque()
-		jogador.receber_dano()
+		jogador.receber_dano(true)
 		return
 	_preparacao_restante = -1.0
 
@@ -126,6 +126,10 @@ func _atualizar_animacao(movimento: Vector2) -> void:
 
 func _efeito_ataque() -> void:
 	pass
+
+func empurrar(impulso: Vector2) -> void:
+	if vida > 0:
+		_empurrao = impulso
 
 func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
 	if vida <= 0:
