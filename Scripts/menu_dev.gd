@@ -48,7 +48,7 @@ func _input(evento: InputEvent) -> void:
 	else:
 		_fase = get_tree().current_scene
 		_jogador = get_tree().get_first_node_in_group("jogador") as MichaelJogador
-		if not is_instance_valid(_jogador):
+		if not is_instance_valid(_jogador) or _jogador.vida <= 0:
 			return
 		_abrir()
 	get_viewport().set_input_as_handled()
@@ -238,7 +238,10 @@ func _definir_ia(ativa: bool) -> void:
 
 func _eliminar_inimigos() -> void:
 	for inimigo: Inimigo in _inimigos():
-		inimigo.receber_dano(inimigo.vida)
+		if inimigo.has_method("dev_eliminar"):
+			inimigo.dev_eliminar()
+		else:
+			inimigo.receber_dano(inimigo.vida)
 
 func _gerar_onda() -> void:
 	if _fase.has_method("dev_gerar_onda"):

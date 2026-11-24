@@ -24,7 +24,7 @@ var _aviso := Line2D.new()
 func _ready() -> void:
 	super._ready()
 	vida = VIDA_MAXIMA
-	_resposta_empurrao = 0.0
+	resistencia_empurrao = 0.0
 	_sprite.sprite_frames = ARTE
 	_aviso.z_index = 1
 	_aviso.width = 5.0
@@ -37,10 +37,10 @@ func ativar() -> void:
 	em_combate = true
 
 
-func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
+func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
 	if not em_combate or vida <= 0:
 		return
-	super.receber_dano(dano, empurrao)
+	super.receber_dano(dano, empurrao, fonte)
 	vida_alterada.emit(maxi(vida, 0))
 	if vida <= 0:
 		_aviso.clear_points()
@@ -90,6 +90,8 @@ func _mover(delta: float) -> void:
 
 
 func _preparar_golpe() -> void:
+	if not _reservar_inicio_ataque():
+		return
 	_estado = Estado.AVISO
 	_tempo = 0.53 if etapa < 3 else 0.46
 	_direcao_golpe = global_position.direction_to(alvo.global_position)

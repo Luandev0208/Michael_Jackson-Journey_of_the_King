@@ -11,12 +11,19 @@ const PASSO_RASTRO_QUADRADO := 9.0 * 9.0
 @export var multiplicador_retorno := 1.55
 @export var dano := 1
 @export var empurrao := 85.0
+# Michael é desenhado com escala 2; o chapéu lançado precisa seguir a mesma proporção.
+# É só visual: as hitboxes (Alcance e colisor) não mudam.
+@export var escala_visual := 2.0
+@export var altura_cabeca := 27.0
+@export var distancia_pouso := 52.0
 
 var retornando := false
 var _alvo: Node2D
 var _direcao := Vector2.ZERO
 var _distancia := 0.0
 var _inicio_da_volta := true
+var _altura_base := -16.0
+var _tempo_decolagem := 0.0
 
 @onready var visual: Node2D = $Visual
 @onready var alcance: ShapeCast2D = $Alcance
@@ -26,6 +33,9 @@ func iniciar(alvo: Node2D, direcao: Vector2, textura: Texture2D = null) -> void:
 	_alvo = alvo
 	_direcao = direcao
 	global_position = alvo.global_position
+	_altura_base = visual.position.y
+	visual.position.y = _altura_base - altura_cabeca
+	visual.scale = Vector2.ONE * escala_visual
 	rastro.add_point(rastro.to_local(visual.global_position))
 	if textura != null:
 		for parte: CanvasItem in visual.get_children():
@@ -41,6 +51,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	visual.rotation += TAU * 2.5 * delta
+	_atualizar_altura(delta)
 	var origem := global_position
 	var limite := velocidade * delta
 	var voltou := false
@@ -74,11 +85,20 @@ func _physics_process(delta: float) -> void:
 		var sentido := origem.direction_to(destino)
 		if sentido.is_zero_approx():
 			sentido = origem.direction_to(inimigo.global_position)
-		inimigo.receber_dano(dano, sentido * empurrao)
+		inimigo.receber_dano(dano, sentido * empurrao, &"chapeu")
 	alcance.position = Vector2.ZERO
 	if voltou:
 		queue_free()
 		recolhido.emit()
+
+func _atualizar_altura(delta: float) -> void:
+	# Sai da cabeça de Michael, voa na altura normal e volta a subir ao pousar nele.
+	var alvo_altura := _altura_base
+	if retornando and is_instance_valid(_alvo):
+		var falta := global_position.distance_to(_alvo.global_position)
+		var pouso := clampf(1.0 - falta / distancia_pouso, 0.0, 1.0)
+		alvo_altura = lerpf(_altura_base, _altura_base - altura_cabeca, pouso)
+	visual.position.y = move_toward(visual.position.y, alvo_altura, altura_cabeca * 6.0 * delta)
 
 func _atualizar_rastro() -> void:
 	var atual := rastro.to_local(visual.global_position)

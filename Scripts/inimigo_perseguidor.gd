@@ -50,7 +50,7 @@ func _mover(delta: float) -> void:
 				velocity = recuo.normalized() * velocidade_patrulha
 				move_and_slide()
 			return
-		_seguir(alvo.global_position, velocidade_perseguicao, delta)
+		_seguir(_destino_perseguicao(distancia), velocidade_perseguicao, delta)
 	elif perseguindo or _retornando:
 		if perseguindo:
 			_recalcular = 0.0
@@ -62,6 +62,10 @@ func _mover(delta: float) -> void:
 			velocity = Vector2.ZERO
 	else:
 		super._mover(delta)
+
+# Ponto para onde o inimigo caminha. Subclasses podem flanquear em vez de ir direto.
+func _destino_perseguicao(_distancia: float) -> Vector2:
+	return alvo.global_position
 
 func _seguir(destino: Vector2, rapidez: float, delta: float) -> void:
 	_recalcular -= delta

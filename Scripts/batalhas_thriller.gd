@@ -1,13 +1,15 @@
 extends Node
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const Zumbi := preload("res://Scripts/zumbi.gd")
 const CENA_ZUMBI := preload("res://Scenes/zumbi.tscn")
+const CENA_GUARDIAO := preload("res://Scenes/guardiao.tscn")
 const LINHAS: Array[int] = [52, 34, 15]
 const NOMES := ["Portão do cemitério", "Alameda dos túmulos", "Guardião do espelho"]
 const ONDAS := [
 	[[Zumbi.Tipo.COMUM, Zumbi.Tipo.COMUM]],
 	[[Zumbi.Tipo.COMUM, Zumbi.Tipo.RAPIDO], [Zumbi.Tipo.LENTO, Zumbi.Tipo.RAPIDO, Zumbi.Tipo.COMUM]],
-	[[Zumbi.Tipo.COMUM, Zumbi.Tipo.RAPIDO], [Zumbi.Tipo.GUARDIAO]],
+	[[Zumbi.Tipo.COMUM, Zumbi.Tipo.RAPIDO, Zumbi.Tipo.LENTO], [Zumbi.Tipo.GUARDIAO]],
 ]
 const DISTANCIA_GATILHO := 218.0
 
@@ -84,7 +86,9 @@ func _physics_process(delta: float) -> void:
 			_painel.hide()
 		return
 	_painel.show()
-	_aviso.text = "%s · Onda %d/%d\nDerrote os zumbis desta passagem" % [NOMES[etapa], onda + 1, ONDAS[etapa].size()]
+	var ultimo: bool = etapa == LINHAS.size() - 1 and onda == ONDAS[etapa].size() - 1
+	var objetivo := "Derrote o Guardião e os reforços" if ultimo else "Derrote os zumbis desta passagem"
+	_aviso.text = "%s · Onda %d/%d\n%s" % [NOMES[etapa], onda + 1, ONDAS[etapa].size(), objetivo]
 	_espera = maxf(0.0, _espera - delta)
 	if _espera <= 0.0 and not _pendentes.is_empty() and distancia >= 0.0 and distancia <= DISTANCIA_GATILHO + 32.0:
 		var local := _local_de_aparicao()
@@ -96,7 +100,7 @@ func _physics_process(delta: float) -> void:
 	if _pendentes.is_empty() and _vivos.is_empty():
 		if onda + 1 < ONDAS[etapa].size():
 			onda += 1
-			_iniciar_onda(0.75)
+			_iniciar_onda(1.15 if etapa == LINHAS.size() - 1 else 0.75)
 		else:
 			_liberar()
 	elif distancia >= 0.0 and distancia <= DISTANCIA_GATILHO:
@@ -151,7 +155,8 @@ func _local_de_aparicao() -> Vector2i:
 	return Vector2i(-1, -1)
 
 func _criar_inimigo(local: Vector2i, tipo: Zumbi.Tipo) -> void:
-	var zumbi := CENA_ZUMBI.instantiate() as Inimigo
+	var cena := CENA_GUARDIAO if tipo == Zumbi.Tipo.GUARDIAO else CENA_ZUMBI
+	var zumbi = cena.instantiate()  # sem tipo estático: o Guardião tem sinais próprios
 	zumbi.position = _fase.piso.map_to_local(local)
 	zumbi.alvo = _fase.pes
 	zumbi.caminhos = _fase.caminhos
@@ -163,7 +168,15 @@ func _criar_inimigo(local: Vector2i, tipo: Zumbi.Tipo) -> void:
 	_vivos[id] = zumbi
 	zumbi.derrotado.connect(_registrar_derrota.bind(id), CONNECT_ONE_SHOT)
 	zumbi.tree_exiting.connect(_repor_se_necessario.bind(id, tipo), CONNECT_ONE_SHOT)
+	if tipo == Zumbi.Tipo.GUARDIAO:
+		zumbi.reforcos_pedidos.connect(_chamar_reforcos)
 	_fase.atores.add_child(zumbi)
+
+# Reforços do chefe: poucos e sempre dos tipos mais leves, para não sufocar o jogador.
+func _chamar_reforcos(quantidade: int) -> void:
+	var tipos := [Zumbi.Tipo.COMUM, Zumbi.Tipo.RAPIDO]
+	for i in range(quantidade):
+		_pendentes.append(tipos[i % tipos.size()])
 
 func _registrar_derrota(id: int) -> void:
 	_vivos.erase(id)
@@ -201,6 +214,7 @@ func _liberar() -> void:
 	ativa = false
 	_mensagem = 2.5
 	_aviso.text = "Espelho liberado" if espelho_liberado() else "Combate concluído · Passagem liberada"
+	FEEDBACK.faixa(_fase, "ESPELHO LIBERADO" if espelho_liberado() else "PASSAGEM LIBERADA", "Guardião derrotado" if espelho_liberado() else "", Color(0.82, 0.62, 1.0), 0.18 if espelho_liberado() else 0.0, 1.8)
 	_painel.show()
 	if not espelho_liberado():
 		_fase.jogador.recuperar_uma_vida()

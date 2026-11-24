@@ -1,7 +1,11 @@
 class_name MichaelJogador
 extends CharacterBody2D
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
+
+signal esquiva_perfeita
 signal vida_alterada(restantes: int)
+signal tentativas_alteradas(restantes: int)
 
 const VIDA_MAXIMA := 4
 const CENA_CHAPEU := preload("res://Scenes/chapeu.tscn")
@@ -9,7 +13,10 @@ const Pausa := preload("res://Scripts/pausa.gd")
 const CAMADA_CENARIO := 1
 const CAMADA_INIMIGO := 4
 
-@export var velocidade_movimento := 80.0
+# Velocidade com a qual os quadros de caminhada foram desenhados.
+const VELOCIDADE_BASE_ANIMACAO := 80.0
+
+@export var velocidade_movimento := 94.0
 @export var protecao_apos_dano := 0.85
 
 @export_group("Figurino")
@@ -20,12 +27,12 @@ const CAMADA_INIMIGO := 4
 @export var alcance_chute := 48.0
 @export_range(1.0, 89.0) var semiabertura_chute := 52.0
 @export var duracao_chute := 0.10
-@export var recarga_chute := 0.45
-@export var empurrao_chute := 130.0
+@export var recarga_chute := 0.38
+@export var empurrao_chute := 150.0
 @export var janela_combo := 0.9
 @export var dano_golpe_final := 2
 @export var multiplicador_alcance_final := 1.20
-@export var multiplicador_empurrao_final := 1.35
+@export var multiplicador_empurrao_final := 1.5
 
 @export_group("Moonwalk")
 @export var velocidade_moonwalk := 300.0
@@ -43,6 +50,7 @@ const CAMADA_INIMIGO := 4
 @export var recarga_dash := 1.2
 
 var vida := VIDA_MAXIMA
+var _derrota_tratada := false
 var posicao_inicial := Vector2.ZERO
 var invencivel_dev := false
 var frente := Vector2.DOWN
@@ -185,7 +193,8 @@ func _andar(direcao: Vector2) -> void:
 	var quadros := _quadros_atuais()
 	if not direcao.is_zero_approx() and get_real_velocity().length_squared() > 1.0:
 		_usar_quadros(quadros)
-		sprite.play(_animacao)
+		# A caminhada acompanha a velocidade para Michael não parecer deslizar.
+		sprite.play(_animacao, clampf(velocidade_movimento / VELOCIDADE_BASE_ANIMACAO, 0.5, 2.0))
 	else:
 		var em_voo := StringName("EmVoo_" + String(_animacao))
 		var parado := StringName("Parado_" + String(_animacao))
@@ -311,7 +320,7 @@ func _atualizar_chute(delta: float) -> void:
 				_tremer_camera(2.0)
 			_atingidos_chute[inimigo.get_instance_id()] = true
 			var empurrao := empurrao_chute * (multiplicador_empurrao_final if _golpe_final else 1.0)
-			inimigo.receber_dano(dano_golpe_final if _golpe_final else 1, sentido * empurrao)
+			inimigo.receber_dano(dano_golpe_final if _golpe_final else 1, sentido * empurrao, &"chute")
 			efeito_chute.color = Color(1.0, 0.60, 0.31, 0.48) if _golpe_final else Color(1.0, 0.79, 0.42, 0.36)
 
 func _empurrar_no_moonwalk() -> void:
@@ -396,6 +405,7 @@ func receber_dano(ataque_confirmado := false) -> void:
 			_tempo_recarga = minf(_tempo_recarga, recarga_apos_esquiva_perfeita)
 			_recarga_dash = 0.0
 			_tremer_camera(1.0)
+			esquiva_perfeita.emit()
 		return
 	_tempo_protecao = protecao_apos_dano
 	vida -= 1
@@ -428,8 +438,22 @@ func _ao_terminar_animacao() -> void:
 
 func _reiniciar_derrota() -> void:
 	var cena := get_tree().current_scene
-	if vida == 0 and cena != null and cena.is_ancestor_of(self):
+	if vida != 0 or cena == null or not cena.is_ancestor_of(self) or _derrota_tratada:
+		return
+	_derrota_tratada = true
+	if TENTATIVAS.ativa_em(cena):
+		_mostrar_derrota.call_deferred(cena)
+	else:
 		get_tree().call_deferred("reload_current_scene")
+
+func _mostrar_derrota(cena: Node) -> void:
+	if not is_instance_valid(cena) or get_tree().current_scene != cena:
+		return
+	if cena.has_node("TelaDerrota"):
+		return
+	var sobraram := TENTATIVAS.consumir()
+	tentativas_alteradas.emit(sobraram)
+	TENTATIVAS.mostrar_derrota(cena, sobraram)
 
 func recuperar_uma_vida() -> bool:
 	if vida <= 0 or vida >= VIDA_MAXIMA:
