@@ -67,6 +67,18 @@ func _mover(delta: float) -> void:
 func _destino_perseguicao(_distancia: float) -> Vector2:
 	return alvo.global_position
 
+func _flanquear(largura: float) -> Vector2:
+	var sentido := global_position.direction_to(alvo.global_position)
+	var lado := 1.0 if get_instance_id() % 2 == 0 else -1.0
+	var desvio := sentido.orthogonal() * lado * largura
+	for variante: Vector2 in [desvio, -desvio]:
+		var ponto := alvo.global_position + variante
+		var celula := Vector2i((ponto / caminhos.cell_size).floor())
+		if caminhos.region.has_point(celula) and not caminhos.is_point_solid(celula):
+			return ponto
+	return alvo.global_position
+
+
 func _seguir(destino: Vector2, rapidez: float, delta: float) -> void:
 	_recalcular -= delta
 	if _recalcular <= 0.0:

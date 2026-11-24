@@ -2,10 +2,11 @@ extends "res://Scripts/zumbi.gd"
 
 # Guardião do Espelho: chefe em três fases, com ataques anunciados.
 #  Fase 1: avanço em linha reta com aviso no chão.
-#  Fase 2 (60% da vida): enfurece, chama reforços e usa onda de choque em anel.
-#  Fase 3 (30% da vida): ataques mais rápidos e janelas de vulnerabilidade longas.
+#  Fase 2 (70% da vida): enfurece, chama reforços e usa onda de choque em anel.
+#  Fase 3 (38% da vida): ataques mais rápidos e janelas de vulnerabilidade longas.
 # Depois de cada ataque especial ele fica exausto: nesse momento recebe mais dano
 # do chute e o chapéu rende o dano completo. Esquivar na hora certa estica a janela.
+# O primeiro ataque de cada fase abre a guarda.
 
 signal vida_alterada(restante: int, maximo: int)
 signal reforcos_pedidos(quantidade: int)
@@ -14,21 +15,24 @@ signal fase_alterada(fase: int)
 enum Acao { NORMAL, RUGIDO, AVISO_CARGA, CARGA, AVISO_ONDA, EXAUSTO }
 
 const VIDA_MAXIMA := 16
-const LIMITE_FASE_2 := 0.60
-const LIMITE_FASE_3 := 0.30
-const RAIO_ONDA := 62.0
-const VELOCIDADE_CARGA := 175.0
+const LIMITE_FASE_2 := 0.70
+const LIMITE_FASE_3 := 0.38
+const RAIO_ONDA := 70.0
+const VELOCIDADE_CARGA := 210.0
 const DURACAO_CARGA := 0.55
+const RAIO_CARGA := 25.0
+const INTERVALOS_ESPECIAL := [3.6, 2.9, 2.25]
 
 var fase := 1
 var _acao := Acao.NORMAL
 var _tempo_acao := 0.0
-var _tempo_especial := 3.0
+var _tempo_especial := 0.45
 var _direcao_carga := Vector2.DOWN
 var _acertou := false
 var _esquivado := false
 var _aplicando_ataque_especial := false
 var _usar_onda := false
+var _especial_concluido := false
 var _indicador: Node2D
 var _barra: Control
 var _jogador: MichaelJogador
@@ -55,7 +59,7 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if vida <= 0:
+	if vida <= 0 or not ia_ativa:
 		return
 	if atraso_aparicao > 0.0 or not is_instance_valid(_jogador):
 		super._physics_process(delta)
@@ -63,11 +67,11 @@ func _physics_process(delta: float) -> void:
 	_tempo_acao = maxf(0.0, _tempo_acao - delta)
 	match _acao:
 		Acao.NORMAL:
-			ia_ativa = true
-			super._physics_process(delta)
 			_tempo_especial -= delta
-			if _tempo_especial <= 0.0 and _preparacao_restante < 0.0 and _atordoamento <= 0.0:
+			if _tempo_especial <= 0.0 and _preparacao_restante < 0.0:
 				_iniciar_especial()
+			if _acao == Acao.NORMAL:
+				super._physics_process(delta)
 		Acao.RUGIDO:
 			_parado(delta)
 			if _tempo_acao <= 0.0:
@@ -97,12 +101,16 @@ func _physics_process(delta: float) -> void:
 func _parado(delta: float) -> void:
 	ia_ativa = false
 	super._physics_process(delta)
+	ia_ativa = true
 
 
 func _iniciar_especial() -> void:
 	var distancia := global_position.distance_to(alvo.global_position)
-	var onda := fase >= 2 and (_usar_onda or distancia < 70.0)
-	if not onda and distancia >= 230.0:
+	var onda := fase >= 2 and distancia < RAIO_ONDA + 18.0 and (_usar_onda or distancia < 52.0)
+	if fase == 2 and not _especial_concluido and not onda:
+		_tempo_especial = 0.25
+		return
+	if not onda and distancia > VELOCIDADE_CARGA * DURACAO_CARGA + RAIO_CARGA:
 		_tempo_especial = 0.6
 		return
 	if not _reservar_inicio_ataque():
@@ -124,14 +132,14 @@ func _iniciar_especial() -> void:
 
 func _terminar_acao() -> void:
 	_acao = Acao.NORMAL
-	ia_ativa = true
 	multiplicador_chapeu = 0.67
-	_tempo_especial = [0.0, 5.0, 4.0, 3.2][fase]
+	_tempo_especial = INTERVALOS_ESPECIAL[fase - 1] if _especial_concluido else 0.30
 	visual.modulate = Color.WHITE
 
 
 func _entrar_exausto(duracao: float) -> void:
 	_acao = Acao.EXAUSTO
+	_especial_concluido = true
 	_tempo_acao = duracao
 	_limpar_indicador()
 	# Janela de vulnerabilidade: o chapéu rende o dano completo.
@@ -150,7 +158,7 @@ func _duracao_exausto(base: float) -> float:
 func _criar_indicador_carga() -> void:
 	_limpar_indicador()
 	var faixa := Line2D.new()
-	faixa.width = 12.0
+	faixa.width = RAIO_CARGA * 2.0
 	faixa.default_color = Color(1.0, 0.22, 0.22, 0.30)
 	faixa.z_index = 1
 	faixa.add_point(Vector2.ZERO)
@@ -176,14 +184,13 @@ func _atualizar_aviso_carga() -> void:
 
 
 func _carregar() -> void:
-	ia_ativa = false
 	_empurrao = Vector2.ZERO
 	velocity = _direcao_carga * VELOCIDADE_CARGA
 	_olhar_para(_direcao_carga)
 	_animar("walk")
 	visual.modulate = Color(1.0, 0.71, 0.47)
 	var bateu := move_and_slide() and get_slide_collision_count() > 0
-	if not _acertou and contato.overlaps_body(_jogador):
+	if not _acertou and global_position.distance_to(alvo.global_position) <= RAIO_CARGA:
 		_acertou = _tentar_acertar_jogador()
 	if bateu or _tempo_acao <= 0.0 or _esquivado:
 		velocity = Vector2.ZERO
@@ -281,7 +288,7 @@ func _chacoalhar() -> void:
 # ----- Dano, fases e derrota -----
 
 func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
-	if vida <= 0:
+	if vida <= 0 or not _especial_concluido:
 		return
 	match _acao:
 		Acao.EXAUSTO:
@@ -303,6 +310,12 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> voi
 		_mudar_fase(3)
 
 
+func dev_eliminar() -> void:
+	if vida > 0:
+		_especial_concluido = true
+		receber_dano(vida)
+
+
 func atordoar(tempo: float) -> void:
 	# O atordoamento comum só vale quando ele está livre; os ataques têm super armadura.
 	if _acao == Acao.NORMAL:
@@ -313,10 +326,11 @@ func _mudar_fase(nova: int) -> void:
 	fase = nova
 	_limpar_indicador()
 	_acao = Acao.RUGIDO
+	_especial_concluido = false
+	_usar_onda = nova == 2
 	multiplicador_chapeu = 0.67
 	_tempo_acao = 1.0
-	ia_ativa = false
-	velocidade_perseguicao = 52.0 + 8.0 * float(nova - 1)
+	velocidade_perseguicao = 52.0 + 10.0 * float(nova - 1)
 	recarga_contato = 1.25 - 0.15 * float(nova - 1)
 	_animar("threat", 1.0, true)
 	_chacoalhar()
@@ -384,4 +398,6 @@ func _desenhar_barra() -> void:
 	if _acao == Acao.EXAUSTO:
 		titulo += "  ·  VULNERÁVEL"
 		tom = Color(0.73, 0.94, 1.0)
+	elif not _especial_concluido:
+		titulo += "  ·  AGUARDE A ABERTURA"
 	_barra.draw_string(fonte, Vector2(caixa.position.x, caixa.position.y - 5.0), titulo, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, tom)

@@ -25,19 +25,20 @@ func configurar(tipo: Tipo, obrigatorio: bool) -> void:
 	match tipo:
 		Tipo.RAPIDO:
 			vida = 1
-			velocidade_perseguicao = 70.0
+			velocidade_perseguicao = 81.0
+			preparacao_contato = 0.30
 			multiplicador_chapeu = 1.0
 		Tipo.ESPECIAL:
 			# Fotógrafo: flash longo e visível, resiste ao chapéu e pede chutes.
 			vida = 4
 			velocidade_perseguicao = 48.0
-			preparacao_contato = 0.46
+			preparacao_contato = 0.50
 			recarga_contato = 1.25
 			armadura_contra_chapeu = true
 			resistencia_empurrao = 0.6
 		Tipo.COMUM:
-			velocidade_perseguicao = 60.0
-			preparacao_contato = 0.28
+			velocidade_perseguicao = 68.0
+			preparacao_contato = 0.34
 	if obrigatorio:
 		# O perseguidor do encontro segue Michael mesmo se ele recuar pela rua.
 		set_meta("obrigatorio", true)
@@ -57,15 +58,7 @@ func _ready() -> void:
 func _destino_perseguicao(distancia: float) -> Vector2:
 	if _tipo == Tipo.ESPECIAL or distancia < 64.0:
 		return alvo.global_position
-	var lado := 1.0 if get_instance_id() % 2 == 0 else -1.0
-	var direcao := (alvo.global_position - global_position).normalized()
-	var desvio := Vector2(-direcao.y, direcao.x) * lado * minf(distancia - 40.0, 34.0)
-	for variante: Vector2 in [desvio, -desvio]:
-		var ponto: Vector2 = alvo.global_position + variante
-		var celula := Vector2i((ponto / caminhos.cell_size).floor())
-		if caminhos.region.has_point(celula) and not caminhos.is_point_solid(celula):
-			return ponto
-	return alvo.global_position
+	return _flanquear(minf(distancia - 40.0, 34.0))
 
 
 # Aviso visual antes do flash: um brilho que cresce sobre a câmera.

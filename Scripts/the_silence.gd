@@ -5,7 +5,7 @@ signal vida_alterada(restante: int)
 signal estado_alterado(estado: Estado)
 
 enum Estado { ESPERA, BUSCA, AVISO, IMPACTO, INVESTIDA, VULNERAVEL, TRANSICAO, DERROTA }
-enum Ataque { ONDA, FENDA, INVESTIDA }
+enum Ataque { ONDA, FENDA, INVESTIDA, NENHUM }
 
 const VIDA_MAXIMA := 15
 const FIGURINOS: Array[SpriteFrames] = [
@@ -19,11 +19,16 @@ const RAIO_FENDA := 46.0
 const ALCANCE_INVESTIDA := 176.0
 const VELOCIDADE_INVESTIDA := 300.0
 const LARGURA_INVESTIDA := 24.0
+const VELOCIDADES_BUSCA := [54.0, 68.0, 82.0]
+const INTERVALOS_BUSCA := [1.1, 0.85, 0.60]
+const TEMPOS_DE_AVISO := [1.0, 0.87, 0.73]
+const JANELAS_VULNERAVEIS := [2.35, 2.10, 1.90]
 
 var fase := 1
 var estado := Estado.ESPERA
 var _jogador: MichaelJogador
 var _ataque := Ataque.ONDA
+var _proximo_ataque := Ataque.NENHUM
 var _tempo := 0.0
 var _centro := Vector2.ZERO
 var _direcao := Vector2.DOWN
@@ -55,11 +60,12 @@ func _physics_process(delta: float) -> void:
 	match estado:
 		Estado.BUSCA:
 			var distancia := global_position.distance_to(alvo.global_position)
-			if _tempo <= 0.0 and distancia <= 250.0 and _reservar_inicio_ataque():
+			var alcance := 84.0 if fase == 1 else (172.0 if fase == 2 else 196.0)
+			if _tempo <= 0.0 and distancia <= alcance and _reservar_inicio_ataque():
 				_preparar_ataque()
 			elif distancia > 42.0:
 				var origem := global_position
-				_seguir(alvo.global_position, 42.0 + fase * 8.0, delta)
+				_seguir(alvo.global_position, VELOCIDADES_BUSCA[fase - 1], delta)
 				var movimento := global_position - origem
 				_olhar_para(movimento)
 				_animar("move" if movimento.length_squared() > 0.01 else "idle")
@@ -69,13 +75,15 @@ func _physics_process(delta: float) -> void:
 			if _tempo <= 0.0:
 				_executar_ataque()
 		Estado.IMPACTO:
-			if _tempo <= 0.0:
-				_vulneravel()
+			if _tempo <= 0.0 and _reservar_inicio_ataque():
+				_ataque = _proximo_ataque
+				_proximo_ataque = Ataque.NENHUM
+				_anunciar_ataque()
 		Estado.INVESTIDA:
 			_investir(delta)
 		Estado.VULNERAVEL, Estado.TRANSICAO:
 			if _tempo <= 0.0:
-				_buscar(1.1)
+				_buscar(INTERVALOS_BUSCA[fase - 1])
 
 
 func _mudar_estado(novo: Estado) -> void:
@@ -91,21 +99,31 @@ func _buscar(atraso: float) -> void:
 
 
 func _preparar_ataque() -> void:
+	_proximo_ataque = Ataque.NENHUM
+	match fase:
+		1:
+			_ataque = Ataque.ONDA
+		2:
+			_ataque = Ataque.FENDA
+			_proximo_ataque = Ataque.FENDA
+		3:
+			_ataque = Ataque.FENDA if _alternar else Ataque.INVESTIDA
+			if _ataque == Ataque.INVESTIDA:
+				_proximo_ataque = Ataque.ONDA
+			_alternar = not _alternar
+	_anunciar_ataque()
+
+
+func _anunciar_ataque() -> void:
 	_esquivou = false
 	_acertou = false
 	_direcao = global_position.direction_to(alvo.global_position)
 	if _direcao.is_zero_approx():
 		_direcao = Vector2.DOWN
 	_olhar_para(_direcao)
-	_tempo = [0.0, 1.0, 0.9, 0.75][fase]
-	match fase:
-		1:
-			_ataque = Ataque.ONDA
-		2:
-			_ataque = Ataque.FENDA
-		3:
-			_ataque = Ataque.FENDA if _alternar else Ataque.INVESTIDA
-			_alternar = not _alternar
+	_tempo = TEMPOS_DE_AVISO[fase - 1]
+	if _ataque == Ataque.ONDA:
+		_tempo = maxf(_tempo, 0.90)
 	_animar("prepare", _tempo, true)
 	if _ataque == Ataque.INVESTIDA:
 		_aviso = Polygon2D.new()
@@ -147,8 +165,7 @@ func _executar_ataque() -> void:
 	_mostrar_efeito(efeito, _centro, _raio())
 	if alvo.global_position.distance_to(_centro) <= _raio():
 		_tentar_acertar(_centro)
-	_tempo = 0.35
-	_mudar_estado(Estado.IMPACTO)
+	_terminar_ataque()
 
 
 func _investir(delta: float) -> void:
@@ -158,7 +175,15 @@ func _investir(delta: float) -> void:
 	if not _acertou and global_position.distance_to(alvo.global_position) <= LARGURA_INVESTIDA:
 		_acertou = _tentar_acertar(global_position)
 	if colisao != null or _distancia_restante <= 0.0 or _esquivou:
+		_terminar_ataque()
+
+
+func _terminar_ataque() -> void:
+	if _proximo_ataque == Ataque.NENHUM or _esquivou:
 		_vulneravel()
+	else:
+		_tempo = 0.35
+		_mudar_estado(Estado.IMPACTO)
 
 
 func _tentar_acertar(origem: Vector2) -> bool:
@@ -178,7 +203,9 @@ func _ao_esquivar() -> void:
 
 
 func _vulneravel() -> void:
-	_tempo = 2.55 + (0.75 if _esquivou else 0.0)
+	_proximo_ataque = Ataque.NENHUM
+	_tempo = JANELAS_VULNERAVEIS[fase - 1] + (0.95 if _esquivou else 0.0)
+	multiplicador_chapeu = 1.0 if fase == 1 or _esquivou else (0.85 if fase == 2 else 0.70)
 	_animar("vulnerable", 0.0, true)
 	_mudar_estado(Estado.VULNERAVEL)
 
