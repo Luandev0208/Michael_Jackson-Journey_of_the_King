@@ -85,7 +85,7 @@ func _physics_process(delta: float) -> void:
 		var sentido := origem.direction_to(destino)
 		if sentido.is_zero_approx():
 			sentido = origem.direction_to(inimigo.global_position)
-		inimigo.receber_dano(dano, sentido * empurrao)
+		inimigo.receber_dano(dano, sentido * empurrao, &"chapeu")
 	alcance.position = Vector2.ZERO
 	if voltou:
 		queue_free()

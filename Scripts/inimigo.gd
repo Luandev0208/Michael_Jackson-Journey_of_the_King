@@ -7,6 +7,15 @@ signal derrotado
 @export var velocidade_patrulha := 25.0
 @export var preparacao_contato := 0.0
 @export var recarga_contato := 0.75
+# Resistências por tipo de golpe. O chapéu atinge de longe, mas rende menos que o chute.
+@export var multiplicador_chapeu := 0.67
+@export var resistencia_empurrao := 1.0
+# Com armadura, o inimigo não tem o ataque interrompido pelo chapéu (só pelo chute).
+@export var armadura_contra_chapeu := false
+
+# Evita que vários inimigos comecem o ataque ao mesmo tempo: dá tempo de reagir a cada um.
+const INTERVALO_ENTRE_ATAQUES := 0.40
+static var _ultimo_inicio_ataque := -10.0
 
 var vida := 2
 var ia_ativa := true
@@ -19,6 +28,8 @@ var _tempo_contato := 0.0
 var _preparacao_restante := -1.0
 var _direcao_visual := "down"
 var _animando_ataque := false
+var _dano_fracionado := 0.0
+var _atordoamento := 0.0
 
 @onready var visual: Node2D = $Visual
 @onready var contato: Area2D = $Contato
@@ -32,6 +43,7 @@ func _physics_process(delta: float) -> void:
 		return
 
 	_tempo_contato = maxf(0.0, _tempo_contato - delta)
+	_atordoamento = maxf(0.0, _atordoamento - delta)
 	_tempo_impacto = maxf(0.0, _tempo_impacto - delta)
 	visual.modulate = Color(1.0, 0.35, 0.35) if _tempo_impacto > 0.0 else Color.WHITE
 	if atraso_aparicao > 0.0:
@@ -43,12 +55,14 @@ func _physics_process(delta: float) -> void:
 		velocity = _empurrao
 		_empurrao = _empurrao.move_toward(Vector2.ZERO, 680.0 * delta)
 		move_and_slide()
+	elif _atordoamento > 0.0:
+		velocity = Vector2.ZERO
 	elif ia_ativa:
 		_mover(delta)
 	else:
 		velocity = Vector2.ZERO
 
-	if ia_ativa and _tempo_contato <= 0.0:
+	if ia_ativa and _tempo_contato <= 0.0 and _atordoamento <= 0.0:
 		_atacar_por_contato(delta)
 	else:
 		_preparacao_restante = -1.0
@@ -65,6 +79,10 @@ func _atacar_por_contato(delta: float) -> void:
 			continue
 		var iniciando := _preparacao_restante < 0.0
 		if iniciando:
+			var agora := Time.get_ticks_msec() / 1000.0
+			if agora - _ultimo_inicio_ataque < INTERVALO_ENTRE_ATAQUES:
+				return
+			_ultimo_inicio_ataque = agora
 			_preparacao_restante = preparacao_contato
 			_animando_ataque = false
 		_preparacao_restante -= delta
@@ -127,22 +145,45 @@ func _atualizar_animacao(movimento: Vector2) -> void:
 func _efeito_ataque() -> void:
 	pass
 
+# Gancho para o aviso visual do início do ataque (usado pelos inimigos especiais).
+func _aviso_preparacao() -> void:
+	pass
+
+# Respiro depois de um golpe forte: o inimigo fica atordoado e sem atacar.
+func atordoar(tempo: float) -> void:
+	if vida > 0:
+		_atordoamento = maxf(_atordoamento, tempo)
+		_preparacao_restante = -1.0
+		_tempo_contato = maxf(_tempo_contato, tempo)
+
 func empurrar(impulso: Vector2) -> void:
 	if vida > 0:
 		_empurrao = impulso
 
-func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
+func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
 	if vida <= 0:
 		return
+	var do_chapeu := fonte == &"chapeu"
+	if do_chapeu:
+		# O chapéu rende menos: o dano fracionado acumula até virar pontos de vida.
+		_dano_fracionado += float(dano) * multiplicador_chapeu
+		dano = int(_dano_fracionado)
+		_dano_fracionado -= float(dano)
+	empurrao *= resistencia_empurrao
 	vida -= dano
-	_empurrao = empurrao
+	var interrompe := not (do_chapeu and armadura_contra_chapeu)
+	if interrompe:
+		_empurrao = empurrao
+		_preparacao_restante = -1.0
+		_tempo_contato = maxf(_tempo_contato, 0.18)
 	_tempo_impacto = 0.18
-	_preparacao_restante = -1.0
-	_tempo_contato = maxf(_tempo_contato, _tempo_impacto)
 	_mostrar_impacto()
 	if vida <= 0:
 		_derrotar()
 	else:
+		if interrompe and not do_chapeu:
+			# O chute quebra o ritmo do inimigo; o golpe final dá mais respiro.
+			atordoar(0.55 if empurrao.length() > 190.0 else 0.30)
 		_animando_ataque = false
 		_olhar_para(-empurrao)
 		_animar("hurt", _tempo_impacto, true)

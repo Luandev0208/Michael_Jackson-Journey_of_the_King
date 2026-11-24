@@ -1,6 +1,7 @@
 class_name MichaelJogador
 extends CharacterBody2D
 
+signal esquiva_perfeita
 signal vida_alterada(restantes: int)
 
 const VIDA_MAXIMA := 4
@@ -23,12 +24,12 @@ const VELOCIDADE_BASE_ANIMACAO := 80.0
 @export var alcance_chute := 48.0
 @export_range(1.0, 89.0) var semiabertura_chute := 52.0
 @export var duracao_chute := 0.10
-@export var recarga_chute := 0.45
-@export var empurrao_chute := 130.0
+@export var recarga_chute := 0.38
+@export var empurrao_chute := 150.0
 @export var janela_combo := 0.9
 @export var dano_golpe_final := 2
 @export var multiplicador_alcance_final := 1.20
-@export var multiplicador_empurrao_final := 1.35
+@export var multiplicador_empurrao_final := 1.5
 
 @export_group("Moonwalk")
 @export var velocidade_moonwalk := 300.0
@@ -315,7 +316,7 @@ func _atualizar_chute(delta: float) -> void:
 				_tremer_camera(2.0)
 			_atingidos_chute[inimigo.get_instance_id()] = true
 			var empurrao := empurrao_chute * (multiplicador_empurrao_final if _golpe_final else 1.0)
-			inimigo.receber_dano(dano_golpe_final if _golpe_final else 1, sentido * empurrao)
+			inimigo.receber_dano(dano_golpe_final if _golpe_final else 1, sentido * empurrao, &"chute")
 			efeito_chute.color = Color(1.0, 0.60, 0.31, 0.48) if _golpe_final else Color(1.0, 0.79, 0.42, 0.36)
 
 func _empurrar_no_moonwalk() -> void:
@@ -400,6 +401,7 @@ func receber_dano(ataque_confirmado := false) -> void:
 			_tempo_recarga = minf(_tempo_recarga, recarga_apos_esquiva_perfeita)
 			_recarga_dash = 0.0
 			_tremer_camera(1.0)
+			esquiva_perfeita.emit()
 		return
 	_tempo_protecao = protecao_apos_dano
 	vida -= 1

@@ -1,0 +1,38 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/guardiao.gd" id="script"]
+[ext_resource type="SpriteFrames" path="res://Assets/Inimigos/Thriller/Guardiao/spriteframes.tres" id="arte"]
+
+[sub_resource type="CircleShape2D" id="Base"]
+radius = 8.0
+
+[sub_resource type="CircleShape2D" id="Contato"]
+radius = 14.0
+
+[node name="Guardiao" type="CharacterBody2D" groups=["inimigos"]]
+collision_layer = 4
+collision_mask = 5
+motion_mode = 1
+script = ExtResource("script")
+distancia_patrulha = 25.0
+velocidade_patrulha = 31.0
+preparacao_contato = 0.18
+recarga_contato = 0.9
+
+[node name="Colisor" type="CollisionShape2D" parent="."]
+shape = SubResource("Base")
+
+[node name="Contato" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Alcance" type="CollisionShape2D" parent="Contato"]
+shape = SubResource("Contato")
+
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+position = Vector2(0, -28)
+scale = Vector2(2, 2)
+sprite_frames = ExtResource("arte")
+animation = &"idle_down"

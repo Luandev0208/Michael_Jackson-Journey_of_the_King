@@ -37,10 +37,10 @@ func ativar() -> void:
 	em_combate = true
 
 
-func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
+func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
 	if not em_combate or vida <= 0:
 		return
-	super.receber_dano(dano, empurrao)
+	super.receber_dano(dano, empurrao, fonte)
 	vida_alterada.emit(maxi(vida, 0))
 	if vida <= 0:
 		_aviso.clear_points()
