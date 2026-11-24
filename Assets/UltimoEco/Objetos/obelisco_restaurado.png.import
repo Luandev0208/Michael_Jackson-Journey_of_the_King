@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://biohjehxoga3i"
-path="res://.godot/imported/poste_gotico.png-2527c6eb498b5b5befacd17656b02d93.ctex"
+uid="uid://cxvmilt3rw8c1"
+path="res://.godot/imported/obelisco_restaurado.png-3a4489bac22766bc53826958050f8845.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/objetos/poste_gotico.png"
-dest_files=["res://.godot/imported/poste_gotico.png-2527c6eb498b5b5befacd17656b02d93.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/obelisco_restaurado.png"
+dest_files=["res://.godot/imported/obelisco_restaurado.png-3a4489bac22766bc53826958050f8845.ctex"]
 
 [params]
 

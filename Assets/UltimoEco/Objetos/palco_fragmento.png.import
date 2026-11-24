@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b52qise3jtgdq"
-path="res://.godot/imported/palco_fragmento.png-e54838341540c52d386e923b3d48c375.ctex"
+path="res://.godot/imported/palco_fragmento.png-016fd6f75d9c5b6cdec9f748d5190e28.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/objetos/palco_fragmento.png"
-dest_files=["res://.godot/imported/palco_fragmento.png-e54838341540c52d386e923b3d48c375.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/palco_fragmento.png"
+dest_files=["res://.godot/imported/palco_fragmento.png-016fd6f75d9c5b6cdec9f748d5190e28.ctex"]
 
 [params]
 

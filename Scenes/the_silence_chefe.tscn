@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://Scripts/the_silence.gd" id="script"]
-[ext_resource type="SpriteFrames" path="res://the_silence/boss/the_silence_fase_1.tres" id="figurino"]
+[ext_resource type="SpriteFrames" path="res://Assets/UltimoEco/Boss/the_silence_fase_1.tres" id="figurino"]
 
 [sub_resource type="CircleShape2D" id="Base"]
 radius = 12.0

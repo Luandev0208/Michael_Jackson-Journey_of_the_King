@@ -6,10 +6,10 @@ const TheSilence := preload("res://Scripts/the_silence.gd")
 const NOTAS := preload("res://Scripts/nota_musical.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const ARENAS: Array[PackedScene] = [
-	preload("res://the_silence/arena_fase_1.tscn"),
-	preload("res://the_silence/arena_fase_2.tscn"),
-	preload("res://the_silence/arena_fase_3.tscn"),
-	preload("res://the_silence/arena_restaurada.tscn"),
+	preload("res://Scenes/ArenasUltimoEco/arena_fase_1.tscn"),
+	preload("res://Scenes/ArenasUltimoEco/arena_fase_2.tscn"),
+	preload("res://Scenes/ArenasUltimoEco/arena_fase_3.tscn"),
+	preload("res://Scenes/ArenasUltimoEco/arena_restaurada.tscn"),
 ]
 const CELULAS_NOTAS: Array[Vector2i] = [Vector2i(12, 12), Vector2i(27, 12), Vector2i(19, 26)]
 const TAMANHO_CELULA := 32

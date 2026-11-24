@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b6uoj2xa3uhcc"
-path="res://.godot/imported/barricada.png-8c945733a0c3bf9fb89d4341c0a214c1.ctex"
+uid="uid://xphrryn4xd4h"
+path="res://.godot/imported/relicario_restaurado.png-c5279df5936ad2d10355586a1b487900.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/objetos/barricada.png"
-dest_files=["res://.godot/imported/barricada.png-8c945733a0c3bf9fb89d4341c0a214c1.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/relicario_restaurado.png"
+dest_files=["res://.godot/imported/relicario_restaurado.png-c5279df5936ad2d10355586a1b487900.ctex"]
 
 [params]
 

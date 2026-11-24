@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cqnr0qu8rn5p"
-path="res://.godot/imported/portal_memoria_apagado.png-7efb2f22fa9f66c0de4d0fe181b1c496.ctex"
+uid="uid://b1qxdvgpmk02u"
+path="res://.godot/imported/the_silence_fase_2.png-0d02a31bfc7b4421ff812d835b3f41b7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/objetos/portal_memoria_apagado.png"
-dest_files=["res://.godot/imported/portal_memoria_apagado.png-7efb2f22fa9f66c0de4d0fe181b1c496.ctex"]
+source_file="res://Assets/UltimoEco/Boss/the_silence_fase_2.png"
+dest_files=["res://.godot/imported/the_silence_fase_2.png-0d02a31bfc7b4421ff812d835b3f41b7.ctex"]
 
 [params]
 

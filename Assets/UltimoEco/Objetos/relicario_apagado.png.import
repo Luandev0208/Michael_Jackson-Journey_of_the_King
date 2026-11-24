@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b5hx77stvfgjy"
-path="res://.godot/imported/altar.png-7a1f2bd6d7020a249a1ef163a06b662e.ctex"
+uid="uid://b8lalpeehsemn"
+path="res://.godot/imported/relicario_apagado.png-eb90072d1154cc0c426f25f54436c8fe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/objetos/altar.png"
-dest_files=["res://.godot/imported/altar.png-7a1f2bd6d7020a249a1ef163a06b662e.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/relicario_apagado.png"
+dest_files=["res://.godot/imported/relicario_apagado.png-eb90072d1154cc0c426f25f54436c8fe.ctex"]
 
 [params]
 

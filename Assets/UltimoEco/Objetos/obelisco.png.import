@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://g1g8xuq6mi7n"
-path="res://.godot/imported/the_silence_efeitos.png-90a2c272a51f57c7870e46d9debcc625.ctex"
+uid="uid://b4bgx7ivdm7e4"
+path="res://.godot/imported/obelisco.png-bccca6487c63d8810f670eeec7c09239.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/efeitos/the_silence_efeitos.png"
-dest_files=["res://.godot/imported/the_silence_efeitos.png-90a2c272a51f57c7870e46d9debcc625.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/obelisco.png"
+dest_files=["res://.godot/imported/obelisco.png-bccca6487c63d8810f670eeec7c09239.ctex"]
 
 [params]
 

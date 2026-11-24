@@ -9,11 +9,11 @@ enum Ataque { ONDA, FENDA, INVESTIDA }
 
 const VIDA_MAXIMA := 15
 const FIGURINOS: Array[SpriteFrames] = [
-	preload("res://the_silence/boss/the_silence_fase_1.tres"),
-	preload("res://the_silence/boss/the_silence_fase_2.tres"),
-	preload("res://the_silence/boss/the_silence_fase_3.tres"),
+	preload("res://Assets/UltimoEco/Boss/the_silence_fase_1.tres"),
+	preload("res://Assets/UltimoEco/Boss/the_silence_fase_2.tres"),
+	preload("res://Assets/UltimoEco/Boss/the_silence_fase_3.tres"),
 ]
-const EFEITOS := preload("res://the_silence/efeitos/the_silence_efeitos.tres")
+const EFEITOS := preload("res://Assets/UltimoEco/Efeitos/the_silence_efeitos.tres")
 const RAIO_ONDA := 90.0
 const RAIO_FENDA := 46.0
 const ALCANCE_INVESTIDA := 176.0

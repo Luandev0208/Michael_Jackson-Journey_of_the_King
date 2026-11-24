@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dk02jhapr0ue5"
-path="res://.godot/imported/lapide.png-e7db6628c995d6a1d7d1a1c756028c54.ctex"
+uid="uid://g1g8xuq6mi7n"
+path="res://.godot/imported/the_silence_efeitos.png-8e4b70ed7f90d24fa938be0c2fd25ec7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/objetos/lapide.png"
-dest_files=["res://.godot/imported/lapide.png-e7db6628c995d6a1d7d1a1c756028c54.ctex"]
+source_file="res://Assets/UltimoEco/Efeitos/the_silence_efeitos.png"
+dest_files=["res://.godot/imported/the_silence_efeitos.png-8e4b70ed7f90d24fa938be0c2fd25ec7.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://pqdh1sd4flpe"
-path="res://.godot/imported/the_silence_tileset.png-905269dc9b5921ecbf454522a3ae61ed.ctex"
+uid="uid://b6uoj2xa3uhcc"
+path="res://.godot/imported/barricada.png-edd38d89205a682e8c38dee7cae74146.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/the_silence_tileset.png"
-dest_files=["res://.godot/imported/the_silence_tileset.png-905269dc9b5921ecbf454522a3ae61ed.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/barricada.png"
+dest_files=["res://.godot/imported/barricada.png-edd38d89205a682e8c38dee7cae74146.ctex"]
 
 [params]
 

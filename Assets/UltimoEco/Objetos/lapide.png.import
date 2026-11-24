@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://doo74at6q5s38"
-path="res://.godot/imported/the_silence_fase_3.png-daae6c1042b5a6c0a94e59678f8256d2.ctex"
+uid="uid://dk02jhapr0ue5"
+path="res://.godot/imported/lapide.png-36970d470353ad631fc277f2d5f71749.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://the_silence/boss/the_silence_fase_3.png"
-dest_files=["res://.godot/imported/the_silence_fase_3.png-daae6c1042b5a6c0a94e59678f8256d2.ctex"]
+source_file="res://Assets/UltimoEco/Objetos/lapide.png"
+dest_files=["res://.godot/imported/lapide.png-36970d470353ad631fc277f2d5f71749.ctex"]
 
 [params]
 
