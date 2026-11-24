@@ -1,6 +1,7 @@
 extends Control
 
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 
 @onready var menu: PanelContainer = $PainelCentral
 @onready var ajuda: PanelContainer = $Ajuda
@@ -8,6 +9,7 @@ const PROGRESSAO := preload("res://Scripts/progressao.gd")
 @onready var botao_voltar: Button = $Ajuda/Conteudo/BotaoVoltar
 
 func _ready() -> void:
+	TENTATIVAS.reiniciar()
 	botao_voltar.pressed.connect(_voltar_da_ajuda)
 
 func _on_button_pressed() -> void:

@@ -24,7 +24,7 @@ var _aviso := Line2D.new()
 func _ready() -> void:
 	super._ready()
 	vida = VIDA_MAXIMA
-	_resposta_empurrao = 0.0
+	resistencia_empurrao = 0.0
 	_sprite.sprite_frames = ARTE
 	_aviso.z_index = 1
 	_aviso.width = 5.0

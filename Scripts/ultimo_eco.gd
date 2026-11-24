@@ -1,5 +1,7 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const NOTAS := preload("res://Scripts/nota_musical.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
@@ -21,6 +23,7 @@ const APOIOS := {
 	"relicario": Vector2(24, 16),
 }
 const TITULOS := ["Apagamento", "Fratura", "Último eco"]
+const CORES_FASE := [Color(0.90, 0.77, 0.50), Color(0.40, 0.76, 1.0), Color(0.79, 0.56, 1.0)]
 
 var caminhos := AStarGrid2D.new()
 var concluida := false
@@ -30,6 +33,7 @@ var _notas_coletadas := 0
 var _pisos: Array[Node2D] = []
 var _objetos: Array[Node2D] = []
 var _portal := Vector2.ZERO
+var _preenchimento := StyleBoxFlat.new()
 
 @onready var atores: Node2D = $Atores
 @onready var jogador: MichaelJogador = $Atores/Michael_Player
@@ -45,6 +49,7 @@ var _portal := Vector2.ZERO
 
 
 func _ready() -> void:
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	_atualizar_notas()
 	for cena in ARENAS:
@@ -70,8 +75,11 @@ func _ready() -> void:
 	chefe.estado_alterado.connect(_estado_alterado)
 	chefe.vida_alterada.connect(func(vida: int) -> void: barra.value = vida)
 	chefe.derrotado.connect(_restaurar_arena, CONNECT_ONE_SHOT)
+	barra.add_theme_stylebox_override("fill", _preenchimento)
 	_fase_alterada(1)
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao(piso)
 	chefe.caminhos = caminhos
 	_pronta = true
@@ -157,18 +165,28 @@ func _physics_process(_delta: float) -> void:
 
 func _fase_alterada(etapa: int) -> void:
 	_mostrar_arena(etapa - 1)
-	titulo.text = "The Silence  ·  " + TITULOS[etapa - 1]
+	titulo.text = "The Silence  ·  %d/3 — %s" % [etapa, TITULOS[etapa - 1]]
+	titulo.modulate = CORES_FASE[etapa - 1]
+	_preenchimento.bg_color = CORES_FASE[etapa - 1]
 	if etapa > 1:
 		jogador.recuperar_uma_vida()
 		chefe._mostrar_efeito(&"fragmentos_memoria", chefe.global_position, 65.0)
 
 
 func _estado_alterado(estado: TheSilence.Estado) -> void:
+	instrucao.modulate = Color.WHITE
 	match estado:
 		TheSilence.Estado.AVISO:
-			instrucao.text = ["Saia do círculo", "Desvie da fenda", "Saia da área marcada"][chefe.fase - 1]
+			match chefe._ataque:
+				TheSilence.Ataque.ONDA:
+					instrucao.text = "Onda · saia do círculo"
+				TheSilence.Ataque.FENDA:
+					instrucao.text = "Fenda · saia da marca"
+				TheSilence.Ataque.INVESTIDA:
+					instrucao.text = "Investida · desvie para o lado"
 		TheSilence.Estado.VULNERAVEL:
 			instrucao.text = "Vulnerável · ataque agora"
+			instrucao.modulate = Color(0.64, 1.0, 0.85)
 		TheSilence.Estado.TRANSICAO:
 			instrucao.text = "Memória recuperada"
 		_:
@@ -190,6 +208,8 @@ func _atualizar_notas() -> void:
 
 func _restaurar_arena() -> void:
 	restaurada = true
+	FEEDBACK.faixa(self, "O SILÊNCIO FOI DERROTADO", "A arena foi restaurada · A música voltou", Color(1.0, 0.9, 0.55), 0.16, 3.6)
+	jogador._tremer_camera(1.4)
 	_mostrar_arena(3)
 	painel_chefe.hide()
 	chefe._mostrar_efeito(&"onda_restauracao", chefe.global_position, 128.0)
@@ -209,7 +229,8 @@ func concluir() -> void:
 	if concluida or not restaurada or jogador.vida <= 0:
 		return
 	concluida = true
-	atores.process_mode = Node.PROCESS_MODE_DISABLED
+	FEEDBACK.encerrar(self)
+	jogador.process_mode = Node.PROCESS_MODE_DISABLED
 	aviso.hide()
 	final.get_node("Conteudo/Pontos").text = "Notas  %d/%d    Pontos  %d" % [_notas_coletadas, CELULAS_NOTAS.size(), _notas_coletadas * 100]
 	final.show()

@@ -1485,6 +1485,14 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "Vigilância · área segura"
 
+[node name="MedidorVigilancia" type="ProgressBar" parent="Interface/Missao/Conteudo"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+mouse_filter = 2
+max_value = 1.0
+step = 0.01
+show_percentage = false
+
 [node name="Interacao" type="PanelContainer" parent="Interface"]
 visible = false
 anchor_left = 0.5

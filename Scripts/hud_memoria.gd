@@ -1,11 +1,13 @@
 extends PanelContainer
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CORACAO := preload("res://Assets/Thriller/coracao.png")
 
 @export var titulo := ""
 
 var _efeito_pontuacao: Tween
 
+@onready var tentativas: Label = $Conteudo/Cabecalho/Tentativas
 @onready var contador: Label = $Conteudo/Notas
 @onready var vidas: Label = $Conteudo/Vidas
 @onready var coracoes: HBoxContainer = $Conteudo/Vidas/Coracoes
@@ -14,7 +16,7 @@ var _efeito_pontuacao: Tween
 
 
 func _ready() -> void:
-	$Conteudo/Titulo.text = titulo
+	$Conteudo/Cabecalho/Titulo.text = titulo
 
 
 func iniciar(jogador: MichaelJogador) -> void:
@@ -24,8 +26,16 @@ func iniciar(jogador: MichaelJogador) -> void:
 		icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		coracoes.add_child(icone)
+	tentativas.visible = TENTATIVAS.ativa_em(get_parent().get_parent())
+	if tentativas.visible:
+		jogador.tentativas_alteradas.connect(_atualizar_tentativas)
+		_atualizar_tentativas(TENTATIVAS.restantes)
 	jogador.vida_alterada.connect(_atualizar_vidas)
 	_atualizar_vidas(jogador.vida)
+
+
+func _atualizar_tentativas(restantes: int) -> void:
+	tentativas.text = "Tentativas %d/%d" % [restantes, TENTATIVAS.MAXIMO]
 
 
 func atualizar_pontos(coletadas: int, total: int, pontos: int) -> void:

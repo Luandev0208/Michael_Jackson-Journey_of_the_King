@@ -69,20 +69,25 @@ func _avisos_visiveis() -> Array[Dictionary]:
 		var distancia: float = item.distancia
 		if distancia > RAIO_AVISO and not (ultimas and avisos.is_empty()):
 			continue
+		var posicao := _posicao_na_borda(item.ponto)
+		if not avisos.is_empty() and posicao.distance_to(avisos[0].posicao) < 24.0:
+			continue
 		var forca := 1.0 if distancia <= RAIO_FORTE else clampf(1.0 - (distancia - RAIO_FORTE) / (RAIO_AVISO - RAIO_FORTE), 0.0, 1.0)
-		avisos.append({"ponto": item.ponto, "opacidade": lerpf(0.40, 1.0, forca)})
+		avisos.append({"ponto": item.ponto, "posicao": posicao, "opacidade": lerpf(0.40, 1.0, forca)})
 	return avisos
 
 
-func _desenhar_seta(alvo: Vector2, opacidade: float) -> void:
+func _posicao_na_borda(alvo: Vector2) -> Vector2:
 	var centro := ZONA.get_center()
 	var direcao := alvo - centro
-	if direcao.is_zero_approx():
-		return
 	var escala := minf(ZONA.size.x * 0.5 / maxf(absf(direcao.x), 0.001), ZONA.size.y * 0.5 / maxf(absf(direcao.y), 0.001))
-	var u := direcao.normalized()
+	return centro + direcao * escala
+
+
+func _desenhar_seta(alvo: Vector2, opacidade: float) -> void:
+	var u := ZONA.get_center().direction_to(alvo)
 	var v := Vector2(-u.y, u.x)
-	var posicao := centro + direcao * escala + u * (1.5 * sin(_tempo * 5.0))
+	var posicao := _posicao_na_borda(alvo) + u * (1.5 * sin(_tempo * 5.0))
 	var pulso := 0.8 + 0.2 * sin(_tempo * 4.0)
 	var contorno := PackedVector2Array([
 		posicao + u * 11.0, posicao - u * 6.0 + v * 8.5,

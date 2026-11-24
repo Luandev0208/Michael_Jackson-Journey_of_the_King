@@ -1,8 +1,11 @@
 class_name MichaelJogador
 extends CharacterBody2D
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
+
 signal esquiva_perfeita
 signal vida_alterada(restantes: int)
+signal tentativas_alteradas(restantes: int)
 
 const VIDA_MAXIMA := 4
 const CENA_CHAPEU := preload("res://Scenes/chapeu.tscn")
@@ -47,6 +50,7 @@ const VELOCIDADE_BASE_ANIMACAO := 80.0
 @export var recarga_dash := 1.2
 
 var vida := VIDA_MAXIMA
+var _derrota_tratada := false
 var posicao_inicial := Vector2.ZERO
 var invencivel_dev := false
 var frente := Vector2.DOWN
@@ -434,8 +438,22 @@ func _ao_terminar_animacao() -> void:
 
 func _reiniciar_derrota() -> void:
 	var cena := get_tree().current_scene
-	if vida == 0 and cena != null and cena.is_ancestor_of(self):
+	if vida != 0 or cena == null or not cena.is_ancestor_of(self) or _derrota_tratada:
+		return
+	_derrota_tratada = true
+	if TENTATIVAS.ativa_em(cena):
+		_mostrar_derrota.call_deferred(cena)
+	else:
 		get_tree().call_deferred("reload_current_scene")
+
+func _mostrar_derrota(cena: Node) -> void:
+	if not is_instance_valid(cena) or get_tree().current_scene != cena:
+		return
+	if cena.has_node("TelaDerrota"):
+		return
+	var sobraram := TENTATIVAS.consumir()
+	tentativas_alteradas.emit(sobraram)
+	TENTATIVAS.mostrar_derrota(cena, sobraram)
 
 func recuperar_uma_vida() -> bool:
 	if vida <= 0 or vida >= VIDA_MAXIMA:

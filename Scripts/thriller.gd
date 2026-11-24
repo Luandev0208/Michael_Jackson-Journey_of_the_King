@@ -1,5 +1,7 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const NOTAS: Array[Vector2i] = [
 	Vector2i(24, 54), Vector2i(18, 58), Vector2i(36, 54),
 	Vector2i(27, 51), Vector2i(9, 46), Vector2i(41, 46), Vector2i(24, 40),
@@ -47,6 +49,7 @@ var concluida := false
 @onready var resultado: Label = $Interface/Conclusao/Conteudo/Resultado
 
 func _ready() -> void:
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_pontos()
@@ -65,6 +68,8 @@ func _ready() -> void:
 	piso.update_internals()
 	muros.update_internals()
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao(mapa)
 	batalhas.iniciar(self, aviso_batalha)
 	encontros.iniciar(self, camera)
@@ -139,9 +144,10 @@ func concluir() -> void:
 	if concluida or jogador.vida <= 0 or not batalhas.espelho_liberado():
 		return
 	concluida = true
+	FEEDBACK.encerrar(self)
 	atores.process_mode = Node.PROCESS_MODE_DISABLED
 	aviso.hide()
-	resultado.text = "Você atravessou o cemitério.\nNotas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
+	resultado.text = "Memória restaurada. O cemitério voltou à vida.\nNotas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
 	var botao: Button = conclusao.get_node("Conteudo/Voltar")
 	if ResourceLoader.exists(PROGRESSAO.SMOOTH_CRIMINAL, "PackedScene"):
 		botao.text = "Continuar"

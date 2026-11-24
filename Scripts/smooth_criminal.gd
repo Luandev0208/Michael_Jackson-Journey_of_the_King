@@ -1,5 +1,7 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CAPANGA := preload("res://Scenes/capanga.tscn")
 const CHEFE := preload("res://Scenes/chefe_smooth.tscn")
 const CURA := preload("res://Scenes/cura_thriller.tscn")
@@ -42,6 +44,7 @@ var _marcador := Line2D.new()
 @onready var nome_chefe: Label = $Interface/Chefe/Conteudo/Nome
 @onready var vida_chefe: ProgressBar = $Interface/Chefe/Conteudo/Vida
 @onready var vigia: Label = $Interface/Missao/Conteudo/Vigilancia
+@onready var medidor_vigilancia: ProgressBar = $Interface/Missao/Conteudo/MedidorVigilancia
 @onready var missao: Label = $Interface/Missao/Conteudo/Objetivo
 @onready var interacao: PanelContainer = $Interface/Interacao
 @onready var texto_interacao: Label = $Interface/Interacao/Conteudo/Texto
@@ -51,6 +54,7 @@ var _marcador := Line2D.new()
 
 func _ready() -> void:
 	set_physics_process(false)
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	_atualizar_notas()
 	_marcador.points = PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-4, 0), Vector2(0, -5)])
@@ -65,6 +69,8 @@ func _ready() -> void:
 
 	# Aguarda os corpos estáticos entrarem no espaço antes de consultar colisões.
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao()
 	for celula in NOTAS:
 		var nota := NOTA_MUSICAL.criar(celula, piso.map_to_local(celula))
@@ -152,14 +158,16 @@ func _atualizar_vigilancia(delta: float) -> void:
 	_progresso_luz = novo
 	_alarme = maxf(0.0, _alarme - delta)
 	if novo >= 1.0 or _alarme > 0.0:
-		vigia.text = "Vigilância · detectado"
+		vigia.text = "Alarme · quebre a linha de visão"
 		vigia.modulate = Color(1.0, 0.55, 0.5)
 	elif novo > 0.0:
-		vigia.text = "Vigilância · observado"
+		vigia.text = "Luz sobre Michael · procure cobertura"
 		vigia.modulate = Color(1.0, 0.84, 0.55)
 	else:
 		vigia.text = "Vigilância · área segura"
 		vigia.modulate = Color(0.76, 0.88, 0.95)
+	medidor_vigilancia.value = 1.0 if _alarme > 0.0 else novo
+	medidor_vigilancia.modulate = vigia.modulate
 
 
 func _atualizar_interacao() -> void:
@@ -189,7 +197,7 @@ func _atualizar_interacao() -> void:
 			objetivo = Objetivo.ACESSO_VIP
 			$Holofotes/Salao.ligar(true)
 			$Holofotes/VIP.ligar(true)
-			missao.text = "Energia ligada. Abra o acesso VIP"
+			missao.text = "Energia ligada · abra a catraca VIP"
 			_marcador.global_position = POSICAO_VIP + Vector2(35, -12)
 		Objetivo.ACESSO_VIP:
 			_atualizar_portao(portao_vip, true)
@@ -198,7 +206,7 @@ func _atualizar_interacao() -> void:
 				_abrir_palco()
 			else:
 				objetivo = Objetivo.SEGURANCA
-				missao.text = "Derrote a segurança do VIP"
+				missao.text = "Derrote a segurança para abrir o palco"
 		Objetivo.ESPELHO:
 			concluir()
 
@@ -212,7 +220,7 @@ func _derrotar_seguranca() -> void:
 func _abrir_palco() -> void:
 	objetivo = Objetivo.PALCO
 	_atualizar_portao(portao_palco, true)
-	missao.text = "Palco liberado pela escadaria"
+	missao.text = "Palco liberado · suba pela escadaria"
 	_marcador.global_position = portao_palco.global_position
 	_marcador.show()
 
@@ -252,12 +260,13 @@ func _atualizar_etapa_chefe(etapa: int) -> void:
 
 
 func _derrotar_chefe() -> void:
+	FEEDBACK.faixa(self, "CHEFE DERROTADO", "O caminho até o espelho está livre", Color(1.0, 0.86, 0.5), 0.30)
 	objetivo = Objetivo.ESPELHO
 	_atualizar_portao(portao_palco, true)
 	$Holofotes/PalcoOeste.ligar(false)
 	$Holofotes/PalcoLeste.ligar(false)
 	painel_chefe.hide()
-	missao.text = "Líder derrotado. Alcance o espelho"
+	missao.text = "Líder derrotado · siga até o espelho"
 	_marcador.global_position = FRENTE_ESPELHO + Vector2(0, -20)
 	_marcador.show()
 
@@ -280,10 +289,11 @@ func concluir() -> void:
 	if concluida or jogador.vida <= 0 or objetivo != Objetivo.ESPELHO:
 		return
 	concluida = true
+	FEEDBACK.encerrar(self)
 	atores.process_mode = Node.PROCESS_MODE_DISABLED
 	interacao.hide()
 	conclusao.show()
-	$Interface/Conclusao/Conteudo/Resultado.text = "Smooth Criminal\nNotas %d/%d    Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
+	$Interface/Conclusao/Conteudo/Resultado.text = "Smooth Criminal · Memória restaurada\nNotas %d/%d    Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
 	$Interface/Conclusao/Conteudo/Voltar.grab_focus()
 
 

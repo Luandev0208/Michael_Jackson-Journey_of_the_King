@@ -1,5 +1,6 @@
 extends Node
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const Zumbi := preload("res://Scripts/zumbi.gd")
 const CENA_ZUMBI := preload("res://Scenes/zumbi.tscn")
 const CENA_GUARDIAO := preload("res://Scenes/guardiao.tscn")
@@ -85,7 +86,9 @@ func _physics_process(delta: float) -> void:
 			_painel.hide()
 		return
 	_painel.show()
-	_aviso.text = "%s · Onda %d/%d\nDerrote os zumbis desta passagem" % [NOMES[etapa], onda + 1, ONDAS[etapa].size()]
+	var ultimo: bool = etapa == LINHAS.size() - 1 and onda == ONDAS[etapa].size() - 1
+	var objetivo := "Derrote o Guardião e os reforços" if ultimo else "Derrote os zumbis desta passagem"
+	_aviso.text = "%s · Onda %d/%d\n%s" % [NOMES[etapa], onda + 1, ONDAS[etapa].size(), objetivo]
 	_espera = maxf(0.0, _espera - delta)
 	if _espera <= 0.0 and not _pendentes.is_empty() and distancia >= 0.0 and distancia <= DISTANCIA_GATILHO + 32.0:
 		var local := _local_de_aparicao()
@@ -97,7 +100,7 @@ func _physics_process(delta: float) -> void:
 	if _pendentes.is_empty() and _vivos.is_empty():
 		if onda + 1 < ONDAS[etapa].size():
 			onda += 1
-			_iniciar_onda(0.75)
+			_iniciar_onda(1.15 if etapa == LINHAS.size() - 1 else 0.75)
 		else:
 			_liberar()
 	elif distancia >= 0.0 and distancia <= DISTANCIA_GATILHO:
@@ -211,6 +214,7 @@ func _liberar() -> void:
 	ativa = false
 	_mensagem = 2.5
 	_aviso.text = "Espelho liberado" if espelho_liberado() else "Combate concluído · Passagem liberada"
+	FEEDBACK.faixa(_fase, "ESPELHO LIBERADO" if espelho_liberado() else "PASSAGEM LIBERADA", "Guardião derrotado" if espelho_liberado() else "", Color(0.82, 0.62, 1.0), 0.18 if espelho_liberado() else 0.0, 1.8)
 	_painel.show()
 	if not espelho_liberado():
 		_fase.jogador.recuperar_uma_vida()
