@@ -7,6 +7,7 @@ const CORACAO := preload("res://Assets/Thriller/coracao.png")
 
 var _efeito_pontuacao: Tween
 
+@onready var tentativas: Label = $Conteudo/Cabecalho/Tentativas
 @onready var contador: Label = $Conteudo/Notas
 @onready var vidas: Label = $Conteudo/Vidas
 @onready var coracoes: HBoxContainer = $Conteudo/Vidas/Coracoes
@@ -15,7 +16,7 @@ var _efeito_pontuacao: Tween
 
 
 func _ready() -> void:
-	$Conteudo/Titulo.text = titulo
+	$Conteudo/Cabecalho/Titulo.text = titulo
 
 
 func iniciar(jogador: MichaelJogador) -> void:
@@ -25,18 +26,16 @@ func iniciar(jogador: MichaelJogador) -> void:
 		icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		coracoes.add_child(icone)
-	if not TENTATIVAS.fase.is_empty():
-		# Tentativas ficam na linha do título, à direita: não tocam corações, notas nem recargas.
-		var tentativas := Label.new()
-		tentativas.text = "Tentativas  %d" % TENTATIVAS.restantes
-		tentativas.add_theme_font_size_override("font_size", 11)
-		tentativas.add_theme_color_override("font_color", Color(0.86, 0.72, 1.0))
-		tentativas.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		tentativas.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
-		tentativas.grow_horizontal = Control.GROW_DIRECTION_BEGIN
-		$Conteudo/Titulo.add_child(tentativas)
+	tentativas.visible = TENTATIVAS.ativa_em(get_parent().get_parent())
+	if tentativas.visible:
+		jogador.tentativas_alteradas.connect(_atualizar_tentativas)
+		_atualizar_tentativas(TENTATIVAS.restantes)
 	jogador.vida_alterada.connect(_atualizar_vidas)
 	_atualizar_vidas(jogador.vida)
+
+
+func _atualizar_tentativas(restantes: int) -> void:
+	tentativas.text = "Tentativas %d/%d" % [restantes, TENTATIVAS.MAXIMO]
 
 
 func atualizar_pontos(coletadas: int, total: int, pontos: int) -> void:

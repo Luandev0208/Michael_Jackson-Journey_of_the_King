@@ -75,6 +75,8 @@ func _ready() -> void:
 	chefe.derrotado.connect(_restaurar_arena, CONNECT_ONE_SHOT)
 	_fase_alterada(1)
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao(piso)
 	chefe.caminhos = caminhos
 	_pronta = true
@@ -193,8 +195,8 @@ func _atualizar_notas() -> void:
 
 func _restaurar_arena() -> void:
 	restaurada = true
-	FEEDBACK.faixa(self, "O SILÊNCIO FOI DERROTADO", "A arena foi restaurada · A música voltou", Color(1.0, 0.9, 0.55), 0.85, 3.6)
-	jogador._tremer_camera(3.0)
+	FEEDBACK.faixa(self, "O SILÊNCIO FOI DERROTADO", "A arena foi restaurada · A música voltou", Color(1.0, 0.9, 0.55), 0.16, 3.6)
+	jogador._tremer_camera(1.4)
 	_mostrar_arena(3)
 	painel_chefe.hide()
 	chefe._mostrar_efeito(&"onda_restauracao", chefe.global_position, 128.0)
@@ -214,7 +216,8 @@ func concluir() -> void:
 	if concluida or not restaurada or jogador.vida <= 0:
 		return
 	concluida = true
-	atores.process_mode = Node.PROCESS_MODE_DISABLED
+	FEEDBACK.encerrar(self)
+	jogador.process_mode = Node.PROCESS_MODE_DISABLED
 	aviso.hide()
 	final.get_node("Conteudo/Pontos").text = "Notas  %d/%d    Pontos  %d" % [_notas_coletadas, CELULAS_NOTAS.size(), _notas_coletadas * 100]
 	final.show()

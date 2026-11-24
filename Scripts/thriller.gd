@@ -68,6 +68,8 @@ func _ready() -> void:
 	piso.update_internals()
 	muros.update_internals()
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao(mapa)
 	batalhas.iniciar(self, aviso_batalha)
 	encontros.iniciar(self, camera)
@@ -142,10 +144,10 @@ func concluir() -> void:
 	if concluida or jogador.vida <= 0 or not batalhas.espelho_liberado():
 		return
 	concluida = true
-	FEEDBACK.faixa(self, "MEMÓRIA RESTAURADA", "O cemitério voltou à vida", Color(1.0, 0.86, 0.5), 0.35, 1.6)
+	FEEDBACK.encerrar(self)
 	atores.process_mode = Node.PROCESS_MODE_DISABLED
 	aviso.hide()
-	resultado.text = "Você atravessou o cemitério.\nNotas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
+	resultado.text = "Memória restaurada. O cemitério voltou à vida.\nNotas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
 	var botao: Button = conclusao.get_node("Conteudo/Voltar")
 	if ResourceLoader.exists(PROGRESSAO.SMOOTH_CRIMINAL, "PackedScene"):
 		botao.text = "Continuar"

@@ -68,6 +68,8 @@ func _ready() -> void:
 
 	# Aguarda os corpos estáticos entrarem no espaço antes de consultar colisões.
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao()
 	for celula in NOTAS:
 		var nota := NOTA_MUSICAL.criar(celula, piso.map_to_local(celula))
@@ -284,10 +286,11 @@ func concluir() -> void:
 	if concluida or jogador.vida <= 0 or objetivo != Objetivo.ESPELHO:
 		return
 	concluida = true
+	FEEDBACK.encerrar(self)
 	atores.process_mode = Node.PROCESS_MODE_DISABLED
 	interacao.hide()
 	conclusao.show()
-	$Interface/Conclusao/Conteudo/Resultado.text = "Smooth Criminal\nNotas %d/%d    Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
+	$Interface/Conclusao/Conteudo/Resultado.text = "Smooth Criminal · Memória restaurada\nNotas %d/%d    Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
 	$Interface/Conclusao/Conteudo/Voltar.grab_focus()
 
 

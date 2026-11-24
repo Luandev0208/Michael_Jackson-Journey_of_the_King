@@ -108,6 +108,8 @@ func _ready() -> void:
 	espelho.modulate = Color(0.59, 0.53, 0.68)
 	_atualizar_objetivo()
 	await get_tree().physics_frame
+	if not is_inside_tree():
+		return
 	_montar_navegacao(mapa)
 	for regiao in REGIOES:
 		var barreira := Barreira.new()

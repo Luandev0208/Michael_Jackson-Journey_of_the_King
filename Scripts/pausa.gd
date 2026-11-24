@@ -39,8 +39,8 @@ func _unhandled_input(evento: InputEvent) -> void:
 	var menu_dev := get_node_or_null("/root/MenuDev/PainelDev") as Control
 	if menu_dev != null and menu_dev.visible:
 		return
-	var jogador: Node = get_parent()
-	if not jogador.can_process() and not _painel.visible:
+	var jogador := get_parent() as MichaelJogador
+	if jogador.vida <= 0 or (not jogador.can_process() and not _painel.visible):
 		return
 	if _painel.visible:
 		_retomar()

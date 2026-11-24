@@ -5,6 +5,7 @@ const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 
 signal esquiva_perfeita
 signal vida_alterada(restantes: int)
+signal tentativas_alteradas(restantes: int)
 
 const VIDA_MAXIMA := 4
 const CENA_CHAPEU := preload("res://Scenes/chapeu.tscn")
@@ -441,14 +442,18 @@ func _reiniciar_derrota() -> void:
 		return
 	_derrota_tratada = true
 	if TENTATIVAS.ativa_em(cena):
-		# Três tentativas por fase: a tela de derrota decide entre tentar de novo e Game Over.
-		call_deferred("_mostrar_derrota", cena, TENTATIVAS.consumir())
+		_mostrar_derrota.call_deferred(cena)
 	else:
 		get_tree().call_deferred("reload_current_scene")
 
-func _mostrar_derrota(cena: Node, sobraram: int) -> void:
-	if is_instance_valid(cena):
-		TENTATIVAS.mostrar_derrota(cena, sobraram)
+func _mostrar_derrota(cena: Node) -> void:
+	if not is_instance_valid(cena) or get_tree().current_scene != cena:
+		return
+	if cena.has_node("TelaDerrota"):
+		return
+	var sobraram := TENTATIVAS.consumir()
+	tentativas_alteradas.emit(sobraram)
+	TENTATIVAS.mostrar_derrota(cena, sobraram)
 
 func recuperar_uma_vida() -> bool:
 	if vida <= 0 or vida >= VIDA_MAXIMA:

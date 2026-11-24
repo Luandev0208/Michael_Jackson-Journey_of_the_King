@@ -9,10 +9,10 @@ const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 @onready var botao_voltar: Button = $Ajuda/Conteudo/BotaoVoltar
 
 func _ready() -> void:
+	TENTATIVAS.reiniciar()
 	botao_voltar.pressed.connect(_voltar_da_ajuda)
 
 func _on_button_pressed() -> void:
-	TENTATIVAS.reiniciar()
 	get_tree().change_scene_to_file(PROGRESSAO.CAMARIM)
 
 func _on_ajuda_pressed() -> void:

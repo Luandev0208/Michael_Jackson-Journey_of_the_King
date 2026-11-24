@@ -40,5 +40,6 @@ static func consumir() -> int:
 
 static func mostrar_derrota(cena: Node, sobraram: int) -> void:
 	var tela := TELA.new()
+	tela.name = "TelaDerrota"
 	tela.restantes = sobraram
 	cena.add_child(tela)

@@ -10,6 +10,9 @@ const ChefeSmooth := preload("res://Scripts/chefe_smooth.gd")
 const UltimoEco := preload("res://Scripts/ultimo_eco.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const Indicador := preload("res://Scripts/indicador_notas.gd")
+const Feedback := preload("res://Scripts/feedback_vitoria.gd")
+const TelaDerrota := preload("res://Scripts/tela_derrota.gd")
+const Pausa := preload("res://Scripts/pausa.gd")
 const Tentativas := preload("res://Scripts/tentativas.gd")
 
 var _falhas := 0
@@ -29,6 +32,7 @@ func _executar() -> void:
 	await _testar_smooth_criminal()
 	await _testar_ultimo_eco()
 	await _testar_reinicio_ultimo_eco()
+	await _testar_telas_de_derrota()
 	print("%d verificações, %d falhas" % [_verificacoes, _falhas])
 	quit(1 if _falhas else 0)
 
@@ -131,8 +135,8 @@ func _testar_controles_e_combate() -> void:
 
 	var zumbi := preload("res://Scenes/zumbi.tscn").instantiate() as Zumbi
 	zumbi.configurar_tipo(Zumbi.Tipo.LENTO)
-	zumbi.ia_ativa = false
 	arena.add_child(zumbi)
+	zumbi.ia_ativa = false
 	var derrotas: Array[int] = []
 	zumbi.derrotado.connect(func() -> void: derrotas.append(1))
 	for golpe in 3:
@@ -156,9 +160,9 @@ func _testar_controles_e_combate() -> void:
 	for tipo in [Zumbi.Tipo.COMUM, Zumbi.Tipo.LENTO, Zumbi.Tipo.RAPIDO]:
 		var alvo := preload("res://Scenes/zumbi.tscn").instantiate() as Zumbi
 		alvo.configurar_tipo(tipo)
-		alvo.ia_ativa = false
 		alvo.position = jogador.colisor.global_position + jogador.direcao_da_mira() * (45.0 + alvos.size() * 32.0)
 		arena.add_child(alvo)
+		alvo.ia_ativa = false
 		alvos.append(alvo)
 	await _quadros(4)
 	await _comando(&"Chapeu")
@@ -306,6 +310,7 @@ func _testar_billie_jean() -> void:
 				inimigo.receber_dano(inimigo.vida)
 		await _quadros(4)
 		_verificar(fase._regiao == indice + 1, "Cota e derrotas liberam região %d" % (indice + 1))
+		_verificar_faixa(fase, "MEMÓRIA RESTAURADA")
 
 	# Os pisos e os inimigos mantêm a progressão mesmo ao recolher as notas depois.
 	await _coletar_notas(jogador, BillieJean.NOTAS.size())
@@ -313,8 +318,10 @@ func _testar_billie_jean() -> void:
 	_testar_menu_dev(jogador)
 	_posicionar_pes(jogador, fase.espelho.global_position + Vector2(0, 32))
 	await _quadros(3)
+	Tentativas.consumir()
 	await _comando(&"Interagir")
 	_verificar(await _esperar(func() -> bool: return current_scene is Thriller, 20), "Espelho leva de Billie Jean a Thriller")
+	_verificar(Tentativas.restantes == 3, "Entrar em Thriller renova tentativas")
 
 
 func _testar_menu_dev(jogador: MichaelJogador) -> void:
@@ -361,6 +368,8 @@ func _testar_thriller() -> void:
 				for inimigo: Inimigo in batalhas._vivos.values():
 					inimigo.receber_dano(inimigo.vida)
 		_verificar(await _esperar(func() -> bool: return batalhas.etapa > etapa, 60), "Barreira %d dissipa com a onda inteira derrotada" % (etapa + 1))
+		await _quadros(2)
+		_verificar_faixa(fase, "ESPELHO LIBERADO" if etapa == 2 else "PASSAGEM LIBERADA")
 	_verificar(batalhas.espelho_liberado(), "Espelho liberado após chefe e reforços")
 	await _coletar_notas(jogador, Thriller.NOTAS.size())
 	_verificar(fase.pontuacao == Thriller.NOTAS.size() * 100, "Thriller pontua todas as notas")
@@ -373,8 +382,11 @@ func _testar_thriller() -> void:
 	await _quadros(3)
 	await _comando(&"Interagir")
 	_verificar(fase.concluida and fase.conclusao.visible, "Interação com espelho conclui Thriller")
+	_verificar(fase.resultado.text.begins_with("Memória restaurada") and not fase.has_node(Feedback.NOME), "Conquista aparece no painel de conclusão sem faixa sobreposta")
+	Tentativas.consumir()
 	fase.conclusao.get_node("Conteudo/Voltar").pressed.emit()
 	await _quadros(4)
+	_verificar(Tentativas.restantes == 3, "A fase seguinte renova tentativas")
 	_verificar(current_scene is Smooth, "Botão de Thriller abre Smooth Criminal")
 
 
@@ -503,11 +515,15 @@ func _testar_smooth_criminal() -> void:
 	_verificar(chefe.etapa == 3 and fase.vida_chefe.value == 4, "Fase 3 e HUD de Smooth Criminal")
 	chefe.receber_dano(4, Vector2.ZERO, &"chute")
 	_verificar(fase.objetivo == Smooth.Objetivo.ESPELHO and not fase.painel_chefe.visible, "Derrota libera espelho em Smooth Criminal")
+	await _quadros(2)
+	_verificar_faixa(fase, "CHEFE DERROTADO")
 	_posicionar_pes(jogador, Smooth.FRENTE_ESPELHO)
 	await _comando(&"Interagir")
 	_verificar(fase.concluida and fase.conclusao.visible, "Espelho conclui Smooth Criminal")
+	Tentativas.consumir()
 	fase.conclusao.get_node("Conteudo/Voltar").pressed.emit()
 	await _quadros(4)
+	_verificar(Tentativas.restantes == 3, "A fase seguinte renova tentativas")
 	_verificar(current_scene is UltimoEco, "Smooth Criminal abre O Último Eco")
 
 
@@ -563,12 +579,22 @@ func _testar_ultimo_eco() -> void:
 	_verificar(jogador.vida == 3, "Investida acerta uma vez em linha reta")
 	chefe.receber_dano(5, Vector2.ZERO, &"chute")
 	_verificar(fase.restaurada and fase._pisos[3].visible and fase._objetos[3].visible and not fase.painel_chefe.visible, "Derrota restaura arena, objetos e portal")
-	await _quadros(150)
-	_verificar(not is_instance_valid(chefe), "The Silence desaparece após dissolução")
+	await _quadros(2)
+	_verificar_faixa(fase, "O SILÊNCIO FOI DERROTADO")
+	var efeitos: Array[int] = []
+	for item in fase.atores.get_children():
+		if item is AnimatedSprite2D and item.animation in [&"onda_restauracao", &"restauracao_particulas"]:
+			efeitos.append(item.get_instance_id())
+	_verificar(efeitos.size() == 2, "Vitória final dispara onda e partículas")
 	_posicionar_pes(jogador, fase.dev_posicao_final())
 	await _quadros(4)
 	await _comando(&"Interagir")
 	_verificar(fase.concluida and fase.final.visible, "Portal restaurado abre desfecho")
+	_verificar(not fase.has_node(Feedback.NOME), "Desfecho remove faixa de vitória")
+	await _quadros(150)
+	_verificar(not is_instance_valid(chefe), "The Silence desaparece após dissolução, inclusive no desfecho")
+	for id in efeitos:
+		_verificar(not is_instance_id_valid(id), "Efeito de restauração termina e sai da árvore")
 	fase.final.get_node("Conteudo/Voltar").pressed.emit()
 	await _quadros(4)
 	_verificar(current_scene.scene_file_path == "res://Scenes/interface.tscn", "Desfecho retorna ao menu")
@@ -595,7 +621,128 @@ func _testar_reinicio_ultimo_eco() -> void:
 	var fase := current_scene as UltimoEco
 	var id_fase := fase.get_instance_id()
 	await _comando(&"Interagir")
-	fase.jogador.vida = 1
-	fase.jogador.receber_dano()
-	_verificar(await _esperar(func() -> bool: return current_scene is UltimoEco and current_scene.get_instance_id() != id_fase, 150), "Derrota do jogador reinicia a fase final")
+	var tela := await _sofrer_derrota(fase.jogador, 2)
+	if tela == null:
+		return
+	_botao_derrota(tela, "Continuar").pressed.emit()
+	_verificar(await _esperar(func() -> bool: return current_scene is UltimoEco and current_scene.get_instance_id() != id_fase, 150), "Botão após derrota reinicia a fase final")
 	_verificar(current_scene is UltimoEco and current_scene.jogador.vida == 4 and current_scene.chefe.estado == TheSilence.Estado.ESPERA, "Reinício restaura o jogador e o chefe volta à espera")
+
+
+func _testar_telas_de_derrota() -> void:
+	print("Telas de derrota")
+	for nome in ["billie_jean", "thriller", "smooth_criminal", "ultimo_eco"]:
+		await _entrar(nome)
+		_verificar(Tentativas.restantes == 3, nome + " começa com 3 tentativas")
+		for restantes in [2, 1, 0]:
+			var fase := current_scene
+			var id_fase := fase.get_instance_id()
+			var jogador := get_first_node_in_group("jogador") as MichaelJogador
+			var tela := await _sofrer_derrota(jogador, restantes)
+			if tela == null:
+				return
+			_verificar(fase.hud.tentativas.text == "Tentativas %d/3" % restantes, "HUD acompanha tentativa consumida")
+			_verificar(tela.get_node("Fundo/Centro/Opcoes/Tentativas").text.contains("%d / 3" % restantes), "Tela exibe o número correto")
+			var titulo: Label = tela.get_node("Fundo/Centro/Opcoes/Titulo")
+			_verificar(titulo.text.begins_with("GAME OVER") == (restantes == 0), "Game Over aparece só na terceira derrota")
+			var continuar := _botao_derrota(tela, "Continuar")
+			_verificar(continuar.text == ("Recomeçar fase" if restantes == 0 else "Tentar novamente"), "Ação corresponde ao estado da tentativa")
+			_verificar(root.gui_get_focus_owner() == continuar, "A ação principal recebe foco durante a pausa")
+			var local := jogador.position
+			_enviar_tecla(KEY_ESCAPE)
+			_enviar_tecla(KEY_F1)
+			Input.action_press(&"Direita")
+			await _quadros(30)
+			Input.action_release(&"Direita")
+			_verificar(paused and jogador.position == local and not root.get_node("MenuDev/PainelDev").visible, "F1, Esc e movimento deixam derrota em pausa")
+			for filho in jogador.get_children():
+				if filho is Pausa:
+					_verificar(not filho._painel.visible, "Menu de pausa permanece oculto na derrota")
+			_verificar(tela.get_node("Fundo").modulate.a > 0.95, "Animação da tela prossegue durante pausa")
+			_enviar_tecla(KEY_ENTER)
+			var recarregou := await _esperar(func() -> bool: return current_scene != null and current_scene.get_instance_id() != id_fase, 90)
+			_verificar(recarregou and not paused, "Enter ativa o botão e o jogo retoma após reload")
+			if not recarregou:
+				return
+			await _quadros(6)
+			var novo_jogador := get_first_node_in_group("jogador") as MichaelJogador
+			_verificar(novo_jogador.vida == 4 and current_scene.get_node_or_null("TelaDerrota") == null, "Reload dá quatro corações e remove a tela")
+			var esperadas: int = restantes if restantes > 0 else 3
+			_verificar(Tentativas.restantes == esperadas and current_scene.hud.tentativas.text == "Tentativas %d/3" % esperadas, "Retry preserva contador e Game Over restaura 3")
+		var jogador := get_first_node_in_group("jogador") as MichaelJogador
+		var tela := await _sofrer_derrota(jogador, 2)
+		if tela == null:
+			return
+		_botao_derrota(tela, "Menu").grab_focus()
+		_enviar_tecla(KEY_ENTER)
+		var chegou := await _esperar(func() -> bool: return current_scene != null and current_scene.scene_file_path == "res://Scenes/interface.tscn", 90)
+		_verificar(chegou and not paused and Tentativas.fase.is_empty(), "Menu principal fecha derrota, libera pausa e zera a fase")
+		if not chegou:
+			return
+	await _testar_derrota_camarim()
+
+
+func _sofrer_derrota(jogador: MichaelJogador, restantes: int) -> TelaDerrota:
+	var fase := current_scene
+	_verificar(jogador.vida == 4, "A tentativa começa com quatro corações")
+	for golpe in range(1, 5):
+		jogador._tempo_protecao = 0.0
+		jogador.receber_dano(true)
+		_verificar(jogador.vida == 4 - golpe, "Golpe retirou um coração")
+	_verificar(jogador.sprite.animation == &"Morte" and jogador.sprite.is_playing() and not paused, "Animação de morte começa antes da pausa")
+	_verificar(fase.get_node_or_null("TelaDerrota") == null, "Tela aguarda conclusão da animação")
+	_enviar_tecla(KEY_ESCAPE)
+	_enviar_tecla(KEY_F1)
+	_verificar(not paused, "Esc e F1 não interrompem a animação de derrota")
+	var apareceu := await _esperar(func() -> bool: return fase.has_node("TelaDerrota"), 150)
+	_verificar(apareceu and paused, "Tela de derrota aparece e pausa a árvore")
+	if not apareceu:
+		return null
+	jogador._reiniciar_derrota()
+	await _quadros(2)
+	_verificar(Tentativas.restantes == restantes, "A tentativa é descontada uma única vez")
+	var telas := 0
+	for filho in fase.get_children():
+		if filho is TelaDerrota:
+			telas += 1
+	_verificar(telas == 1, "A árvore contém somente uma tela de derrota")
+	return fase.get_node("TelaDerrota") as TelaDerrota
+
+
+func _botao_derrota(tela: TelaDerrota, nome: String) -> Button:
+	return tela.get_node("Fundo/Centro/Opcoes/" + nome) as Button
+
+
+func _enviar_tecla(codigo: Key) -> void:
+	var tecla := InputEventKey.new()
+	tecla.keycode = codigo
+	tecla.pressed = true
+	root.push_input(tecla, true)
+	tecla.pressed = false
+	root.push_input(tecla, true)
+
+
+func _testar_derrota_camarim() -> void:
+	Tentativas.registrar_fase("res://Scenes/billie_jean.tscn")
+	Tentativas.consumir()
+	await _entrar("camarim")
+	var id_fase := current_scene.get_instance_id()
+	var jogador := get_first_node_in_group("jogador") as MichaelJogador
+	jogador.vida = 1
+	jogador.receber_dano()
+	var recarregou := await _esperar(func() -> bool: return current_scene != null and current_scene.get_instance_id() != id_fase, 150)
+	_verificar(recarregou and not paused and Tentativas.restantes == 2, "Camarim recarrega sem consumir tentativa ou mostrar derrota")
+	if recarregou:
+		_verificar(current_scene.get_node_or_null("TelaDerrota") == null, "Camarim ignora a tela de derrota")
+
+
+func _verificar_faixa(fase: Node, titulo: String) -> void:
+	var camada := fase.get_node_or_null(Feedback.NOME) as CanvasLayer
+	_verificar(camada != null, "Exibe faixa da conquista " + titulo)
+	if camada == null:
+		return
+	_verificar(camada.get_node("Faixa/Titulo").text == titulo, "Faixa informa conquista correta")
+	var interface := fase.get_node("Interface") as CanvasLayer
+	_verificar(camada.layer <= interface.layer and camada.get_index() < interface.get_index(), "Faixa e clarão ficam abaixo do HUD")
+	var clarao := camada.get_node_or_null("Clarao") as ColorRect
+	_verificar(clarao == null or (clarao.color.a <= Feedback.ALFA_MAXIMO and clarao.mouse_filter == Control.MOUSE_FILTER_IGNORE), "Clarão limitado e sem captura de entrada")
