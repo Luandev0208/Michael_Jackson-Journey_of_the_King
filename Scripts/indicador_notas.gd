@@ -32,21 +32,27 @@ func _process(delta: float) -> void:
 
 
 func _desenhar() -> void:
+	for aviso in _avisos_visiveis():
+		_desenhar_seta(aviso.ponto, aviso.opacidade)
+
+
+func _avisos_visiveis() -> Array[Dictionary]:
+	var avisos: Array[Dictionary] = []
 	var fase := get_parent()
 	var jogador := get_tree().get_first_node_in_group("jogador") as Node2D
 	if jogador == null:
-		return
+		return avisos
 	if fase.has_method("indicador_notas_suprimido") and fase.indicador_notas_suprimido():
-		return
+		return avisos
 	var viva: Array[Node2D] = []
 	for no in get_tree().get_nodes_in_group("notas_musicais"):
 		var nota := no as Node2D
 		if nota != null and not nota.is_queued_for_deletion():
 			viva.append(nota)
 	if viva.is_empty():
-		return
+		return avisos
 
-	var tela := get_viewport().get_visible_rect().grow(-10.0)
+	var tela := get_viewport().get_visible_rect()
 	var transformacao := get_viewport().get_canvas_transform()
 	var fora: Array[Dictionary] = []
 	for nota in viva:
@@ -57,16 +63,15 @@ func _desenhar() -> void:
 	fora.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.distancia < b.distancia)
 
 	var ultimas := viva.size() <= ULTIMAS_NOTAS
-	var mostradas := 0
 	for item in fora:
-		if mostradas >= MAX_SETAS:
+		if avisos.size() >= MAX_SETAS:
 			break
 		var distancia: float = item.distancia
-		if distancia > RAIO_AVISO and not (ultimas and mostradas == 0):
+		if distancia > RAIO_AVISO and not (ultimas and avisos.is_empty()):
 			continue
 		var forca := 1.0 if distancia <= RAIO_FORTE else clampf(1.0 - (distancia - RAIO_FORTE) / (RAIO_AVISO - RAIO_FORTE), 0.0, 1.0)
-		_desenhar_seta(item.ponto, lerpf(0.40, 1.0, forca))
-		mostradas += 1
+		avisos.append({"ponto": item.ponto, "opacidade": lerpf(0.40, 1.0, forca)})
+	return avisos
 
 
 func _desenhar_seta(alvo: Vector2, opacidade: float) -> void:

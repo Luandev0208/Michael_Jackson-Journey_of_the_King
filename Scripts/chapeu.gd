@@ -35,6 +35,7 @@ func iniciar(alvo: Node2D, direcao: Vector2, textura: Texture2D = null) -> void:
 	global_position = alvo.global_position
 	_altura_base = visual.position.y
 	visual.position.y = _altura_base - altura_cabeca
+	visual.scale = Vector2.ONE * escala_visual
 	rastro.add_point(rastro.to_local(visual.global_position))
 	if textura != null:
 		for parte: CanvasItem in visual.get_children():
@@ -42,7 +43,6 @@ func iniciar(alvo: Node2D, direcao: Vector2, textura: Texture2D = null) -> void:
 		var arte := Sprite2D.new()
 		arte.texture = textura
 		arte.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		arte.scale = Vector2(escala_visual, escala_visual)
 		visual.add_child(arte)
 
 func _physics_process(delta: float) -> void:

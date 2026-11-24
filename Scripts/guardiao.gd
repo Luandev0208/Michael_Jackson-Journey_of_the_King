@@ -27,10 +27,11 @@ var _tempo_especial := 3.0
 var _direcao_carga := Vector2.DOWN
 var _acertou := false
 var _esquivado := false
+var _aplicando_ataque_especial := false
 var _usar_onda := false
 var _indicador: Node2D
 var _barra: Control
-var _jogador: Node2D
+var _jogador: MichaelJogador
 
 
 func _ready() -> void:
@@ -42,9 +43,9 @@ func _ready() -> void:
 	super._ready()
 	_criar_barra()
 	if is_instance_valid(alvo):
-		_jogador = alvo.get_parent()
-		if _jogador.has_signal("esquiva_perfeita"):
-			_jogador.esquiva_perfeita.connect(func() -> void: _esquivado = true)
+		_jogador = alvo.get_parent() as MichaelJogador
+		if _jogador != null:
+			_jogador.esquiva_perfeita.connect(_ao_esquivar)
 	vida_alterada.emit(vida, VIDA_MAXIMA)
 
 
@@ -80,7 +81,7 @@ func _physics_process(delta: float) -> void:
 				_acertou = false
 				_limpar_indicador()
 		Acao.CARGA:
-			_carregar(delta)
+			_carregar()
 		Acao.AVISO_ONDA:
 			_parado(delta)
 			_atualizar_aviso_onda()
@@ -99,21 +100,23 @@ func _parado(delta: float) -> void:
 
 
 func _iniciar_especial() -> void:
-	var distancia := global_position.distance_to(_jogador.global_position)
+	var distancia := global_position.distance_to(alvo.global_position)
 	var onda := fase >= 2 and (_usar_onda or distancia < 70.0)
+	if not onda and distancia >= 230.0:
+		_tempo_especial = 0.6
+		return
+	if not _reservar_inicio_ataque():
+		return
 	_usar_onda = not _usar_onda
 	if onda:
 		_acao = Acao.AVISO_ONDA
 		_tempo_acao = 0.95 if fase == 2 else 0.80
 		_criar_indicador_onda()
-	elif distancia < 230.0:
+	else:
 		_acao = Acao.AVISO_CARGA
 		_tempo_acao = 0.85 if fase == 1 else (0.70 if fase == 2 else 0.60)
 		_criar_indicador_carga()
 		_animar("threat", _tempo_acao, true)
-	else:
-		_tempo_especial = 0.6
-		return
 	_preparacao_restante = -1.0
 	_esquivado = false
 
@@ -153,13 +156,13 @@ func _criar_indicador_carga() -> void:
 	faixa.add_point(Vector2.DOWN * VELOCIDADE_CARGA * DURACAO_CARGA)
 	add_child(faixa)
 	_indicador = faixa
-	_direcao_carga = global_position.direction_to(_jogador.global_position)
+	_direcao_carga = global_position.direction_to(alvo.global_position)
 
 
 func _atualizar_aviso_carga() -> void:
 	# Acompanha Michael no começo e trava a direção nos últimos 0.30 s: tempo justo para reagir.
 	if _tempo_acao > 0.30:
-		_direcao_carga = global_position.direction_to(_jogador.global_position)
+		_direcao_carga = global_position.direction_to(alvo.global_position)
 	_olhar_para(_direcao_carga)
 	if is_instance_valid(_indicador):
 		var comprimento := VELOCIDADE_CARGA * DURACAO_CARGA
@@ -168,7 +171,7 @@ func _atualizar_aviso_carga() -> void:
 		(_indicador as Line2D).default_color = Color(1.0, 0.15, 0.15, 0.70 if travado else 0.30)
 
 
-func _carregar(delta: float) -> void:
+func _carregar() -> void:
 	ia_ativa = false
 	_empurrao = Vector2.ZERO
 	velocity = _direcao_carga * VELOCIDADE_CARGA
@@ -177,8 +180,7 @@ func _carregar(delta: float) -> void:
 	visual.modulate = Color(1.0, 0.71, 0.47)
 	var bateu := move_and_slide() and get_slide_collision_count() > 0
 	if not _acertou and contato.overlaps_body(_jogador):
-		_acertou = true
-		_jogador.receber_dano(true)
+		_acertou = _tentar_acertar_jogador()
 	if bateu or _tempo_acao <= 0.0 or _esquivado:
 		velocity = Vector2.ZERO
 		visual.modulate = Color.WHITE
@@ -236,9 +238,29 @@ func _disparar_onda() -> void:
 	expansao.tween_property(anel, "modulate:a", 0.0, 0.25)
 	expansao.chain().tween_callback(anel.queue_free)
 	_chacoalhar()
-	if _jogador.global_position.distance_to(centro) <= RAIO_ONDA + 6.0 or alvo.global_position.distance_to(centro) <= RAIO_ONDA:
-		_jogador.receber_dano(true)
+	if alvo.global_position.distance_to(centro) <= RAIO_ONDA:
+		_tentar_acertar_jogador()
 	_entrar_exausto(_duracao_exausto(1.4))
+
+
+func _tentar_acertar_jogador() -> bool:
+	var raio := PhysicsRayQueryParameters2D.create(global_position, alvo.global_position, 1)
+	if not get_world_2d().direct_space_state.intersect_ray(raio).is_empty():
+		return false
+	_aplicando_ataque_especial = true
+	_jogador.receber_dano(true)
+	_aplicando_ataque_especial = false
+	return true
+
+
+func _ao_esquivar() -> void:
+	if _aplicando_ataque_especial:
+		_esquivado = true
+
+
+func _atualizar_animacao(movimento: Vector2) -> void:
+	if _acao == Acao.NORMAL:
+		super._atualizar_animacao(movimento)
 
 
 func _chacoalhar() -> void:
@@ -287,6 +309,7 @@ func _mudar_fase(nova: int) -> void:
 	fase = nova
 	_limpar_indicador()
 	_acao = Acao.RUGIDO
+	multiplicador_chapeu = 0.67
 	_tempo_acao = 1.0
 	ia_ativa = false
 	velocidade_perseguicao = 52.0 + 8.0 * float(nova - 1)

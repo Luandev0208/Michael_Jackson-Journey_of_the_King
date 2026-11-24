@@ -66,6 +66,7 @@ func _destino_perseguicao(distancia: float) -> Vector2:
 # Aviso visual antes do flash: um brilho que cresce sobre a câmera.
 func _aviso_preparacao() -> void:
 	var aviso := Polygon2D.new()
+	aviso.name = "AvisoFotografico"
 	aviso.polygon = PackedVector2Array([Vector2(0, -6), Vector2(2, -2), Vector2(6, 0), Vector2(2, 2), Vector2(0, 6), Vector2(-2, 2), Vector2(-6, 0), Vector2(-2, -2)])
 	aviso.color = Color(1.0, 0.95, 0.6, 0.0)
 	aviso.z_index = 3

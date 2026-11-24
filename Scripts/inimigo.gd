@@ -15,7 +15,7 @@ signal derrotado
 
 # Evita que vários inimigos comecem o ataque ao mesmo tempo: dá tempo de reagir a cada um.
 const INTERVALO_ENTRE_ATAQUES := 0.40
-static var _ultimo_inicio_ataque := -10.0
+static var _proximo_quadro_de_ataque := 0
 
 var vida := 2
 var ia_ativa := true
@@ -79,14 +79,14 @@ func _atacar_por_contato(delta: float) -> void:
 			continue
 		var iniciando := _preparacao_restante < 0.0
 		if iniciando:
-			var agora := Time.get_ticks_msec() / 1000.0
-			if agora - _ultimo_inicio_ataque < INTERVALO_ENTRE_ATAQUES:
+			if not _reservar_inicio_ataque():
 				return
-			_ultimo_inicio_ataque = agora
 			_preparacao_restante = preparacao_contato
 			_animando_ataque = false
 		_preparacao_restante -= delta
 		_olhar_para(colisor.global_position - global_position)
+		if iniciando and _preparacao_restante > 0.0:
+			_aviso_preparacao()
 		if _preparacao_restante > 0.0:
 			visual.modulate = Color(1.0, 0.71, 0.47)
 			_animar("prepare", _preparacao_restante + delta, iniciando)
@@ -98,6 +98,13 @@ func _atacar_por_contato(delta: float) -> void:
 		jogador.receber_dano(true)
 		return
 	_preparacao_restante = -1.0
+
+func _reservar_inicio_ataque() -> bool:
+	var quadro := Engine.get_physics_frames()
+	if quadro < _proximo_quadro_de_ataque:
+		return false
+	_proximo_quadro_de_ataque = quadro + ceili(INTERVALO_ENTRE_ATAQUES * Engine.physics_ticks_per_second)
+	return true
 
 func _mover(_delta: float) -> void:
 	if (global_position.x - _origem) * _lado >= distancia_patrulha:
@@ -169,6 +176,7 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> voi
 		_dano_fracionado += float(dano) * multiplicador_chapeu
 		dano = int(_dano_fracionado)
 		_dano_fracionado -= float(dano)
+	var golpe_final := empurrao.length() > 190.0
 	empurrao *= resistencia_empurrao
 	vida -= dano
 	var interrompe := not (do_chapeu and armadura_contra_chapeu)
@@ -183,10 +191,11 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> voi
 	else:
 		if interrompe and not do_chapeu:
 			# O chute quebra o ritmo do inimigo; o golpe final dá mais respiro.
-			atordoar(0.55 if empurrao.length() > 190.0 else 0.30)
-		_animando_ataque = false
-		_olhar_para(-empurrao)
-		_animar("hurt", _tempo_impacto, true)
+			atordoar(0.55 if golpe_final else 0.30)
+		if interrompe or (_preparacao_restante < 0.0 and not _animando_ataque):
+			_animando_ataque = false
+			_olhar_para(-empurrao)
+			_animar("hurt", _tempo_impacto, true)
 
 func _derrotar() -> void:
 	velocity = Vector2.ZERO

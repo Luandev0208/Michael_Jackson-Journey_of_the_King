@@ -90,6 +90,8 @@ func _mover(delta: float) -> void:
 
 
 func _preparar_golpe() -> void:
+	if not _reservar_inicio_ataque():
+		return
 	_estado = Estado.AVISO
 	_tempo = 0.53 if etapa < 3 else 0.46
 	_direcao_golpe = global_position.direction_to(alvo.global_position)
