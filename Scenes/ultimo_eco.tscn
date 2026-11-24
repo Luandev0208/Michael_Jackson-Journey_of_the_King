@@ -91,41 +91,4 @@ theme_override_font_sizes/font_size = 13
 text = "The Silence reuniu as três memórias nesta arena.\nE — Enfrentar The Silence"
 horizontal_alignment = 1
 
-[node name="Final" type="PanelContainer" parent="Interface"]
-visible = false
-anchor_left = 0.5
-anchor_right = 0.5
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -75.0
-offset_right = 180.0
-offset_bottom = 75.0
-theme = ExtResource("tema")
-
-[node name="Conteudo" type="VBoxContainer" parent="Interface/Final"]
-layout_mode = 2
-
-[node name="Titulo" type="Label" parent="Interface/Final/Conteudo"]
-layout_mode = 2
-text = "Memórias restauradas"
-horizontal_alignment = 1
-
-[node name="Mensagem" type="Label" parent="Interface/Final/Conteudo"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "O Silêncio se desfaz.\nA música e as memórias de Michael foram preservadas."
-horizontal_alignment = 1
-
-[node name="Pontos" type="Label" parent="Interface/Final/Conteudo"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-horizontal_alignment = 1
-
-[node name="Voltar" type="Button" parent="Interface/Final/Conteudo"]
-layout_mode = 2
-text = "Voltar ao menu"
-
-[connection signal="pressed" from="Interface/Final/Conteudo/Voltar" to="." method="_voltar"]
-
 [editable path="Atores/Michael_Player"]

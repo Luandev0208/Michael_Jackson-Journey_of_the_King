@@ -4,7 +4,7 @@ const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const NOTAS := preload("res://Scripts/nota_musical.gd")
-const PROGRESSAO := preload("res://Scripts/progressao.gd")
+const ENCERRAMENTO := preload("res://Scenes/encerramento.tscn")
 const ARENAS: Array[PackedScene] = [
 	preload("res://Scenes/ArenasUltimoEco/arena_fase_1.tscn"),
 	preload("res://Scenes/ArenasUltimoEco/arena_fase_2.tscn"),
@@ -13,6 +13,7 @@ const ARENAS: Array[PackedScene] = [
 ]
 const CELULAS_NOTAS: Array[Vector2i] = [Vector2i(12, 12), Vector2i(27, 12), Vector2i(19, 26)]
 const TAMANHO_CELULA := 32
+const ALCANCE_PORTAL := 56.0
 const APOIOS := {
 	"obelisco": Vector2(30, 18),
 	"poste": Vector2(22, 14),
@@ -45,7 +46,6 @@ var _preenchimento := StyleBoxFlat.new()
 @onready var instrucao: Label = $Interface/Chefe/Conteudo/Instrucao
 @onready var aviso: PanelContainer = $Interface/Aviso
 @onready var aviso_texto: Label = $Interface/Aviso/Texto
-@onready var final: PanelContainer = $Interface/Final
 
 
 func _ready() -> void:
@@ -153,7 +153,7 @@ func _physics_process(_delta: float) -> void:
 		return
 	hud.atualizar_recargas(jogador)
 	if restaurada:
-		var perto := jogador.colisor.global_position.distance_to(_portal) <= 56.0
+		var perto := _perto_do_portal()
 		aviso.visible = perto
 		if perto and Input.is_action_just_pressed("Interagir"):
 			concluir()
@@ -225,17 +225,19 @@ func dev_posicao_final() -> Vector2:
 	return _portal
 
 
+func _perto_do_portal() -> bool:
+	return jogador.colisor.global_position.distance_to(_portal) <= ALCANCE_PORTAL
+
+
 func concluir() -> void:
-	if concluida or not restaurada or jogador.vida <= 0:
+	if not _pronta or concluida or not restaurada or jogador.vida <= 0 or not _perto_do_portal():
 		return
+	var cena := ENCERRAMENTO.instantiate()
+	cena.notas_coletadas = _notas_coletadas
+	cena.total_notas = CELULAS_NOTAS.size()
 	concluida = true
-	FEEDBACK.encerrar(self)
-	jogador.process_mode = Node.PROCESS_MODE_DISABLED
-	aviso.hide()
-	final.get_node("Conteudo/Pontos").text = "Notas  %d/%d    Pontos  %d" % [_notas_coletadas, CELULAS_NOTAS.size(), _notas_coletadas * 100]
-	final.show()
-	final.get_node("Conteudo/Voltar").grab_focus()
-
-
-func _voltar() -> void:
-	get_tree().change_scene_to_file(PROGRESSAO.MENU)
+	var erro := get_tree().change_scene_to_node(cena)
+	if erro != OK:
+		concluida = false
+		cena.free()
+		push_error("Não foi possível abrir o encerramento: %s" % error_string(erro))

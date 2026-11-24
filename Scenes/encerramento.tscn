@@ -1,0 +1,187 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/encerramento.gd" id="encerramento"]
+[ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="tema"]
+
+[sub_resource type="Shader" id="Vinheta"]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+void fragment() {
+	vec2 p = abs(UV * 2.0 - 1.0);
+	float sombra = smoothstep(0.31, 1.36, length(p)) * 0.39;
+	COLOR = vec4(0.035, 0.021, 0.075, sombra);
+}"
+
+[sub_resource type="ShaderMaterial" id="Bordas"]
+shader = SubResource("Vinheta")
+
+[sub_resource type="StyleBoxFlat" id="Painel"]
+content_margin_left = 24.0
+content_margin_top = 17.0
+content_margin_right = 24.0
+content_margin_bottom = 18.0
+bg_color = Color(0.088, 0.055, 0.113, 1)
+border_width_top = 1
+border_width_bottom = 1
+border_color = Color(0.68, 0.44, 0.25, 1)
+
+[node name="Encerramento" type="Node2D"]
+texture_filter = 1
+script = ExtResource("encerramento")
+
+[node name="Cenarios" type="Node2D" parent="."]
+
+[node name="Ambiente" type="CanvasModulate" parent="."]
+color = Color(0.57, 0.49, 0.69, 1)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="Interface" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="Vinheta" type="ColorRect" parent="Interface"]
+material = SubResource("Bordas")
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Topo" type="ColorRect" parent="Interface"]
+anchor_right = 1.0
+offset_bottom = 30.0
+color = Color(0.037, 0.024, 0.054, 0.96)
+mouse_filter = 2
+
+[node name="Rodape" type="ColorRect" parent="Interface"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -54.0
+color = Color(0.037, 0.024, 0.054, 0.94)
+mouse_filter = 2
+
+[node name="Escuro" type="ColorRect" parent="Interface"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.026, 0.018, 0.039, 1)
+mouse_filter = 2
+
+[node name="Memoria" type="Label" parent="Interface"]
+offset_left = 18.0
+offset_top = 6.0
+offset_right = 250.0
+offset_bottom = 26.0
+theme = ExtResource("tema")
+theme_override_colors/font_color = Color(0.92, 0.76, 0.53, 1)
+theme_override_font_sizes/font_size = 12
+mouse_filter = 2
+
+[node name="Legenda" type="Label" parent="Interface"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 26.0
+offset_top = -53.0
+offset_right = -26.0
+offset_bottom = -4.0
+theme = ExtResource("tema")
+theme_override_colors/font_color = Color(0.97, 0.93, 0.89, 1)
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+mouse_filter = 2
+
+[node name="Titulo" type="VBoxContainer" parent="Interface"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -270.0
+offset_top = 14.0
+offset_right = 270.0
+theme = ExtResource("tema")
+theme_override_constants/separation = 0
+mouse_filter = 2
+
+[node name="Nome" type="Label" parent="Interface/Titulo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.80, 0.52, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.08, 0.18, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 22
+text = "MICHAEL JACKSON:"
+horizontal_alignment = 1
+
+[node name="Jornada" type="Label" parent="Interface/Titulo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.88, 0.69, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.08, 0.18, 1)
+theme_override_constants/outline_size = 7
+theme_override_font_sizes/font_size = 30
+text = "JOURNEY OF THE KING"
+horizontal_alignment = 1
+
+[node name="Fim" type="Label" parent="Interface/Titulo"]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.93, 0.87, 1)
+theme_override_colors/font_outline_color = Color(0.14, 0.08, 0.18, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 17
+text = "THE END"
+horizontal_alignment = 1
+
+[node name="Pular" type="Button" parent="Interface"]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 4.0
+offset_right = -12.0
+offset_bottom = 27.0
+theme = ExtResource("tema")
+theme_override_font_sizes/font_size = 11
+text = "Pular  [Enter]"
+
+[node name="Conclusao" type="CenterContainer" parent="Interface"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("tema")
+
+[node name="Painel" type="PanelContainer" parent="Interface/Conclusao"]
+custom_minimum_size = Vector2(362, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("Painel")
+
+[node name="Conteudo" type="VBoxContainer" parent="Interface/Conclusao/Painel"]
+layout_mode = 2
+theme_override_constants/separation = 9
+
+[node name="Titulo" type="Label" parent="Interface/Conclusao/Painel/Conteudo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.80, 0.52, 1)
+theme_override_font_sizes/font_size = 23
+text = "JORNADA CONCLUÍDA"
+horizontal_alignment = 1
+
+[node name="Mensagem" type="Label" parent="Interface/Conclusao/Painel/Conteudo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Todas as memórias foram restauradas."
+horizontal_alignment = 1
+
+[node name="Pontos" type="Label" parent="Interface/Conclusao/Painel/Conteudo"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.80, 0.73, 0.81, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="Voltar" type="Button" parent="Interface/Conclusao/Painel/Conteudo"]
+layout_mode = 2
+text = "Voltar ao menu"
+
+[connection signal="pressed" from="Interface/Pular" to="." method="_mostrar_conclusao"]
+[connection signal="pressed" from="Interface/Conclusao/Painel/Conteudo/Voltar" to="." method="_voltar_ao_menu"]
