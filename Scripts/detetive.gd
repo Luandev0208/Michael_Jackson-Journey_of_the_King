@@ -60,7 +60,12 @@ func _destino_perseguicao(distancia: float) -> Vector2:
 	var lado := 1.0 if get_instance_id() % 2 == 0 else -1.0
 	var direcao := (alvo.global_position - global_position).normalized()
 	var desvio := Vector2(-direcao.y, direcao.x) * lado * minf(distancia - 40.0, 34.0)
-	return alvo.global_position + desvio
+	for variante: Vector2 in [desvio, -desvio]:
+		var ponto: Vector2 = alvo.global_position + variante
+		var celula := Vector2i((ponto / caminhos.cell_size).floor())
+		if caminhos.region.has_point(celula) and not caminhos.is_point_solid(celula):
+			return ponto
+	return alvo.global_position
 
 
 # Aviso visual antes do flash: um brilho que cresce sobre a câmera.

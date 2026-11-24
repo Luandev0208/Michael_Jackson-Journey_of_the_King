@@ -109,9 +109,10 @@ func _preparar_ataque() -> void:
 	_animar("prepare", _tempo, true)
 	if _ataque == Ataque.INVESTIDA:
 		_aviso = Polygon2D.new()
+		var alcance := _alcance_da_faixa()
 		_aviso.polygon = PackedVector2Array([
-			Vector2(0, -LARGURA_INVESTIDA), Vector2(ALCANCE_INVESTIDA, -LARGURA_INVESTIDA),
-			Vector2(ALCANCE_INVESTIDA, LARGURA_INVESTIDA), Vector2(0, LARGURA_INVESTIDA),
+			Vector2(0, -LARGURA_INVESTIDA), Vector2(alcance, -LARGURA_INVESTIDA),
+			Vector2(alcance, LARGURA_INVESTIDA), Vector2(0, LARGURA_INVESTIDA),
 		])
 		_aviso.color = Color(0.94, 0.32, 0.55, 0.55)
 		_aviso.z_index = 1
@@ -122,6 +123,13 @@ func _preparar_ataque() -> void:
 		_centro = global_position if _ataque == Ataque.ONDA else alvo.global_position
 		_aviso = _mostrar_area(_centro, _raio(), &"aviso_circular")
 	_mudar_estado(Estado.AVISO)
+
+
+func _alcance_da_faixa() -> float:
+	var colisao := KinematicCollision2D.new()
+	if test_move(global_transform, _direcao * ALCANCE_INVESTIDA, colisao):
+		return maxf(1.0, colisao.get_travel().length())
+	return ALCANCE_INVESTIDA
 
 
 func _raio() -> float:

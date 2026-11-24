@@ -54,7 +54,7 @@ func observar(pes: Vector2, delta: float) -> float:
 	_angulo = deg_to_rad(direcao_graus + sin(_tempo * 1.15) * oscilacao_graus)
 	var deslocamento := (pes - to_global(LENTE)).rotated(-_angulo)
 	var dentro := deslocamento.y > 0.0 and deslocamento.y < PROFUNDIDADE
-	dentro = dentro and absf(deslocamento.x) < 3.0 + deslocamento.y * SEMILARGURA / PROFUNDIDADE
+	dentro = dentro and absf(deslocamento.x) < deslocamento.y * SEMILARGURA / PROFUNDIDADE
 	var visivel := dentro and _obstaculo(pes).is_empty()
 	acumulo = move_toward(acumulo, 1.0 if visivel else 0.0, delta / (TEMPO_DETECCAO if visivel else 0.22))
 	_atualizar_arte()
@@ -70,6 +70,7 @@ func _atualizar_arte() -> void:
 	var em_alerta := acumulo >= 1.0
 	_corpo.texture = (ALERTA if em_alerta else LIGADO) if ativo else APAGADO
 	_cone.texture = VERMELHO if em_alerta else (AZUL if azul else DOURADO)
+	_cone.modulate.a = lerpf(0.72, 1.0, acumulo)
 
 
 func _obstaculo(destino: Vector2) -> Dictionary:

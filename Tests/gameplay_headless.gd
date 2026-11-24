@@ -1,5 +1,7 @@
 extends SceneTree
 
+const Holofote := preload("res://Scripts/holofote_smooth.gd")
+const Camarim := preload("res://Scripts/camarim.gd")
 const BillieJean := preload("res://Scripts/billie_jean.gd")
 const Thriller := preload("res://Scripts/thriller.gd")
 const Smooth := preload("res://Scripts/smooth_criminal.gd")
@@ -27,6 +29,7 @@ func _executar() -> void:
 	seed(1234)
 	_testar_tentativas()
 	await _testar_controles_e_combate()
+	await _testar_inicio_da_jornada()
 	await _testar_billie_jean()
 	await _testar_thriller()
 	await _testar_smooth_criminal()
@@ -264,6 +267,9 @@ func _testar_indicador(indicador: Indicador, jogador: MichaelJogador) -> void:
 	notas[0].global_position = fora_do_mapa
 	var avisos := indicador._avisos_visiveis()
 	_verificar(avisos.size() == 1 and (avisos[0].ponto as Vector2).is_equal_approx(fora), "Indicador aponta para a nota viva fora da tela")
+	notas[1].global_position = tela_para_mundo * (fora + Vector2(18, 3))
+	_verificar(indicador._avisos_visiveis().size() == 1, "Setas quase sobrepostas são agrupadas")
+	notas[1].global_position = tela_para_mundo * centro
 	notas[0].remove_from_group("notas_musicais")
 	_verificar(indicador._avisos_visiveis().is_empty(), "Indicador ignora nota removida do grupo de coleta")
 	notas[0].add_to_group("notas_musicais")
@@ -271,12 +277,33 @@ func _testar_indicador(indicador: Indicador, jogador: MichaelJogador) -> void:
 		notas[indice].global_position = posicoes[indice]
 
 
+func _testar_inicio_da_jornada() -> void:
+	await _entrar("interface")
+	current_scene.get_node("PainelCentral/VBoxContainer/BotaoIniciar").pressed.emit()
+	await _quadros(6)
+	_verificar(current_scene is Camarim, "Iniciar no menu abre o Camarim")
+	if not current_scene is Camarim:
+		return
+	var fase := current_scene as Camarim
+	_posicionar_pes(fase.jogador as MichaelJogador, fase.frente_do_espelho.global_position + Vector2(0, 12))
+	await _comando(&"Interagir")
+	_verificar(fase._espelho_revelado, "Primeira interação revela o espelho no Camarim")
+	await _comando(&"Interagir")
+	_verificar(await _esperar(func() -> bool: return current_scene is BillieJean, 30), "Segunda interação leva do Camarim a Billie Jean")
+	await _quadros(4)
+
+
 func _testar_billie_jean() -> void:
 	print("Billie Jean")
-	await _entrar("billie_jean")
+	if not current_scene is BillieJean:
+		await _entrar("billie_jean")
 	var fase := current_scene as BillieJean
 	var jogador := fase.jogador
 	jogador.invencivel_dev = true
+	_enviar_tecla(KEY_ESCAPE)
+	_verificar(paused, "Menu de pausa abre durante a exploração")
+	_enviar_tecla(KEY_ESCAPE)
+	_verificar(not paused, "Esc retoma a exploração")
 	var indicador: Indicador
 	for no in fase.get_children():
 		if no is Indicador:
@@ -305,6 +332,8 @@ func _testar_billie_jean() -> void:
 			_verificar(fase.pisos.get_cell_atlas_coords(celula).x > 0, "Piso aceso por contato %s" % str(celula))
 		_verificar(livres == [12, 20, 25][indice], "Pisos alcançáveis, região %d (%d)" % [indice + 1, livres])
 		_verificar(fase._detetives_restantes == 2 and indicador._avisos_visiveis().is_empty(), "Encontro bloqueia passagem e suprime indicador")
+		if indice == 0:
+			_verificar(fase.detalhe.text.contains("Derrote os detetives"), "Objetivo destaca detetives após atingir cota")
 		for inimigo: Inimigo in get_nodes_in_group("inimigos"):
 			if inimigo.has_meta("obrigatorio"):
 				inimigo.receber_dano(inimigo.vida)
@@ -467,6 +496,10 @@ func _testar_carga_contra_parede(chefe: Guardiao, fase: Thriller, destino: Vecto
 	chefe._tempo_especial = 0.0
 	var iniciou := await _esperar(func() -> bool: return chefe._acao == Guardiao.Acao.AVISO_CARGA, 90)
 	_verificar(iniciou and chefe._tempo_acao <= 0.60, "Fase 3 acelera aviso de carga")
+	await _quadros(2)
+	if chefe._indicador is Line2D:
+		var comprimento: float = chefe._indicador.get_point_position(1).length()
+		_verificar(comprimento < Guardiao.VELOCIDADE_CARGA * Guardiao.DURACAO_CARGA, "Faixa do Guardião termina no obstáculo")
 	var exausto := await _esperar(func() -> bool: return chefe._acao == Guardiao.Acao.EXAUSTO, 100)
 	_verificar(exausto and chefe._tempo_acao > 1.9 and chefe.global_position.x < parede.position.x, "Parede para a carga e amplia a exaustão da fase 3")
 	parede.queue_free()
@@ -490,10 +523,19 @@ func _testar_smooth_criminal() -> void:
 	_posicionar_pes(jogador, fase.jukebox.global_position + Vector2(0, 30))
 	await _comando(&"Interagir")
 	_verificar(fase.objetivo == Smooth.Objetivo.ACESSO_VIP, "Smooth Criminal liga energia")
+	await _testar_vigilancia(fase)
+	var agil: Inimigo = fase.atores.get_node("VigiaSalao")
+	agil.receber_dano(1, Vector2.ZERO, &"chapeu")
+	_verificar(agil.vida == 0, "Vigia ágil cai com um acerto de chapéu")
 	_posicionar_pes(jogador, Smooth.POSICAO_VIP)
 	await _comando(&"Interagir")
 	_verificar(fase.objetivo == Smooth.Objetivo.SEGURANCA and fase.portao_vip.get_node("Base").disabled, "Interação abre colisão VIP")
 	var seguranca: Inimigo = fase.atores.get_node("SegurancaVIP")
+	seguranca._preparacao_restante = 0.3
+	seguranca.receber_dano(1, Vector2.RIGHT * 85.0, &"chapeu")
+	_verificar(seguranca.vida == 4 and seguranca._preparacao_restante == 0.3 and seguranca._empurrao == Vector2.ZERO, "Chapéu não interrompe segurança protegida")
+	seguranca.receber_dano(2, Vector2.RIGHT * 225.0, &"chute")
+	_verificar(seguranca.vida == 2 and seguranca._preparacao_restante < 0.0 and is_equal_approx(seguranca._atordoamento, 0.55), "Chute final quebra ataque e mantém atordoamento apesar da resistência")
 	seguranca.receber_dano(seguranca.vida, Vector2.ZERO, &"chute")
 	await _quadros(4)
 	_verificar(fase.objetivo == Smooth.Objetivo.PALCO and fase.portao_palco.get_node("Base").disabled, "Segurança abre colisão do palco")
@@ -527,6 +569,26 @@ func _testar_smooth_criminal() -> void:
 	_verificar(current_scene is UltimoEco, "Smooth Criminal abre O Último Eco")
 
 
+func _testar_vigilancia(fase: Smooth) -> void:
+	var luz := fase.get_node("Holofotes/VIP") as Holofote
+	var oscilacao := luz.oscilacao_graus
+	luz.oscilacao_graus = 0.0
+	var direcao := deg_to_rad(luz.direcao_graus)
+	var exposto := luz.to_global(Holofote.LENTE + Vector2(-12, 60).rotated(direcao))
+	var coberto := luz.to_global(Holofote.LENTE + Vector2(25, 160).rotated(direcao))
+	_posicionar_pes(fase.jogador, exposto)
+	await _quadros(10)
+	_verificar(luz.acumulo > 0.0 and luz.acumulo < 1.0 and fase.medidor_vigilancia.value > 0.0, "Holofote e HUD indicam observação antes do alarme")
+	await _quadros(22)
+	_verificar(is_equal_approx(luz.acumulo, 1.0) and fase.vigia.text.begins_with("Alarme"), "Exposição sustentada dispara alarme")
+	var impacto := luz._obstaculo(coberto)
+	_verificar(not impacto.is_empty() and String(impacto.collider.name).begins_with("mesa_"), "Mesa real do VIP bloqueia o raio")
+	_posicionar_pes(fase.jogador, coberto)
+	await _quadros(30)
+	_verificar(is_zero_approx(luz.acumulo), "Atrás da mesa, exposição cai a zero dentro do cone")
+	luz.oscilacao_graus = oscilacao
+
+
 func _testar_ultimo_eco() -> void:
 	print("O Último Eco")
 	if not current_scene is UltimoEco:
@@ -546,6 +608,7 @@ func _testar_ultimo_eco() -> void:
 	_verificar(chefe.vida == 15, "Chefe invulnerável fora da abertura mesmo com golpe letal")
 	var avisou := await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.AVISO, 140)
 	_verificar(avisou and chefe._ataque == TheSilence.Ataque.ONDA and chefe._aviso is Line2D, "Apagamento anuncia onda")
+	_verificar(fase.instrucao.text.begins_with("Onda") and fase.titulo.modulate == UltimoEco.CORES_FASE[0], "HUD identifica onda e cor de Apagamento")
 	if avisou:
 		await _esperar(func() -> bool: return chefe._tempo <= 0.07, 85)
 		jogador.frente = Vector2.RIGHT
@@ -557,6 +620,7 @@ func _testar_ultimo_eco() -> void:
 	chefe.receber_dano(4, Vector2.ZERO, &"chute")
 	_verificar(chefe.fase == 2 and chefe.estado == TheSilence.Estado.TRANSICAO, "Dez PV iniciam Fratura")
 	_verificar(fase._pisos[1].visible and fase._objetos[1].visible and not fase._pisos[0].visible, "Fratura troca piso e objetos")
+	_verificar(fase.titulo.text.contains("2/3") and fase._preenchimento.bg_color == UltimoEco.CORES_FASE[1], "Barra identifica etapa e cor de Fratura")
 
 	avisou = await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.AVISO, 190)
 	_verificar(avisou and chefe._ataque == TheSilence.Ataque.FENDA, "Fratura marca fenda nas coordenadas do jogador")
@@ -574,6 +638,7 @@ func _testar_ultimo_eco() -> void:
 	_posicionar_pes(jogador, chefe.global_position + Vector2(0, 55))
 	avisou = await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.AVISO, 190)
 	_verificar(avisou and chefe._ataque == TheSilence.Ataque.INVESTIDA and chefe._aviso is Polygon2D, "Último eco sinaliza investida")
+	_verificar(fase.instrucao.text.begins_with("Investida") and fase._preenchimento.bg_color == UltimoEco.CORES_FASE[2], "HUD diferencia a investida e a cor final")
 	_verificar(await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.INVESTIDA, 90), "Investida começa após aviso")
 	_verificar(await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.VULNERAVEL, 100), "Investida termina e expõe chefe")
 	_verificar(jogador.vida == 3, "Investida acerta uma vez em linha reta")

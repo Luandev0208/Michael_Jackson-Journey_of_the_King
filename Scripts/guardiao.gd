@@ -116,6 +116,7 @@ func _iniciar_especial() -> void:
 		_acao = Acao.AVISO_CARGA
 		_tempo_acao = 0.85 if fase == 1 else (0.70 if fase == 2 else 0.60)
 		_criar_indicador_carga()
+		_atualizar_aviso_carga()
 		_animar("threat", _tempo_acao, true)
 	_preparacao_restante = -1.0
 	_esquivado = false
@@ -165,8 +166,11 @@ func _atualizar_aviso_carga() -> void:
 		_direcao_carga = global_position.direction_to(alvo.global_position)
 	_olhar_para(_direcao_carga)
 	if is_instance_valid(_indicador):
-		var comprimento := VELOCIDADE_CARGA * DURACAO_CARGA
-		(_indicador as Line2D).set_point_position(1, _direcao_carga * comprimento)
+		var percurso := _direcao_carga * VELOCIDADE_CARGA * DURACAO_CARGA
+		var colisao := KinematicCollision2D.new()
+		if test_move(global_transform, percurso, colisao):
+			percurso = colisao.get_travel()
+		(_indicador as Line2D).set_point_position(1, percurso)
 		var travado := _tempo_acao <= 0.30
 		(_indicador as Line2D).default_color = Color(1.0, 0.15, 0.15, 0.70 if travado else 0.30)
 
@@ -375,4 +379,9 @@ func _desenhar_barra() -> void:
 	for marca in [LIMITE_FASE_2, LIMITE_FASE_3]:
 		_barra.draw_rect(Rect2(caixa.position.x + caixa.size.x * marca - 1.0, caixa.position.y, 2.0, caixa.size.y), Color(0.14, 0.07, 0.23))
 	var fonte := ThemeDB.fallback_font
-	_barra.draw_string(fonte, Vector2(caixa.position.x, caixa.position.y - 5.0), "GUARDIÃO DO ESPELHO  ·  FASE %d" % fase, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, Color(0.95, 0.88, 1.0))
+	var titulo := "GUARDIÃO DO ESPELHO  ·  FASE %d" % fase
+	var tom := Color(0.95, 0.88, 1.0)
+	if _acao == Acao.EXAUSTO:
+		titulo += "  ·  VULNERÁVEL"
+		tom = Color(0.73, 0.94, 1.0)
+	_barra.draw_string(fonte, Vector2(caixa.position.x, caixa.position.y - 5.0), titulo, HORIZONTAL_ALIGNMENT_LEFT, -1.0, 10, tom)

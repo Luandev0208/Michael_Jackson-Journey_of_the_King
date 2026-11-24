@@ -44,6 +44,7 @@ var _marcador := Line2D.new()
 @onready var nome_chefe: Label = $Interface/Chefe/Conteudo/Nome
 @onready var vida_chefe: ProgressBar = $Interface/Chefe/Conteudo/Vida
 @onready var vigia: Label = $Interface/Missao/Conteudo/Vigilancia
+@onready var medidor_vigilancia: ProgressBar = $Interface/Missao/Conteudo/MedidorVigilancia
 @onready var missao: Label = $Interface/Missao/Conteudo/Objetivo
 @onready var interacao: PanelContainer = $Interface/Interacao
 @onready var texto_interacao: Label = $Interface/Interacao/Conteudo/Texto
@@ -157,14 +158,16 @@ func _atualizar_vigilancia(delta: float) -> void:
 	_progresso_luz = novo
 	_alarme = maxf(0.0, _alarme - delta)
 	if novo >= 1.0 or _alarme > 0.0:
-		vigia.text = "Vigilância · detectado"
+		vigia.text = "Alarme · quebre a linha de visão"
 		vigia.modulate = Color(1.0, 0.55, 0.5)
 	elif novo > 0.0:
-		vigia.text = "Vigilância · observado"
+		vigia.text = "Luz sobre Michael · procure cobertura"
 		vigia.modulate = Color(1.0, 0.84, 0.55)
 	else:
 		vigia.text = "Vigilância · área segura"
 		vigia.modulate = Color(0.76, 0.88, 0.95)
+	medidor_vigilancia.value = 1.0 if _alarme > 0.0 else novo
+	medidor_vigilancia.modulate = vigia.modulate
 
 
 func _atualizar_interacao() -> void:
@@ -194,7 +197,7 @@ func _atualizar_interacao() -> void:
 			objetivo = Objetivo.ACESSO_VIP
 			$Holofotes/Salao.ligar(true)
 			$Holofotes/VIP.ligar(true)
-			missao.text = "Energia ligada. Abra o acesso VIP"
+			missao.text = "Energia ligada · abra a catraca VIP"
 			_marcador.global_position = POSICAO_VIP + Vector2(35, -12)
 		Objetivo.ACESSO_VIP:
 			_atualizar_portao(portao_vip, true)
@@ -203,7 +206,7 @@ func _atualizar_interacao() -> void:
 				_abrir_palco()
 			else:
 				objetivo = Objetivo.SEGURANCA
-				missao.text = "Derrote a segurança do VIP"
+				missao.text = "Derrote a segurança para abrir o palco"
 		Objetivo.ESPELHO:
 			concluir()
 
@@ -217,7 +220,7 @@ func _derrotar_seguranca() -> void:
 func _abrir_palco() -> void:
 	objetivo = Objetivo.PALCO
 	_atualizar_portao(portao_palco, true)
-	missao.text = "Palco liberado pela escadaria"
+	missao.text = "Palco liberado · suba pela escadaria"
 	_marcador.global_position = portao_palco.global_position
 	_marcador.show()
 
@@ -263,7 +266,7 @@ func _derrotar_chefe() -> void:
 	$Holofotes/PalcoOeste.ligar(false)
 	$Holofotes/PalcoLeste.ligar(false)
 	painel_chefe.hide()
-	missao.text = "Líder derrotado. Alcance o espelho"
+	missao.text = "Líder derrotado · siga até o espelho"
 	_marcador.global_position = FRENTE_ESPELHO + Vector2(0, -20)
 	_marcador.show()
 
