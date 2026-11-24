@@ -100,4 +100,4 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "← Voltar ao Menu"
 
-[connection signal="pressed" from="Painel/VBoxContainer/BotaoVoltar" to="." method="_on_botao_voltar_pressed"]
+[connection signal="pressed" from="Painel/VBoxContainer/BotaoVoltar" to="." method="_voltar_ao_menu"]

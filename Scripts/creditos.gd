@@ -2,13 +2,15 @@ extends Control
 
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 
-@onready var video: VideoStreamPlayer = $Video
-@onready var botao_pular: Button = $BotaoPular
+@onready var video := get_node_or_null("Video") as VideoStreamPlayer
+@onready var botao_pular := get_node_or_null("BotaoPular") as Button
 
 var _encerrando := false
 
 
 func _ready() -> void:
+	if video == null:
+		return
 	video.finished.connect(_voltar_ao_menu)
 	botao_pular.pressed.connect(_voltar_ao_menu)
 	botao_pular.grab_focus()
@@ -30,5 +32,6 @@ func _voltar_ao_menu() -> void:
 	if _encerrando:
 		return
 	_encerrando = true
-	video.stop()
+	if video != null:
+		video.stop()
 	get_tree().change_scene_to_file(PROGRESSAO.MENU)
