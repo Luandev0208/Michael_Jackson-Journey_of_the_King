@@ -1,87 +1,40 @@
 # Michael Jackson: Journey of the King
 
-Jogo 2D de ação e aventura em pixel art, com visão de cima em três quartos. Michael percorre cenários inspirados em suas músicas para recuperar suas memórias.
+## 1. Sobre o jogo
 
-## História
+Michael Jackson: Journey of the King é um jogo de ação e aventura em 2D, com gráficos em pixel art, no qual o jogador controla Michael Jackson em uma jornada inspirada em três músicas famosas de sua carreira: Billie Jean, Thriller e Smooth Criminal.
 
-No camarim, Michael descobre que uma presença chamada **The Silence** ameaça apagar suas lembranças. O espelho dá acesso a mundos formados por essas memórias. Cada lugar guarda algo que Michael precisa restaurar para seguir adiante. Ao escolher **Iniciar**, uma introdução apresenta a ameaça antes da chegada ao Camarim.
+## 2. História
 
-## Objetivo do jogador
+A história começa no camarim de Michael, quando uma entidade misteriosa chamada The Silence aparece através de seu espelho. Ela pretende apagar as memórias mais importantes de Michael. Para impedir isso, ele precisa entrar nesses mundos e recuperar as lembranças que estão sendo destruídas.
 
-Atravesse as quatro fases, supere os obstáculos, recupere as memórias e derrote The Silence. Explore os cenários para coletar notas musicais e encontrar itens de recuperação.
+## 3. Fases do jogo
 
-## Fases
+O jogo possui quatro fases. A primeira, inspirada em Billie Jean, acontece em uma cidade noturna onde Michael enfrenta detetives. A segunda, baseada em Thriller, se passa em um cemitério cheio de zumbis e termina com a batalha contra o Guardião do Espelho. A terceira, inspirada em Smooth Criminal, acontece em um clube noturno com capangas e sistemas de vigilância. Por último, em O Último Eco, Michael enfrenta The Silence em uma arena que mistura elementos das fases anteriores.
 
-| Fase | Como avançar |
-| --- | --- |
-| **Billie Jean** | Acenda pisos luminosos nas três regiões e enfrente os detetives para restaurar o relógio, a jukebox e a fonte. |
-| **Thriller** | Atravesse o cemitério, vença as ondas de zumbis e derrote o Guardião do Espelho e seus reforços. |
-| **Smooth Criminal** | Restaure a energia do clube dos anos 1930, use a cobertura contra os holofotes, abra o acesso VIP e derrote a segurança e o líder dos capangas. |
-| **O Último Eco** | Enfrente The Silence em uma arena que reúne fragmentos das três memórias anteriores. |
+## 4. Jogabilidade e habilidades
 
-### The Silence
+Durante o jogo, é possível explorar cenários, enfrentar inimigos, coletar notas musicais e encontrar itens de recuperação. Michael possui habilidades como chutes, combos, lançamento do chapéu, moonwalk e dash, que ajudam nos combates e nas esquivas.
 
-| Etapa | Ataque e mudança na arena |
-| --- | --- |
-| **Apagamento** | O chefe anuncia uma onda circular. Os relicários estão apagados. |
-| **Fratura** | Uma fenda marca a posição de Michael antes de atingir a área. O piso ganha luz azul e o primeiro relicário é restaurado. |
-| **Último eco** | O chefe alterna fendas e investidas anunciadas. O piso ganha luz roxa e o segundo relicário é restaurado. |
+## 5. Sistema de vida e pontuação
 
-Aproveite a abertura após cada ataque para usar chutes e o chapéu. Uma esquiva perfeita pode prolongar essa janela. Na vitória, os pisos ficam dourados, o último relicário e o portal são restaurados e a arena recebe ondas e partículas de restauração.
+O jogador começa cada fase com quatro corações e três tentativas. Ao perder todos os corações, uma tentativa é descontada. Se perder as três, pode reiniciar a fase ou voltar ao menu. As notas musicais espalhadas pelos cenários valem 100 pontos cada.
 
-## Personagens e inimigos
+## 6. Estilo visual
 
-- **Michael Jackson** é o protagonista. Luta com chutes de dança, um chapéu que volta como um bumerangue e o moonwalk.
-- **The Silence** é a entidade que ameaça as memórias e o chefe de O Último Eco.
-- **Detetives, zumbis e capangas** têm ritmos, alcances e resistências diferentes. O fotógrafo anuncia o flash. O Guardião do Espelho e o líder dos capangas mudam de comportamento ao longo dos confrontos.
+Cada fase possui um visual inspirado em seu respectivo videoclipe. Billie Jean apresenta uma cidade iluminada, Thriller traz um ambiente sombrio e Smooth Criminal utiliza a estética dos clubes dos anos 1930. A fase final mistura elementos dos três cenários.
 
-## Controles e habilidades
+## 7. Desenvolvimento
 
-| Entrada | Ação |
-| --- | --- |
-| **WASD** ou **setas** | Mover Michael |
-| **Botão esquerdo do mouse** | Chutar na direção do cursor. Três chutes em sequência ativam o golpe final. |
-| **Espaço** | Lançar o chapéu |
-| **Ctrl esquerdo** | Fazer dash na direção do movimento |
-| **Shift** | Deslizar para trás com moonwalk. O tempo certo permite uma esquiva perfeita. |
-| **E** | Interagir com objetos e espelhos |
-| **Esc** | Pausar ou retomar |
-| **Enter** ou **Pular introdução** | Ir direto ao Camarim durante a introdução |
-| **F1** | Abrir o menu de desenvolvimento na execução pelo editor |
+O jogo foi desenvolvido na Godot, utilizando GDScript, pixel art e animações em 2D. Durante sua criação, trabalhamos na programação, nos cenários, personagens, animações, combates e menus.
 
-## Coletáveis
+## 8. Equipe
 
-Cada **nota musical** vale 100 pontos. O HUD acompanha as notas e a pontuação da fase. Billie Jean e Thriller têm setas para notas próximas fora da tela, que somem nos encontros obrigatórios. Os itens de **cura** recuperam um coração quando Michael está ferido.
+O projeto foi desenvolvido por Luan Resende Ferreira e Mateus Martins, como parte do curso Técnico em Informática do IFMG – Campus Ribeirão das Neves.
 
-## Vitória e derrota
+## 9. Objetivo do projeto
 
-Restaure os pontos de memória e vença os encontros obrigatórios para liberar as passagens. Os espelhos permitem continuar a jornada. Após derrotar The Silence, atravesse o portal restaurado para ver o desfecho.
-
-Michael é derrotado quando perde os quatro corações. A tela de derrota abre depois da animação e permite tentar novamente ou voltar ao menu.
-
-## Três tentativas
-
-Cada fase começa com três tentativas e cada tentativa começa com quatro corações. A primeira derrota deixa duas tentativas e a segunda deixa uma. Na terceira, o Game Over oferece a opção de recomeçar a fase com três novas tentativas. Repetir a tentativa mantém o saldo. Entrar em outra fase restaura as três tentativas. O Camarim fica fora dessa contagem.
-
-## Progressão e dificuldade
-
-Billie Jean apresenta exploração e encontros locais. Thriller pede atenção aos avisos de ataque e à ordem das ondas. Smooth Criminal combina combate com vigilância e cobertura. O Último Eco reúne essas habilidades em um confronto com janelas de contra-ataque.
-
-## Direção artística
-
-As fases usam pixel art com filtro **Nearest**, materiais e silhuetas inspirados nos videoclipes. O Último Eco mistura pedra, madeira, calçadas, motivos góticos e detalhes art déco. Os quatro estados da arena compartilham a geometria e mudam a iluminação do piso e dos objetos.
-
-As três versões de The Silence usam quadros de 64×64, pivô em `[32, 56]` e escala 2×. Cada versão tem 29 animações e 92 referências de quadros. Repouso, movimento, preparação, ataque, impacto, vulnerabilidade e mudança de etapa usam quatro direções. A derrota é frontal e termina com um quadro transparente para a dispersão.
-
-## Tecnologias e organização
-
-Abra `project.godot` na **Godot 4.7.2**. O jogo usa GDScript, TileMapLayer, colisões 2D e SpriteFrames.
-
-- `Assets/UltimoEco/Tiles/` contém o atlas de piso de 32×32. Os TileSets das arenas estão nas próprias cenas.
-- `Assets/UltimoEco/Boss/`, `Efeitos/` e `Objetos/` contêm as spritesheets, animações e texturas da fase. Os efeitos usam quadros de 128×128. A procedência dos recursos de O Último Eco está em `Assets/UltimoEco/producao.json`.
-- `Scenes/ArenasUltimoEco/` contém as três etapas da arena e o estado restaurado. `Scenes/ultimo_eco.tscn` reúne os recursos, e seus scripts em `Scripts/` controlam a luta, a navegação e as colisões.
-- `Scenes/` reúne as cenas jogáveis e as interfaces. `Scripts/` contém as regras de progressão, combate e interface.
-
+O objetivo foi transformar algumas das músicas mais conhecidas de Michael Jackson em uma aventura jogável, misturando referências de seus videoclipes com exploração, combate e uma história própria.
 ## Créditos
 
 - **Mateus** — Arte & Sprites.
