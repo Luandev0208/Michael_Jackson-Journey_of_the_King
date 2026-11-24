@@ -33,8 +33,8 @@ func ouvir_alarme(origem: Vector2) -> void:
 		_recalcular = 0.0
 
 
-func receber_dano(dano: int, empurrao := Vector2.ZERO) -> void:
-	super.receber_dano(dano, empurrao * _resposta_empurrao)
+func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
+	super.receber_dano(dano, empurrao * _resposta_empurrao, fonte)
 
 
 func empurrar(impulso: Vector2) -> void:

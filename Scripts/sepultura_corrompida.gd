@@ -39,7 +39,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		_tempo = 0.75
 
-func receber_dano(dano: int, _empurrao := Vector2.ZERO) -> void:
+func receber_dano(dano: int, _empurrao := Vector2.ZERO, _fonte := &"chute") -> void:
 	if vida <= 0:
 		return
 	vida -= dano

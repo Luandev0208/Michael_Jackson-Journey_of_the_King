@@ -1,30 +1,21 @@
 extends RefCounted
 
-const CAMADA_JOGADOR := 2
+const NOTA_VISUAL := preload("res://Scripts/nota_visual.gd")
+const INDICADOR := preload("res://Scripts/indicador_notas.gd")
 
 
 static func criar(celula: Vector2i, posicao: Vector2) -> Area2D:
-	var nota := Area2D.new()
+	var nota: Area2D = NOTA_VISUAL.new()
 	nota.name = "Nota_%d_%d" % [celula.x, celula.y]
 	nota.position = posicao
-	nota.collision_layer = 0
-	nota.collision_mask = CAMADA_JOGADOR
-	nota.monitorable = false
-	var colisor := CollisionShape2D.new()
-	var forma := CircleShape2D.new()
-	forma.radius = 10.0
-	colisor.shape = forma
-	nota.add_child(colisor)
-	var brilho := Polygon2D.new()
-	brilho.polygon = PackedVector2Array([Vector2(0, -13), Vector2(12, 0),
-		Vector2(0, 13), Vector2(-12, 0)])
-	brilho.color = Color(0.38, 0.28, 0.53, 0.85)
-	nota.add_child(brilho)
-	var simbolo := Label.new()
-	simbolo.text = "♪"
-	simbolo.add_theme_font_size_override("font_size", 20)
-	simbolo.add_theme_color_override("font_color", Color(1.0, 0.86, 0.54))
-	simbolo.position = Vector2(-7, -15)
-	simbolo.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	nota.add_child(simbolo)
 	return nota
+
+
+# Instala o indicador de proximidade abaixo da interface, para nunca cobrir o HUD.
+static func instalar_indicador(fase: Node) -> void:
+	var indicador := CanvasLayer.new()
+	indicador.set_script(INDICADOR)
+	fase.add_child(indicador)
+	var interface := fase.get_node_or_null("Interface")
+	if interface != null:
+		fase.move_child(indicador, interface.get_index())

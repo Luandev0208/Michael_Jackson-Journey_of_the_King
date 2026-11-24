@@ -1,9 +1,9 @@
 extends Node2D
 
 const NOTAS: Array[Vector2i] = [
-	Vector2i(24, 56), Vector2i(18, 58), Vector2i(36, 54),
+	Vector2i(24, 54), Vector2i(18, 58), Vector2i(36, 54),
 	Vector2i(27, 51), Vector2i(9, 46), Vector2i(41, 46), Vector2i(24, 40),
-	Vector2i(14, 37), Vector2i(37, 39), Vector2i(24, 31),
+	Vector2i(16, 37), Vector2i(37, 39), Vector2i(24, 29),
 	Vector2i(9, 24), Vector2i(38, 20), Vector2i(24, 16), Vector2i(28, 13),
 ]
 const CURAS_FIXAS: Array[Vector2i] = [Vector2i(24, 42), Vector2i(24, 23)]
@@ -48,6 +48,7 @@ var concluida := false
 
 func _ready() -> void:
 	hud.iniciar(jogador)
+	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_pontos()
 	for celula in NOTAS:
 		_adicionar_nota(celula)
@@ -113,7 +114,7 @@ func _adicionar_nota(celula: Vector2i) -> void:
 func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 	if concluida or nota.is_queued_for_deletion():
 		return
-	nota.queue_free()
+	nota.coletar()
 	_notas_coletadas += 1
 	_atualizar_pontos()
 	hud.destacar_pontos()
@@ -165,6 +166,10 @@ func dev_gerar_onda() -> void:
 
 func dev_espelho_liberado() -> bool:
 	return batalhas.espelho_liberado()
+
+func indicador_notas_suprimido() -> bool:
+	# Durante as ondas obrigatórias o indicador some para não poluir a tela.
+	return concluida or jogador.vida <= 0 or batalhas.ativa
 
 func dev_progresso() -> String:
 	return "Notas %d/%d  ·  Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]

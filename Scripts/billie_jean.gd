@@ -15,7 +15,7 @@ const REGIOES := [
 		"inicio": 1360,
 		"barreira": 1088,
 		"pisos": Rect2i(12, 35, 7, 2),
-		"cota": 4,
+		"cota": 6,
 		"guia": "Acenda os pisos junto ao relógio, no fim da rua à esquerda.",
 		"detetives": [Vector2i(27, 38), Vector2i(17, 37)],
 		"tipos": [TIPO.COMUM, TIPO.COMUM],
@@ -26,7 +26,7 @@ const REGIOES := [
 		"inicio": 1088,
 		"barreira": 720,
 		"pisos": Rect2i(38, 23, 2, 10),
-		"cota": 5,
+		"cota": 8,
 		"guia": "Acenda os pisos da calçada direita para restaurar a jukebox.",
 		"detetives": [Vector2i(35, 30), Vector2i(31, 26)],
 		"tipos": [TIPO.COMUM, TIPO.RAPIDO],
@@ -37,16 +37,16 @@ const REGIOES := [
 		"inicio": 720,
 		"barreira": 352,
 		"pisos": Rect2i(29, 17, 5, 5),
-		"cota": 6,
+		"cota": 11,
 		"guia": "Acenda o mosaico da praça e derrote o detetive especial para restaurar a fonte.",
 		"detetives": [Vector2i(34, 19), Vector2i(31, 16)],
 		"tipos": [TIPO.COMUM, TIPO.ESPECIAL],
 	},
 ]
 const NOTAS: Array[Vector2i] = [
-	Vector2i(19, 43), Vector2i(50, 41), Vector2i(7, 36),
-	Vector2i(24, 31), Vector2i(55, 31), Vector2i(15, 25),
-	Vector2i(39, 21), Vector2i(25, 15), Vector2i(38, 12),
+	Vector2i(19, 43), Vector2i(49, 41), Vector2i(7, 36),
+	Vector2i(24, 31), Vector2i(55, 31), Vector2i(14, 25),
+	Vector2i(39, 20), Vector2i(25, 15), Vector2i(38, 12),
 ]
 
 var caminhos := AStarGrid2D.new()
@@ -79,6 +79,7 @@ var _espera_spawn := 0.0
 
 func _ready() -> void:
 	hud.iniciar(jogador)
+	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_notas()
 	var mapa := chao.get_used_rect()
 	var camera: Camera2D = jogador.get_node("Camera2D")
@@ -293,7 +294,7 @@ func _atualizar_objetivo() -> void:
 func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 	if concluida or nota.is_queued_for_deletion():
 		return
-	nota.queue_free()
+	nota.coletar()
 	_notas_coletadas += 1
 	_atualizar_notas()
 	hud.destacar_pontos()
@@ -312,6 +313,11 @@ func concluir() -> void:
 
 func dev_espelho_liberado() -> bool:
 	return _regiao == REGIOES.size()
+
+
+func indicador_notas_suprimido() -> bool:
+	# Durante a perseguição o indicador some para não competir com os detetives.
+	return concluida or jogador.vida <= 0 or (_encontro_iniciado and _detetives_restantes > 0)
 
 
 func dev_posicao_central() -> Vector2:
