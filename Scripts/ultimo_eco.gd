@@ -1,5 +1,6 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const NOTAS := preload("res://Scripts/nota_musical.gd")
@@ -192,6 +193,8 @@ func _atualizar_notas() -> void:
 
 func _restaurar_arena() -> void:
 	restaurada = true
+	FEEDBACK.faixa(self, "O SILÊNCIO FOI DERROTADO", "A arena foi restaurada · A música voltou", Color(1.0, 0.9, 0.55), 0.85, 3.6)
+	jogador._tremer_camera(3.0)
 	_mostrar_arena(3)
 	painel_chefe.hide()
 	chefe._mostrar_efeito(&"onda_restauracao", chefe.global_position, 128.0)

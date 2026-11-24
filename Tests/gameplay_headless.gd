@@ -10,6 +10,7 @@ const ChefeSmooth := preload("res://Scripts/chefe_smooth.gd")
 const UltimoEco := preload("res://Scripts/ultimo_eco.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const Indicador := preload("res://Scripts/indicador_notas.gd")
+const Tentativas := preload("res://Scripts/tentativas.gd")
 
 var _falhas := 0
 var _verificacoes := 0
@@ -21,6 +22,7 @@ func _initialize() -> void:
 
 func _executar() -> void:
 	seed(1234)
+	_testar_tentativas()
 	await _testar_controles_e_combate()
 	await _testar_billie_jean()
 	await _testar_thriller()
@@ -29,6 +31,24 @@ func _executar() -> void:
 	await _testar_reinicio_ultimo_eco()
 	print("%d verificações, %d falhas" % [_verificacoes, _falhas])
 	quit(1 if _falhas else 0)
+
+
+func _testar_tentativas() -> void:
+	Tentativas.reiniciar()
+	Tentativas.registrar_fase("res://Scenes/billie_jean.tscn")
+	_verificar(Tentativas.restantes == 3, "Cada fase começa com três tentativas")
+	_verificar(Tentativas.consumir() == 2, "A primeira derrota deixa duas tentativas")
+	Tentativas.registrar_fase("res://Scenes/billie_jean.tscn")
+	_verificar(Tentativas.restantes == 2, "Recarregar a mesma fase mantém as tentativas")
+	_verificar(Tentativas.consumir() == 1 and Tentativas.consumir() == 0, "A terceira derrota zera as tentativas")
+	_verificar(Tentativas.consumir() == 0, "As tentativas nunca ficam negativas")
+	Tentativas.registrar_fase("res://Scenes/thriller.tscn")
+	_verificar(Tentativas.restantes == 3, "Uma nova fase começa com três tentativas")
+	Tentativas.consumir()
+	Tentativas.restaurar()
+	_verificar(Tentativas.restantes == 3, "Recomeçar a fase após o Game Over restaura as três tentativas")
+	Tentativas.reiniciar()
+	_verificar(Tentativas.fase.is_empty() and Tentativas.restantes == 3, "Voltar ao menu zera o sistema")
 
 
 func _verificar(condicao: bool, mensagem: String) -> void:

@@ -1,5 +1,6 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
@@ -237,6 +238,7 @@ func _restaurar_ponto(indice: int) -> void:
 	if _restauradas[indice]:
 		return
 	_restauradas[indice] = true
+	FEEDBACK.faixa(self, "MEMÓRIA RESTAURADA", REGIOES[indice].nome + " voltou a brilhar", Color(1.0, 0.86, 0.5), 0.25)
 	var ponto := atores.get_node(NodePath(REGIOES[indice].ponto))
 	ponto.get_node("Apagado").hide()
 	ponto.get_node("Restaurado").show()

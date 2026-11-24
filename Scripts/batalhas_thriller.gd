@@ -1,5 +1,6 @@
 extends Node
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const Zumbi := preload("res://Scripts/zumbi.gd")
 const CENA_ZUMBI := preload("res://Scenes/zumbi.tscn")
 const CENA_GUARDIAO := preload("res://Scenes/guardiao.tscn")
@@ -211,6 +212,7 @@ func _liberar() -> void:
 	ativa = false
 	_mensagem = 2.5
 	_aviso.text = "Espelho liberado" if espelho_liberado() else "Combate concluído · Passagem liberada"
+	FEEDBACK.faixa(_fase, "ESPELHO LIBERADO" if espelho_liberado() else "PASSAGEM LIBERADA", "Guardião derrotado" if espelho_liberado() else "", Color(0.82, 0.62, 1.0), 0.18 if espelho_liberado() else 0.0, 1.8)
 	_painel.show()
 	if not espelho_liberado():
 		_fase.jogador.recuperar_uma_vida()

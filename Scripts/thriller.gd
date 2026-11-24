@@ -1,5 +1,6 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const NOTAS: Array[Vector2i] = [
 	Vector2i(24, 54), Vector2i(18, 58), Vector2i(36, 54),
@@ -141,6 +142,7 @@ func concluir() -> void:
 	if concluida or jogador.vida <= 0 or not batalhas.espelho_liberado():
 		return
 	concluida = true
+	FEEDBACK.faixa(self, "MEMÓRIA RESTAURADA", "O cemitério voltou à vida", Color(1.0, 0.86, 0.5), 0.35, 1.6)
 	atores.process_mode = Node.PROCESS_MODE_DISABLED
 	aviso.hide()
 	resultado.text = "Você atravessou o cemitério.\nNotas  %d/%d     Pontos  %d" % [_notas_coletadas, NOTAS.size(), pontuacao]

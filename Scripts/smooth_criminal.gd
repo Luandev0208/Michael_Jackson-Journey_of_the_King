@@ -1,5 +1,6 @@
 extends Node2D
 
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CAPANGA := preload("res://Scenes/capanga.tscn")
 const CHEFE := preload("res://Scenes/chefe_smooth.tscn")
@@ -254,6 +255,7 @@ func _atualizar_etapa_chefe(etapa: int) -> void:
 
 
 func _derrotar_chefe() -> void:
+	FEEDBACK.faixa(self, "CHEFE DERROTADO", "O caminho até o espelho está livre", Color(1.0, 0.86, 0.5), 0.30)
 	objetivo = Objetivo.ESPELHO
 	_atualizar_portao(portao_palco, true)
 	$Holofotes/PalcoOeste.ligar(false)
