@@ -13,7 +13,7 @@ func _ready() -> void:
 	botao_voltar.pressed.connect(_voltar_da_ajuda)
 
 func _on_button_pressed() -> void:
-	get_tree().change_scene_to_file(PROGRESSAO.CAMARIM)
+	get_tree().change_scene_to_file(PROGRESSAO.INTRODUCAO)
 
 func _on_ajuda_pressed() -> void:
 	menu.hide()

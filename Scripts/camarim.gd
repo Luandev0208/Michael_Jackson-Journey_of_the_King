@@ -13,7 +13,17 @@ var _espelho_revelado := false
 
 func _ready() -> void:
 	var piso: TileMapLayer = $Piso
-	var paredes: TileMapLayer = $Paredes
+	montar_cenario(piso, $Paredes)
+	var camera: Camera2D = jogador.get_node("Camera2D")
+	var limites := TAMANHO_SALA * piso.tile_set.tile_size
+	camera.limit_right = limites.x
+	camera.limit_bottom = limites.y
+	camera.position.y = -125.0
+	camera.reset_smoothing()
+	_revelar_sala()
+
+
+static func montar_cenario(piso: TileMapLayer, paredes: TileMapLayer) -> void:
 	for y in range(TAMANHO_SALA.y):
 		for x in range(TAMANHO_SALA.x):
 			var celula := Vector2i(x, y)
@@ -24,12 +34,20 @@ func _ready() -> void:
 			else:
 				piso.set_cell(celula, 0, Vector2i(0, 0))
 
-	var camera: Camera2D = jogador.get_node("Camera2D")
-	var limites := TAMANHO_SALA * piso.tile_set.tile_size
-	camera.limit_right = limites.x
-	camera.limit_bottom = limites.y
-	camera.position.y = -125.0
-	camera.reset_smoothing()
+
+func _revelar_sala() -> void:
+	var camada := CanvasLayer.new()
+	camada.layer = 2
+	add_child(camada)
+	var escuro := ColorRect.new()
+	escuro.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	escuro.color = Color(0.026, 0.018, 0.039)
+	camada.add_child(escuro)
+	escuro.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var animacao := camada.create_tween()
+	animacao.tween_property(escuro, "color:a", 0.0, 0.52)
+	animacao.tween_callback(camada.queue_free)
+
 
 func _physics_process(_delta: float) -> void:
 	var pes := jogador.global_position + Vector2(0, 12)

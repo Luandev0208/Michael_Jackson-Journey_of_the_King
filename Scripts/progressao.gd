@@ -1,5 +1,6 @@
 extends RefCounted
 
+const INTRODUCAO := "res://Scenes/introducao.tscn"
 const CAMARIM := "res://Scenes/camarim.tscn"
 const BILLIE_JEAN := "res://Scenes/billie_jean.tscn"
 const THRILLER := "res://Scenes/thriller.tscn"

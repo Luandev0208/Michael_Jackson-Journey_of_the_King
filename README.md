@@ -4,7 +4,7 @@ Jogo 2D de ação e aventura em pixel art, com visão de cima em três quartos. 
 
 ## História
 
-No camarim, Michael descobre que uma presença chamada **The Silence** ameaça apagar suas lembranças. O espelho dá acesso a mundos formados por essas memórias. Cada lugar guarda algo que Michael precisa restaurar para seguir adiante.
+No camarim, Michael descobre que uma presença chamada **The Silence** ameaça apagar suas lembranças. O espelho dá acesso a mundos formados por essas memórias. Cada lugar guarda algo que Michael precisa restaurar para seguir adiante. Ao escolher **Iniciar**, uma introdução apresenta a ameaça antes da chegada ao Camarim.
 
 ## Objetivo do jogador
 
@@ -46,6 +46,7 @@ Aproveite a abertura após cada ataque para usar chutes e o chapéu. Uma esquiva
 | **Shift** | Deslizar para trás com moonwalk. O tempo certo permite uma esquiva perfeita. |
 | **E** | Interagir com objetos e espelhos |
 | **Esc** | Pausar ou retomar |
+| **Enter** ou **Pular introdução** | Ir direto ao Camarim durante a introdução |
 | **F1** | Abrir o menu de desenvolvimento na execução pelo editor |
 
 ## Coletáveis
