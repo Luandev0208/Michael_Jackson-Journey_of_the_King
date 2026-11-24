@@ -1,5 +1,6 @@
 extends Node2D
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CAPANGA := preload("res://Scenes/capanga.tscn")
 const CHEFE := preload("res://Scenes/chefe_smooth.tscn")
 const CURA := preload("res://Scenes/cura_thriller.tscn")
@@ -51,6 +52,7 @@ var _marcador := Line2D.new()
 
 func _ready() -> void:
 	set_physics_process(false)
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	_atualizar_notas()
 	_marcador.points = PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-4, 0), Vector2(0, -5)])

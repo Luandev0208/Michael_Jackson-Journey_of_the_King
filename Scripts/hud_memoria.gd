@@ -1,5 +1,6 @@
 extends PanelContainer
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CORACAO := preload("res://Assets/Thriller/coracao.png")
 
 @export var titulo := ""
@@ -24,6 +25,16 @@ func iniciar(jogador: MichaelJogador) -> void:
 		icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		coracoes.add_child(icone)
+	if not TENTATIVAS.fase.is_empty():
+		# Tentativas ficam na linha do título, à direita: não tocam corações, notas nem recargas.
+		var tentativas := Label.new()
+		tentativas.text = "Tentativas  %d" % TENTATIVAS.restantes
+		tentativas.add_theme_font_size_override("font_size", 11)
+		tentativas.add_theme_color_override("font_color", Color(0.86, 0.72, 1.0))
+		tentativas.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tentativas.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+		tentativas.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		$Conteudo/Titulo.add_child(tentativas)
 	jogador.vida_alterada.connect(_atualizar_vidas)
 	_atualizar_vidas(jogador.vida)
 

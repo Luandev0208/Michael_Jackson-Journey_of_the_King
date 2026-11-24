@@ -1,5 +1,6 @@
 extends Node2D
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const NOTAS: Array[Vector2i] = [
 	Vector2i(24, 54), Vector2i(18, 58), Vector2i(36, 54),
 	Vector2i(27, 51), Vector2i(9, 46), Vector2i(41, 46), Vector2i(24, 40),
@@ -47,6 +48,7 @@ var concluida := false
 @onready var resultado: Label = $Interface/Conclusao/Conteudo/Resultado
 
 func _ready() -> void:
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_pontos()

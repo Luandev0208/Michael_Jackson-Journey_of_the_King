@@ -1,5 +1,6 @@
 extends Node2D
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
 const DETETIVE := preload("res://Scenes/detetive.tscn")
@@ -78,6 +79,7 @@ var _espera_spawn := 0.0
 
 
 func _ready() -> void:
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_notas()

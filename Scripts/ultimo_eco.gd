@@ -1,5 +1,6 @@
 extends Node2D
 
+const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const NOTAS := preload("res://Scripts/nota_musical.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
@@ -45,6 +46,7 @@ var _portal := Vector2.ZERO
 
 
 func _ready() -> void:
+	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
 	_atualizar_notas()
 	for cena in ARENAS:
