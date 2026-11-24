@@ -27,6 +27,8 @@ const CORES_FASE := [Color(0.90, 0.77, 0.50), Color(0.40, 0.76, 1.0), Color(0.79
 
 var caminhos := AStarGrid2D.new()
 var concluida := false
+var _creditos_iniciados := false
+var _creditos_abertos := false
 var restaurada := false
 var _pronta := false
 var _notas_coletadas := 0
@@ -235,7 +237,21 @@ func concluir() -> void:
 	final.get_node("Conteudo/Pontos").text = "Notas  %d/%d    Pontos  %d" % [_notas_coletadas, CELULAS_NOTAS.size(), _notas_coletadas * 100]
 	final.show()
 	final.get_node("Conteudo/Voltar").grab_focus()
+	_iniciar_creditos_automaticamente()
+
+
+func _iniciar_creditos_automaticamente() -> void:
+	if _creditos_iniciados:
+		return
+	_creditos_iniciados = true
+	await get_tree().create_timer(3.0).timeout
+	if is_inside_tree() and concluida and not _creditos_abertos:
+		_creditos_abertos = true
+		get_tree().change_scene_to_file("res://Scenes/creditos.tscn")
 
 
 func _voltar() -> void:
-	get_tree().change_scene_to_file(PROGRESSAO.MENU)
+	if _creditos_abertos:
+		return
+	_creditos_abertos = true
+	get_tree().change_scene_to_file("res://Scenes/creditos.tscn")

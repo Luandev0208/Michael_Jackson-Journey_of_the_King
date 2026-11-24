@@ -124,7 +124,7 @@ horizontal_alignment = 1
 
 [node name="Voltar" type="Button" parent="Interface/Final/Conteudo"]
 layout_mode = 2
-text = "Voltar ao menu"
+text = "Assistir créditos agora"
 
 [connection signal="pressed" from="Interface/Final/Conteudo/Voltar" to="." method="_voltar"]
 
