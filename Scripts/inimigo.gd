@@ -155,12 +155,58 @@ func _derrotar() -> void:
 	contato.set_deferred("monitoring", false)
 	remove_from_group("inimigos")
 	visual.modulate = Color.WHITE
+	_efeito_derrota()
+	var duracao := 0.0
 	if _animar("death", 0.0, true):
-		_sprite.animation_finished.connect(queue_free, CONNECT_ONE_SHOT)
-	else:
-		queue_free()
+		duracao = _duracao_animacao(&"death")
+	# O corpo fica visível até o fim da animação, dissolve e só então sai da cena.
+	# O tempo é calculado aqui e não depende do sinal da animação.
+	var saida := create_tween()
+	saida.tween_interval(duracao + 0.25)
+	saida.tween_property(visual, "modulate:a", 0.0, 0.40)
+	saida.tween_callback(queue_free)
 	# Barreiras, vagas de spawn e recompensas contam a derrota no golpe final.
 	derrotado.emit()
+
+func _duracao_animacao(nome: StringName) -> float:
+	var quadros := _sprite.sprite_frames
+	var total := 0.0
+	for indice in quadros.get_frame_count(nome):
+		total += quadros.get_frame_duration(nome, indice)
+	return total / maxf(quadros.get_animation_speed(nome), 0.01)
+
+func _efeito_derrota() -> void:
+	# Clarão no golpe final, anel de impacto e fagulhas: o jogador percebe a vitória na hora.
+	visual.modulate = Color(2.4, 2.4, 2.4)
+	create_tween().tween_property(visual, "modulate", Color.WHITE, 0.16)
+	var cena := get_parent()
+	if cena == null:
+		return
+	var centro := global_position + Vector2(0.0, -18.0)
+	var anel := Line2D.new()
+	anel.width = 2.0
+	anel.default_color = Color(1.0, 0.94, 0.75, 0.95)
+	anel.z_index = 4
+	for i in range(17):
+		anel.add_point(Vector2.from_angle(TAU * float(i) / 16.0) * 8.0)
+	cena.add_child(anel)
+	anel.global_position = centro
+	var expansao := anel.create_tween().set_parallel()
+	expansao.tween_property(anel, "scale", Vector2(3.2, 3.2), 0.30)
+	expansao.tween_property(anel, "modulate:a", 0.0, 0.30)
+	expansao.chain().tween_callback(anel.queue_free)
+	for i in range(6):
+		var faisca := Polygon2D.new()
+		faisca.polygon = PackedVector2Array([Vector2(-1.5, -1.5), Vector2(1.5, -1.5), Vector2(1.5, 1.5), Vector2(-1.5, 1.5)])
+		faisca.color = Color(1.0, 0.92, 0.65) if i % 2 == 0 else Color(0.75, 0.55, 1.0)
+		faisca.z_index = 4
+		cena.add_child(faisca)
+		faisca.global_position = centro
+		var sentido := Vector2.from_angle(TAU * (float(i) + 0.5) / 6.0)
+		var voo := faisca.create_tween().set_parallel()
+		voo.tween_property(faisca, "global_position", centro + sentido * randf_range(16.0, 28.0), 0.34)
+		voo.tween_property(faisca, "modulate:a", 0.0, 0.34)
+		voo.chain().tween_callback(faisca.queue_free)
 
 
 func _mostrar_impacto() -> void:

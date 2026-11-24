@@ -9,7 +9,10 @@ const Pausa := preload("res://Scripts/pausa.gd")
 const CAMADA_CENARIO := 1
 const CAMADA_INIMIGO := 4
 
-@export var velocidade_movimento := 80.0
+# Velocidade com a qual os quadros de caminhada foram desenhados.
+const VELOCIDADE_BASE_ANIMACAO := 80.0
+
+@export var velocidade_movimento := 94.0
 @export var protecao_apos_dano := 0.85
 
 @export_group("Figurino")
@@ -185,7 +188,8 @@ func _andar(direcao: Vector2) -> void:
 	var quadros := _quadros_atuais()
 	if not direcao.is_zero_approx() and get_real_velocity().length_squared() > 1.0:
 		_usar_quadros(quadros)
-		sprite.play(_animacao)
+		# A caminhada acompanha a velocidade para Michael não parecer deslizar.
+		sprite.play(_animacao, clampf(velocidade_movimento / VELOCIDADE_BASE_ANIMACAO, 0.5, 2.0))
 	else:
 		var em_voo := StringName("EmVoo_" + String(_animacao))
 		var parado := StringName("Parado_" + String(_animacao))

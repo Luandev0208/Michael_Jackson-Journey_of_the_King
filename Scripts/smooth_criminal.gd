@@ -265,7 +265,7 @@ func _derrotar_chefe() -> void:
 func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 	if concluida:
 		return
-	nota.queue_free()
+	nota.coletar()
 	_notas_coletadas += 1
 	pontuacao = _notas_coletadas * 100
 	_atualizar_notas()
