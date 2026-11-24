@@ -238,7 +238,10 @@ func _definir_ia(ativa: bool) -> void:
 
 func _eliminar_inimigos() -> void:
 	for inimigo: Inimigo in _inimigos():
-		inimigo.receber_dano(inimigo.vida)
+		if inimigo.has_method("dev_eliminar"):
+			inimigo.dev_eliminar()
+		else:
+			inimigo.receber_dano(inimigo.vida)
 
 func _gerar_onda() -> void:
 	if _fase.has_method("dev_gerar_onda"):

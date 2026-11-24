@@ -287,8 +287,8 @@ func concluir() -> void:
 	$Interface/Conclusao/Conteudo/Voltar.grab_focus()
 
 
-func _voltar() -> void:
-	get_tree().change_scene_to_file(PROGRESSAO.MENU)
+func _avancar() -> void:
+	get_tree().change_scene_to_file(PROGRESSAO.ULTIMO_ECO)
 
 
 func dev_posicao_central() -> Vector2:
