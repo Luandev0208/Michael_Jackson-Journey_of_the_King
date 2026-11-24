@@ -213,10 +213,14 @@ func _liberar() -> void:
 	etapa += 1
 	ativa = false
 	_mensagem = 2.5
-	_aviso.text = "Espelho liberado" if espelho_liberado() else "Combate concluído · Passagem liberada"
-	FEEDBACK.faixa(_fase, "ESPELHO LIBERADO" if espelho_liberado() else "PASSAGEM LIBERADA", "Guardião derrotado" if espelho_liberado() else "", Color(0.82, 0.62, 1.0), 0.18 if espelho_liberado() else 0.0, 1.8)
 	_painel.show()
-	if not espelho_liberado():
+	var cor := Color(0.82, 0.62, 1.0)
+	if espelho_liberado():
+		_aviso.text = "Guardião derrotado · Passagem liberada"
+		FEEDBACK.faixa(_fase, "GUARDIÃO DERROTADO", "Passagem liberada", cor, 0.18, 1.8)
+	else:
+		_aviso.text = "Combate concluído · Passagem liberada"
+		FEEDBACK.faixa(_fase, "PASSAGEM LIBERADA", "", cor, 0.0, 1.8)
 		_fase.jogador.recuperar_uma_vida()
 
 func espelho_liberado() -> bool:

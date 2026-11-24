@@ -2,10 +2,12 @@ extends PanelContainer
 
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CORACAO := preload("res://Assets/Thriller/coracao.png")
+const VERDE_META := Color(0.60, 0.96, 0.71)
 
 @export var titulo := ""
 
 var _efeito_pontuacao: Tween
+var _cor_contador := Color.WHITE
 
 @onready var tentativas: Label = $Conteudo/Cabecalho/Tentativas
 @onready var contador: Label = $Conteudo/Notas
@@ -38,16 +40,23 @@ func _atualizar_tentativas(restantes: int) -> void:
 	tentativas.text = "Tentativas %d/%d" % [restantes, TENTATIVAS.MAXIMO]
 
 
-func atualizar_pontos(coletadas: int, total: int, pontos: int) -> void:
-	contador.text = "Notas  %d/%d     Pontos  %d" % [coletadas, total, pontos]
+func atualizar_pontos(coletadas: int, total: int, pontos: int, meta := 0) -> void:
+	if meta <= 0:
+		contador.text = "Notas  %d/%d     Pontos  %d" % [coletadas, total, pontos]
+		return
+	var atingiu_meta := coletadas >= meta
+	_cor_contador = VERDE_META if atingiu_meta else Color.WHITE
+	var estado_meta := " · Meta atingida" if atingiu_meta else " (meta)"
+	contador.text = "Notas  %d/%d%s  ·  %d pts" % [coletadas, meta, estado_meta, pontos]
+	contador.modulate = _cor_contador
 
 
 func destacar_pontos() -> void:
 	if _efeito_pontuacao != null:
 		_efeito_pontuacao.kill()
-	contador.modulate = Color(1.0, 0.76, 0.32)
+	contador.modulate = Color(1.0, 0.76, 0.32) if _cor_contador == Color.WHITE else _cor_contador.lerp(Color.WHITE, 0.35)
 	_efeito_pontuacao = create_tween()
-	_efeito_pontuacao.tween_property(contador, "modulate", Color.WHITE, 0.55)
+	_efeito_pontuacao.tween_property(contador, "modulate", _cor_contador, 0.55)
 
 
 func _atualizar_vidas(restantes: int) -> void:

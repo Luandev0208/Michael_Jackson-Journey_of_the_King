@@ -65,7 +65,6 @@ func _abrir() -> void:
 	_restaurar_pontos.visible = _fase.has_method("dev_restaurar_pontos")
 	_completar_testes.visible = _fase.has_method("dev_completar_objetivos")
 	_nota.disabled = not _fase.has_method("dev_coletar_nota")
-	_concluir.disabled = not _fase.has_method("concluir") or (_fase.has_method("dev_espelho_liberado") and not _fase.dev_espelho_liberado())
 	_painel.show()
 	set_process(true)
 	_process(0.0)
@@ -88,6 +87,7 @@ func _process(_delta: float) -> void:
 			nome = rotulo
 			break
 	var posicao := Vector2i(_jogador.global_position.round())
+	_concluir.disabled = not _fase.has_method("concluir") or (_fase.has_method("dev_espelho_liberado") and not _fase.dev_espelho_liberado())
 	_status.text = "%s  ·  %d FPS  ·  Posição %d, %d\nVida %d/%d  ·  Inimigos %d  ·  %s  ·  Invencível %s" % [
 		nome, Engine.get_frames_per_second(), posicao.x, posicao.y, _jogador.vida,
 		MichaelJogador.VIDA_MAXIMA, _inimigos().size(), progresso,
@@ -215,7 +215,6 @@ func _ir_para_final() -> void:
 
 func _completar_objetivos_teste() -> void:
 	_fase.dev_completar_objetivos()
-	_concluir.disabled = not _fase.dev_espelho_liberado()
 
 func _concluir_objetivo() -> void:
 	_fechar()

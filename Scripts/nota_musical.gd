@@ -4,6 +4,17 @@ const NOTA_VISUAL := preload("res://Scripts/nota_visual.gd")
 const INDICADOR := preload("res://Scripts/indicador_notas.gd")
 
 
+static func minimo_para_avancar(total: int) -> int:
+	return ceili(total * 0.8)
+
+
+static func aviso_espelho(faltam: int, objetivo_pendente := "") -> String:
+	if faltam <= 0:
+		return "E — Interagir com o espelho" if objetivo_pendente.is_empty() else objetivo_pendente
+	var pendencia := "Falta recuperar 1 nota musical." if faltam == 1 else "Faltam %d notas musicais." % faltam
+	return pendencia if objetivo_pendente.is_empty() else "%s\n%s" % [objetivo_pendente, pendencia]
+
+
 static func criar(celula: Vector2i, posicao: Vector2) -> Area2D:
 	var nota: Area2D = NOTA_VISUAL.new()
 	nota.name = "Nota_%d_%d" % [celula.x, celula.y]

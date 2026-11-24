@@ -63,6 +63,7 @@ var _detetives_restantes := 0
 var _encontro_iniciado := false
 var _inicio_pronto := false
 var _notas_coletadas := 0
+var _meta_notas := NOTA_MUSICAL.minimo_para_avancar(NOTAS.size())
 var _avanco := ""
 var _tempo_avanco := 0.0
 var _espera_spawn := 0.0
@@ -158,7 +159,8 @@ func _physics_process(delta: float) -> void:
 		_verificar_passagem()
 	aviso_espelho.visible = pes.global_position.distance_to(espelho.global_position + Vector2(0, 20)) <= 54.0
 	if aviso_espelho.visible:
-		$Interface/Espelho/Texto.text = "E — Interagir com o espelho" if dev_espelho_liberado() else "A memória ainda está apagada"
+		var pendencia := "" if _memorias_restauradas() else "Restaure as memórias da cidade."
+		$Interface/Espelho/Texto.text = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas, pendencia)
 		if Input.is_action_just_pressed("Interagir"):
 			concluir()
 
@@ -275,9 +277,7 @@ func _liberar_passagem() -> void:
 	_espera_spawn = 0.0
 	_avanco = "Memória restaurada · Passagem liberada"
 	_tempo_avanco = 2.6
-	if dev_espelho_liberado():
-		espelho.modulate = Color.WHITE
-	else:
+	if not _memorias_restauradas():
 		for celula: Vector2i in _pisos_acesos:
 			if REGIOES[_regiao].pisos.has_point(celula) and pisos.get_cell_atlas_coords(celula).x > 0:
 				_pisos_da_regiao += 1
@@ -285,9 +285,13 @@ func _liberar_passagem() -> void:
 
 
 func _atualizar_objetivo() -> void:
-	if dev_espelho_liberado():
+	if _memorias_restauradas():
 		titulo.text = "Memória restaurada · 3/3"
-		detalhe.text = "O espelho está aberto. Siga ao norte."
+		if dev_espelho_liberado():
+			espelho.modulate = Color.WHITE
+			detalhe.text = "O espelho está aberto. Siga ao norte."
+		else:
+			detalhe.text = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas)
 		return
 	var regiao: Dictionary = REGIOES[_regiao]
 	titulo.text = "%s · %d/3" % [regiao.nome, _regiao]
@@ -310,7 +314,9 @@ func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 
 
 func _atualizar_notas() -> void:
-	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), _notas_coletadas * 100)
+	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), _notas_coletadas * 100, _meta_notas)
+	if _memorias_restauradas():
+		_atualizar_objetivo()
 
 
 func concluir() -> void:
@@ -320,8 +326,12 @@ func concluir() -> void:
 	get_tree().change_scene_to_file(PROGRESSAO.THRILLER)
 
 
-func dev_espelho_liberado() -> bool:
+func _memorias_restauradas() -> bool:
 	return _regiao == REGIOES.size()
+
+
+func dev_espelho_liberado() -> bool:
+	return _memorias_restauradas() and _notas_coletadas >= _meta_notas
 
 
 func indicador_notas_suprimido() -> bool:
@@ -355,7 +365,7 @@ func dev_completar_objetivos() -> void:
 		if detetive.has_meta("obrigatorio") and detetive.vida > 0:
 			detetive.receber_dano(detetive.vida)
 	dev_restaurar_pontos()
-	while not dev_espelho_liberado():
+	while not _memorias_restauradas():
 		_liberar_passagem()
 
 
@@ -385,4 +395,4 @@ func dev_coletar_nota() -> void:
 
 
 func dev_progresso() -> String:
-	return "Memórias %d/3  ·  Notas %d/%d" % [_restauradas.count(true), _notas_coletadas, NOTAS.size()]
+	return "Memórias %d/3  ·  Notas %d/%d (meta)" % [_restauradas.count(true), _notas_coletadas, _meta_notas]

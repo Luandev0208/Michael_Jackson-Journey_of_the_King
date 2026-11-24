@@ -25,6 +25,7 @@ var pontuacao: int:
 		return _notas_coletadas * 100
 
 var _notas_coletadas := 0
+var _meta_notas := NOTA_MUSICAL.minimo_para_avancar(NOTAS.size())
 var concluida := false
 
 @onready var piso: TileMapLayer = $Piso
@@ -125,7 +126,7 @@ func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 	hud.destacar_pontos()
 
 func _atualizar_pontos() -> void:
-	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), pontuacao)
+	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), pontuacao, _meta_notas)
 
 
 func _physics_process(_delta: float) -> void:
@@ -135,13 +136,14 @@ func _physics_process(_delta: float) -> void:
 	var frente_do_espelho := espelho.global_position + Vector2(0, 60)
 	aviso.visible = pes.global_position.distance_to(frente_do_espelho) <= ALCANCE_ESPELHO
 	if aviso.visible:
-		texto_aviso.text = "E — Interagir com o espelho" if batalhas.espelho_liberado() else "Derrote os zumbis das passagens"
+		var pendencia := "" if batalhas.espelho_liberado() else "Derrote os zumbis das passagens."
+		texto_aviso.text = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas, pendencia)
 	if aviso.visible and Input.is_action_just_pressed("Interagir"):
 		concluir()
 
 
 func concluir() -> void:
-	if concluida or jogador.vida <= 0 or not batalhas.espelho_liberado():
+	if concluida or jogador.vida <= 0 or not dev_espelho_liberado():
 		return
 	concluida = true
 	FEEDBACK.encerrar(self)
@@ -171,17 +173,17 @@ func dev_gerar_onda() -> void:
 		encontros.gerar_onda_teste()
 
 func dev_espelho_liberado() -> bool:
-	return batalhas.espelho_liberado()
+	return batalhas.espelho_liberado() and _notas_coletadas >= _meta_notas
 
 func indicador_notas_suprimido() -> bool:
 	# Durante as ondas obrigatórias o indicador some para não poluir a tela.
 	return concluida or jogador.vida <= 0 or batalhas.ativa
 
 func dev_progresso() -> String:
-	return "Notas %d/%d  ·  Pontos %d" % [_notas_coletadas, NOTAS.size(), pontuacao]
+	return "Notas %d/%d (meta)  ·  Pontos %d" % [_notas_coletadas, _meta_notas, pontuacao]
 
 func dev_coletar_nota() -> void:
 	for nota in atores.get_children():
-		if nota is Area2D and not nota.is_queued_for_deletion():
+		if nota.is_in_group("notas_musicais") and not nota.is_queued_for_deletion():
 			_coletar_nota(jogador, nota)
 			return

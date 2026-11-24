@@ -27,6 +27,7 @@ var objetivo := Objetivo.ENERGIA
 var concluida := false
 var pontuacao := 0
 var _notas_coletadas := 0
+var _meta_notas := NOTA_MUSICAL.minimo_para_avancar(NOTAS.size())
 var _alarme := 0.0
 var _progresso_luz := 0.0
 var _estagio_chefe := 1
@@ -56,6 +57,7 @@ func _ready() -> void:
 	set_physics_process(false)
 	TENTATIVAS.registrar_fase(scene_file_path)
 	hud.iniciar(jogador)
+	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_notas()
 	_marcador.points = PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-4, 0), Vector2(0, -5)])
 	_marcador.width = 2.0
@@ -184,10 +186,11 @@ func _atualizar_interacao() -> void:
 			if pes.global_position.distance_to(POSICAO_VIP) <= ALCANCE_INTERACAO:
 				mensagem = "E — Abrir acesso VIP"
 				pode_interagir = true
-		Objetivo.ESPELHO:
+		Objetivo.CHEFE, Objetivo.ESPELHO:
 			if pes.global_position.distance_to(FRENTE_ESPELHO) <= ALCANCE_INTERACAO:
-				mensagem = "E — Recuperar a memória"
-				pode_interagir = true
+				var pendencia := "Derrote o líder dos capangas." if objetivo == Objetivo.CHEFE else ""
+				mensagem = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas, pendencia)
+				pode_interagir = dev_espelho_liberado()
 	interacao.visible = not mensagem.is_empty()
 	texto_interacao.text = mensagem
 	if not pode_interagir or not Input.is_action_just_pressed("Interagir"):
@@ -260,19 +263,19 @@ func _atualizar_etapa_chefe(etapa: int) -> void:
 
 
 func _derrotar_chefe() -> void:
-	FEEDBACK.faixa(self, "CHEFE DERROTADO", "O caminho até o espelho está livre", Color(1.0, 0.86, 0.5), 0.30)
 	objetivo = Objetivo.ESPELHO
+	FEEDBACK.faixa(self, "CHEFE DERROTADO", "A escadaria está livre", Color(1.0, 0.86, 0.5), 0.30)
 	_atualizar_portao(portao_palco, true)
 	$Holofotes/PalcoOeste.ligar(false)
 	$Holofotes/PalcoLeste.ligar(false)
 	painel_chefe.hide()
-	missao.text = "Líder derrotado · siga até o espelho"
+	_atualizar_objetivo_final()
 	_marcador.global_position = FRENTE_ESPELHO + Vector2(0, -20)
 	_marcador.show()
 
 
 func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
-	if concluida:
+	if concluida or nota.is_queued_for_deletion():
 		return
 	nota.coletar()
 	_notas_coletadas += 1
@@ -282,11 +285,17 @@ func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 
 
 func _atualizar_notas() -> void:
-	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), pontuacao)
+	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), pontuacao, _meta_notas)
+	if objetivo == Objetivo.ESPELHO:
+		_atualizar_objetivo_final()
+
+
+func _atualizar_objetivo_final() -> void:
+	missao.text = "Líder derrotado · siga até o espelho" if dev_espelho_liberado() else "Líder derrotado · recolha as notas"
 
 
 func concluir() -> void:
-	if concluida or jogador.vida <= 0 or objetivo != Objetivo.ESPELHO:
+	if concluida or jogador.vida <= 0 or not dev_espelho_liberado():
 		return
 	concluida = true
 	FEEDBACK.encerrar(self)
@@ -314,11 +323,15 @@ func dev_posicao_final() -> Vector2:
 
 
 func dev_espelho_liberado() -> bool:
-	return objetivo == Objetivo.ESPELHO
+	return objetivo == Objetivo.ESPELHO and _notas_coletadas >= _meta_notas
+
+
+func indicador_notas_suprimido() -> bool:
+	return concluida or jogador.vida <= 0 or objetivo == Objetivo.CHEFE
 
 
 func dev_progresso() -> String:
-	return "%s · Notas %d/%d" % [missao.text, _notas_coletadas, NOTAS.size()]
+	return "%s · Notas %d/%d (meta)" % [missao.text, _notas_coletadas, _meta_notas]
 
 
 func dev_coletar_nota() -> void:
