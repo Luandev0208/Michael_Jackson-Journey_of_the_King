@@ -7,6 +7,8 @@ const Guardiao := preload("res://Scripts/guardiao.gd")
 const Zumbi := preload("res://Scripts/zumbi.gd")
 const Detetive := preload("res://Scripts/detetive.gd")
 const ChefeSmooth := preload("res://Scripts/chefe_smooth.gd")
+const UltimoEco := preload("res://Scripts/ultimo_eco.gd")
+const TheSilence := preload("res://Scripts/the_silence.gd")
 const Indicador := preload("res://Scripts/indicador_notas.gd")
 
 var _falhas := 0
@@ -23,6 +25,8 @@ func _executar() -> void:
 	await _testar_billie_jean()
 	await _testar_thriller()
 	await _testar_smooth_criminal()
+	await _testar_ultimo_eco()
+	await _testar_reinicio_ultimo_eco()
 	print("%d verificações, %d falhas" % [_verificacoes, _falhas])
 	quit(1 if _falhas else 0)
 
@@ -484,4 +488,94 @@ func _testar_smooth_criminal() -> void:
 	_verificar(fase.concluida and fase.conclusao.visible, "Espelho conclui Smooth Criminal")
 	fase.conclusao.get_node("Conteudo/Voltar").pressed.emit()
 	await _quadros(4)
-	_verificar(current_scene.scene_file_path == "res://Scenes/interface.tscn", "Smooth Criminal volta ao menu")
+	_verificar(current_scene is UltimoEco, "Smooth Criminal abre O Último Eco")
+
+
+func _testar_ultimo_eco() -> void:
+	print("O Último Eco")
+	if not current_scene is UltimoEco:
+		await _entrar("ultimo_eco")
+	var fase := current_scene as UltimoEco
+	var jogador := fase.jogador
+	var chefe := fase.chefe
+	_verificar(fase._pronta and chefe.estado == TheSilence.Estado.ESPERA, "Arena pronta, confronto começa com interação")
+	_verificar(not fase.dev_espelho_liberado(), "Portal final bloqueado no início")
+	_testar_colisoes_finais(fase)
+	await _coletar_notas(jogador, 3)
+	_verificar(fase._notas_coletadas == 3, "Três notas adicionam 300 pontos")
+	_posicionar_pes(jogador, chefe.global_position + Vector2(0, 55))
+	await _comando(&"Interagir")
+	_verificar(fase.painel_chefe.visible and chefe.estado != TheSilence.Estado.ESPERA, "Interação inicia o confronto e mostra a barra")
+	chefe.receber_dano(15, Vector2.ZERO, &"chute")
+	_verificar(chefe.vida == 15, "Chefe invulnerável fora da abertura mesmo com golpe letal")
+	var avisou := await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.AVISO, 140)
+	_verificar(avisou and chefe._ataque == TheSilence.Ataque.ONDA and chefe._aviso is Line2D, "Apagamento anuncia onda")
+	if avisou:
+		await _esperar(func() -> bool: return chefe._tempo <= 0.07, 85)
+		jogador.frente = Vector2.RIGHT
+		await _comando(&"Moonwalk")
+	_verificar(await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.VULNERAVEL, 80), "Após onda, chefe fica vulnerável")
+	_verificar(jogador.vida == 4 and chefe._tempo > 2.8, "Moonwalk evita onda e prolonga janela")
+	chefe.receber_dano(1, Vector2.ZERO, &"chapeu")
+	_verificar(chefe.vida == 14 and fase.barra.value == 14.0, "Chapéu atinge na janela e atualiza barra")
+	chefe.receber_dano(4, Vector2.ZERO, &"chute")
+	_verificar(chefe.fase == 2 and chefe.estado == TheSilence.Estado.TRANSICAO, "Dez PV iniciam Fratura")
+	_verificar(fase._pisos[1].visible and fase._objetos[1].visible and not fase._pisos[0].visible, "Fratura troca piso e objetos")
+
+	avisou = await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.AVISO, 190)
+	_verificar(avisou and chefe._ataque == TheSilence.Ataque.FENDA, "Fratura marca fenda nas coordenadas do jogador")
+	var fenda := chefe._centro
+	Input.action_press(&"Direita")
+	await _comando(&"Dash")
+	Input.action_release(&"Direita")
+	await _quadros(14)
+	_verificar(chefe._centro == fenda, "Fenda permanece na posição anunciada")
+	_verificar(await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.VULNERAVEL, 90), "Fenda abre janela de ataque")
+	_verificar(jogador.vida == 4 and jogador.colisor.global_position.distance_to(fenda) > TheSilence.RAIO_FENDA, "Dash sai da área anunciada e evita a fenda")
+	chefe.receber_dano(5, Vector2.ZERO, &"chute")
+	_verificar(chefe.fase == 3 and fase._pisos[2].visible and not fase._objetos[1].visible, "Cinco PV ativam arena de Último eco")
+
+	_posicionar_pes(jogador, chefe.global_position + Vector2(0, 55))
+	avisou = await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.AVISO, 190)
+	_verificar(avisou and chefe._ataque == TheSilence.Ataque.INVESTIDA and chefe._aviso is Polygon2D, "Último eco sinaliza investida")
+	_verificar(await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.INVESTIDA, 90), "Investida começa após aviso")
+	_verificar(await _esperar(func() -> bool: return chefe.estado == TheSilence.Estado.VULNERAVEL, 100), "Investida termina e expõe chefe")
+	_verificar(jogador.vida == 3, "Investida acerta uma vez em linha reta")
+	chefe.receber_dano(5, Vector2.ZERO, &"chute")
+	_verificar(fase.restaurada and fase._pisos[3].visible and fase._objetos[3].visible and not fase.painel_chefe.visible, "Derrota restaura arena, objetos e portal")
+	await _quadros(150)
+	_verificar(not is_instance_valid(chefe), "The Silence desaparece após dissolução")
+	_posicionar_pes(jogador, fase.dev_posicao_final())
+	await _quadros(4)
+	await _comando(&"Interagir")
+	_verificar(fase.concluida and fase.final.visible, "Portal restaurado abre desfecho")
+	fase.final.get_node("Conteudo/Voltar").pressed.emit()
+	await _quadros(4)
+	_verificar(current_scene.scene_file_path == "res://Scenes/interface.tscn", "Desfecho retorna ao menu")
+
+
+func _testar_colisoes_finais(fase: UltimoEco) -> void:
+	var jogador := fase.jogador
+	var piso: TileMapLayer = fase._pisos[0].get_node("Piso0")
+	var celula := Vector2i(8, 2)
+	var centro := piso.to_global(piso.map_to_local(celula))
+	var inicio := Transform2D(0.0, centro - jogador.colisor.position)
+	_verificar(jogador.test_move(inicio, Vector2.UP * 32.0), "Colisão física impede entrada no vazio")
+	var altar: Node2D = fase._objetos[0].get_node("altar18")
+	inicio.origin = altar.global_position + Vector2(0, 30) - jogador.colisor.position
+	_verificar(jogador.test_move(inicio, Vector2.UP * 40.0), "Apoio do altar bloqueia passagem")
+	var origem := Vector2i((jogador.colisor.global_position / 32.0).floor())
+	var portal := Vector2i((fase.dev_posicao_final() / 32.0).floor())
+	_verificar(not fase.caminhos.get_id_path(origem, portal).is_empty(), "Rota navegável do ponto de entrada ao portal")
+	_verificar(fase._pisos[0].get_node("Piso0").get_used_cells().size() == 892, "Todos os tiles-base da arena são carregados")
+
+
+func _testar_reinicio_ultimo_eco() -> void:
+	await _entrar("ultimo_eco")
+	var fase := current_scene as UltimoEco
+	var id_fase := fase.get_instance_id()
+	await _comando(&"Interagir")
+	fase.jogador.vida = 1
+	fase.jogador.receber_dano()
+	_verificar(await _esperar(func() -> bool: return current_scene is UltimoEco and current_scene.get_instance_id() != id_fase, 150), "Derrota do jogador reinicia a fase final")
+	_verificar(current_scene is UltimoEco and current_scene.jogador.vida == 4 and current_scene.chefe.estado == TheSilence.Estado.ESPERA, "Reinício restaura o jogador e o chefe volta à espera")

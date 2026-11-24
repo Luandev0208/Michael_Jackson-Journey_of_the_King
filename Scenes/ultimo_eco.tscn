@@ -1,0 +1,131 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/ultimo_eco.gd" id="fase"]
+[ext_resource type="PackedScene" path="res://Scenes/michael.tscn" id="michael"]
+[ext_resource type="PackedScene" path="res://Scenes/the_silence_chefe.tscn" id="chefe"]
+[ext_resource type="PackedScene" path="res://Scenes/hud_memoria.tscn" id="hud"]
+[ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="tema"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/SmoothCriminal/michael_terno_claro_com_chapeu.tres" id="figurino"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/SmoothCriminal/michael_terno_claro_sem_chapeu.tres" id="sem_chapeu"]
+[ext_resource type="Texture2D" path="res://Assets/Michael/Animacoes/Efeitos/chapeu_em_voo_branco.png" id="chapeu"]
+
+[node name="UltimoEco" type="Node2D"]
+script = ExtResource("fase")
+
+[node name="Cenario" type="Node2D" parent="."]
+z_index = -2
+
+[node name="Colisoes" type="Node2D" parent="."]
+
+[node name="Atores" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Michael_Player" parent="Atores" instance=ExtResource("michael")]
+position = Vector2(640, 718)
+textura_chapeu = ExtResource("chapeu")
+figurino_sem_chapeu = ExtResource("sem_chapeu")
+
+[node name="Michael_Sprite" parent="Atores/Michael_Player" index="0"]
+sprite_frames = ExtResource("figurino")
+
+[node name="Camera2D" parent="Atores/Michael_Player" index="2"]
+position = Vector2(0, -44)
+limit_right = 1280
+limit_bottom = 1024
+
+[node name="TheSilence" parent="Atores" node_paths=PackedStringArray("alvo") instance=ExtResource("chefe")]
+position = Vector2(640, 528)
+alvo = NodePath("../Michael_Player/Michael_Colisor")
+
+[node name="Interface" type="CanvasLayer" parent="."]
+
+[node name="HUD" parent="Interface" instance=ExtResource("hud")]
+titulo = "O ÚLTIMO ECO"
+
+[node name="Chefe" type="PanelContainer" parent="Interface"]
+visible = false
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -250.0
+offset_top = 12.0
+offset_right = -14.0
+theme = ExtResource("tema")
+mouse_filter = 2
+
+[node name="Conteudo" type="VBoxContainer" parent="Interface/Chefe"]
+layout_mode = 2
+
+[node name="Titulo" type="Label" parent="Interface/Chefe/Conteudo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+
+[node name="Vida" type="ProgressBar" parent="Interface/Chefe/Conteudo"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+max_value = 15.0
+value = 15.0
+show_percentage = false
+
+[node name="Instrucao" type="Label" parent="Interface/Chefe/Conteudo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Aguarde a abertura"
+horizontal_alignment = 1
+
+[node name="Aviso" type="PanelContainer" parent="Interface"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -208.0
+offset_top = -64.0
+offset_right = 208.0
+offset_bottom = -12.0
+theme = ExtResource("tema")
+mouse_filter = 2
+
+[node name="Texto" type="Label" parent="Interface/Aviso"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "The Silence reuniu as três memórias nesta arena.\nE — Enfrentar The Silence"
+horizontal_alignment = 1
+
+[node name="Final" type="PanelContainer" parent="Interface"]
+visible = false
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -75.0
+offset_right = 180.0
+offset_bottom = 75.0
+theme = ExtResource("tema")
+
+[node name="Conteudo" type="VBoxContainer" parent="Interface/Final"]
+layout_mode = 2
+
+[node name="Titulo" type="Label" parent="Interface/Final/Conteudo"]
+layout_mode = 2
+text = "Memórias restauradas"
+horizontal_alignment = 1
+
+[node name="Mensagem" type="Label" parent="Interface/Final/Conteudo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "O Silêncio se desfaz.\nA música e as memórias de Michael foram preservadas."
+horizontal_alignment = 1
+
+[node name="Pontos" type="Label" parent="Interface/Final/Conteudo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="Voltar" type="Button" parent="Interface/Final/Conteudo"]
+layout_mode = 2
+text = "Voltar ao menu"
+
+[connection signal="pressed" from="Interface/Final/Conteudo/Voltar" to="." method="_voltar"]
+
+[editable path="Atores/Michael_Player"]
