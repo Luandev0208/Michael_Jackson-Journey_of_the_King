@@ -43,6 +43,7 @@ func receber_dano(dano: int, _empurrao := Vector2.ZERO, _fonte := &"chute") -> v
 	if vida <= 0:
 		return
 	vida -= dano
+	AudioManager.tocar(&"impacto", global_position)
 	_arte.modulate = Color(1.0, 0.81, 1.0)
 	var efeito := create_tween()
 	if vida <= 0:

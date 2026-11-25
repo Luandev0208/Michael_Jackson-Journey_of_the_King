@@ -8,11 +8,14 @@ const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 @onready var botao_ajuda: Button = $PainelCentral/VBoxContainer/BotaoAjuda
 @onready var botao_voltar: Button = $Ajuda/Conteudo/BotaoVoltar
 
+@onready var configuracoes = $ConfiguracoesAudio
+
 var _aviso_creditos: ConfirmationDialog
 
 func _ready() -> void:
 	TENTATIVAS.reiniciar()
 	botao_voltar.pressed.connect(_voltar_da_ajuda)
+	configuracoes.fechar_solicitado.connect(_fechar_configuracoes)
 	_aviso_creditos = ConfirmationDialog.new()
 	_aviso_creditos.title = "Créditos"
 	_aviso_creditos.dialog_text = "Você também pode assistir aos créditos depois de concluir a jornada.\n\nQuer assistir agora?"
@@ -42,3 +45,20 @@ func _assistir_creditos() -> void:
 
 func _on_button_3_pressed() -> void:
 	get_tree().quit()
+
+
+func _unhandled_input(evento: InputEvent) -> void:
+	if configuracoes.visible and evento.is_action_pressed("ui_cancel") and not evento.is_echo():
+		_fechar_configuracoes()
+		get_viewport().set_input_as_handled()
+
+
+func _abrir_configuracoes() -> void:
+	menu.hide()
+	configuracoes.abrir()
+
+
+func _fechar_configuracoes() -> void:
+	configuracoes.hide()
+	menu.show()
+	$PainelCentral/VBoxContainer/BotaoConfiguracoes.grab_focus()

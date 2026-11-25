@@ -160,6 +160,7 @@ func _avancar() -> void:
 	var destino := PROGRESSAO.MENU
 	if ResourceLoader.exists(PROGRESSAO.SMOOTH_CRIMINAL, "PackedScene"):
 		destino = PROGRESSAO.SMOOTH_CRIMINAL
+	AudioManager.tocar(&"portal")
 	get_tree().change_scene_to_file(destino)
 
 func dev_posicao_final() -> Vector2:

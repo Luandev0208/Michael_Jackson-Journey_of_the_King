@@ -140,6 +140,7 @@ func _anunciar_ataque() -> void:
 	else:
 		_centro = global_position if _ataque == Ataque.ONDA else alvo.global_position
 		_aviso = _mostrar_area(_centro, _raio(), &"aviso_circular")
+	AudioManager.tocar(&"chefe_aviso", global_position if _ataque == Ataque.INVESTIDA else _centro)
 	_mudar_estado(Estado.AVISO)
 
 
@@ -160,8 +161,10 @@ func _executar_ataque() -> void:
 	if _ataque == Ataque.INVESTIDA:
 		_distancia_restante = ALCANCE_INVESTIDA
 		_mudar_estado(Estado.INVESTIDA)
+		AudioManager.tocar(&"chefe_investida", global_position)
 		return
 	var efeito := &"onda_silencio" if _ataque == Ataque.ONDA else &"fenda_energia"
+	AudioManager.tocar(&"chefe_onda" if _ataque == Ataque.ONDA else &"chefe_fenda", _centro)
 	_mostrar_efeito(efeito, _centro, _raio())
 	if alvo.global_position.distance_to(_centro) <= _raio():
 		_tentar_acertar(_centro)
@@ -233,6 +236,7 @@ func _aplicar_dano(dano: int, fonte: StringName) -> void:
 		_animar("phase_change", 1.1, true)
 		_tempo = 1.1
 		_mudar_estado(Estado.TRANSICAO)
+		AudioManager.tocar(&"chefe_etapa", global_position)
 		fase_alterada.emit(fase)
 
 

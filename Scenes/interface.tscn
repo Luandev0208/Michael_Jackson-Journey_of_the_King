@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://Assets/Camarim/camarim_preview.png" id="2_fundo"]
 [ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="3_tema"]
 [ext_resource type="PackedScene" path="res://Scenes/ajuda.tscn" id="4_ajuda"]
+[ext_resource type="PackedScene" path="res://Scenes/configuracoes_audio.tscn" id="5_configuracoes"]
 
 [node name="Interface" type="Control" unique_id=733257440]
 layout_mode = 3
@@ -41,9 +42,9 @@ layout_mode = 1
 anchor_top = 0.5
 anchor_bottom = 0.5
 offset_left = 26.0
-offset_top = -124.0
+offset_top = -140.0
 offset_right = 242.0
-offset_bottom = 124.0
+offset_bottom = 140.0
 grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PainelCentral" unique_id=573276791]
@@ -73,6 +74,11 @@ custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 text = "Ajuda"
 
+[node name="BotaoConfiguracoes" type="Button" parent="PainelCentral/VBoxContainer"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+text = "Configurações"
+
 [node name="BotaoCreditos" type="Button" parent="PainelCentral/VBoxContainer" unique_id=911302059]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
@@ -87,6 +93,11 @@ text = "Sair"
 visible = false
 layout_mode = 1
 
+[node name="ConfiguracoesAudio" parent="." instance=ExtResource("5_configuracoes")]
+visible = false
+layout_mode = 1
+
+[connection signal="pressed" from="PainelCentral/VBoxContainer/BotaoConfiguracoes" to="." method="_abrir_configuracoes"]
 [connection signal="pressed" from="PainelCentral/VBoxContainer/BotaoIniciar" to="." method="_on_button_pressed"]
 [connection signal="pressed" from="PainelCentral/VBoxContainer/BotaoAjuda" to="." method="_on_ajuda_pressed"]
 [connection signal="pressed" from="PainelCentral/VBoxContainer/BotaoCreditos" to="." method="_on_button_2_pressed"]

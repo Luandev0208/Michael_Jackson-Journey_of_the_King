@@ -198,6 +198,7 @@ func _atualizar_interacao() -> void:
 	match objetivo:
 		Objetivo.ENERGIA:
 			objetivo = Objetivo.ACESSO_VIP
+			AudioManager.tocar(&"restauracao", jukebox.global_position)
 			$Holofotes/Salao.ligar(true)
 			$Holofotes/VIP.ligar(true)
 			missao.text = "Energia ligada · abra a catraca VIP"
@@ -263,6 +264,7 @@ func _atualizar_etapa_chefe(etapa: int) -> void:
 
 
 func _derrotar_chefe() -> void:
+	AudioManager.tocar(&"vitoria")
 	objetivo = Objetivo.ESPELHO
 	FEEDBACK.faixa(self, "CHEFE DERROTADO", "A escadaria está livre", Color(1.0, 0.86, 0.5), 0.30)
 	_atualizar_portao(portao_palco, true)
@@ -307,6 +309,7 @@ func concluir() -> void:
 
 
 func _avancar() -> void:
+	AudioManager.tocar(&"portal")
 	get_tree().change_scene_to_file(PROGRESSAO.ULTIMO_ECO)
 
 

@@ -17,6 +17,7 @@ func _ready() -> void:
 	_pausa_anterior = get_tree().paused
 	get_tree().paused = true
 	var game_over := restantes <= 0
+	AudioManager.tocar(&"game_over" if game_over else &"derrota")
 
 	var fundo := ColorRect.new()
 	fundo.name = "Fundo"

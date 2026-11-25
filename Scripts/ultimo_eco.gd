@@ -208,6 +208,7 @@ func _atualizar_notas() -> void:
 
 func _restaurar_arena() -> void:
 	restaurada = true
+	AudioManager.tocar(&"vitoria")
 	FEEDBACK.faixa(self, "O SILÊNCIO FOI DERROTADO", "A arena foi restaurada · A música voltou", Color(1.0, 0.9, 0.55), 0.16, 3.6)
 	jogador._tremer_camera(1.4)
 	_mostrar_arena(3)
@@ -236,6 +237,7 @@ func concluir() -> void:
 	cena.notas_coletadas = _notas_coletadas
 	cena.total_notas = CELULAS_NOTAS.size()
 	concluida = true
+	AudioManager.tocar(&"portal")
 	var erro := get_tree().change_scene_to_node(cena)
 	if erro != OK:
 		concluida = false

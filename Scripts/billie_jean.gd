@@ -244,6 +244,7 @@ func _restaurar_ponto(indice: int) -> void:
 	_restauradas[indice] = true
 	FEEDBACK.faixa(self, "MEMÓRIA RESTAURADA", REGIOES[indice].nome + " voltou a brilhar", Color(1.0, 0.86, 0.5), 0.25)
 	var ponto := atores.get_node(NodePath(REGIOES[indice].ponto))
+	AudioManager.tocar(&"restauracao", ponto.global_position)
 	ponto.get_node("Apagado").hide()
 	ponto.get_node("Restaurado").show()
 	var brilho: Sprite2D = ponto.get_node("Brilho")
@@ -323,6 +324,7 @@ func concluir() -> void:
 	if concluida or jogador.vida <= 0 or not dev_espelho_liberado():
 		return
 	concluida = true
+	AudioManager.tocar(&"portal")
 	get_tree().change_scene_to_file(PROGRESSAO.THRILLER)
 
 

@@ -95,6 +95,7 @@ func _atacar_por_contato(delta: float) -> void:
 		_preparacao_restante = -1.0
 		_animando_ataque = _animar("attack", 0.0, true)
 		_efeito_ataque()
+		AudioManager.tocar(&"ataque_inimigo", global_position)
 		jogador.receber_dano(true)
 		return
 	_preparacao_restante = -1.0
@@ -260,6 +261,7 @@ func _efeito_derrota() -> void:
 
 
 func _mostrar_impacto() -> void:
+	AudioManager.tocar(&"impacto", global_position)
 	var faisca := Polygon2D.new()
 	faisca.polygon = PackedVector2Array([-7, 0, -2, -2, 0, -8, 2, -2, 7, 0, 2, 2, 0, 8, -2, 2])
 	faisca.color = Color(1.0, 0.88, 0.60)

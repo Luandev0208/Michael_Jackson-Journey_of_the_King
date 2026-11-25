@@ -230,6 +230,7 @@ func _oscilar_luzes() -> void:
 
 
 func _ameaca() -> void:
+	AudioManager.tocar(&"intro_ameaca")
 	_plano(0, camera.position, Vector2(320, 132), camera.zoom.x, 1.58, 6.5)
 	_silencio.show()
 	_silencio.play(&"idle_down")

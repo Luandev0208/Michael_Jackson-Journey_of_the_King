@@ -57,6 +57,7 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> voi
 	if nova_etapa != etapa:
 		etapa = nova_etapa
 		_recuperar(0.8)
+		AudioManager.tocar(&"chefe_etapa", global_position)
 		etapa_alterada.emit(etapa)
 
 
@@ -78,10 +79,12 @@ func _mover(delta: float) -> void:
 				_aviso.clear_points()
 				if _golpe_correndo:
 					_estado = Estado.INVESTIDA
+					AudioManager.tocar(&"chefe_investida", global_position)
 					_distancia_restante = _alcance_corrida
 					_atingiu = false
 					_animar("special", _alcance_corrida / _velocidade_corrida, true)
 				else:
+					AudioManager.tocar(&"chefe_golpe", global_position)
 					_acertar_se_proximo(ALCANCE_GOLPE, 0.42)
 					_recuperar(0.76, "attack")
 		Estado.INVESTIDA:
@@ -101,6 +104,7 @@ func _mover(delta: float) -> void:
 func _preparar_golpe(investida: bool) -> void:
 	if not _reservar_inicio_ataque():
 		return
+	AudioManager.tocar(&"chefe_aviso", global_position)
 	if etapa == 2:
 		_alternar_investida = not _alternar_investida
 	_golpe_correndo = investida

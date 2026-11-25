@@ -57,9 +57,11 @@ func _physics_process(_delta: float) -> void:
 
 	if Input.is_action_just_pressed("Interagir"):
 		if _espelho_revelado:
+			AudioManager.tocar(&"portal")
 			get_tree().change_scene_to_file(PROGRESSAO.BILLIE_JEAN)
 			return
 		_espelho_revelado = true
+		AudioManager.tocar(&"restauracao", frente_do_espelho.global_position)
 
 	texto.text = "E — Interagir"
 	if _espelho_revelado:

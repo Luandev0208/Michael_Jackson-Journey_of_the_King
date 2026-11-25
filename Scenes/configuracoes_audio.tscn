@@ -1,0 +1,161 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/configuracoes_audio.gd" id="audio"]
+[ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="tema"]
+
+[sub_resource type="StyleBoxFlat" id="Trilho"]
+content_margin_top = 3.0
+content_margin_bottom = 3.0
+bg_color = Color(0.24, 0.145, 0.24, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_left = 2
+corner_radius_bottom_right = 2
+
+[sub_resource type="StyleBoxFlat" id="Preenchimento"]
+content_margin_top = 3.0
+content_margin_bottom = 3.0
+bg_color = Color(0.76, 0.53, 0.29, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_left = 2
+corner_radius_bottom_right = 2
+
+[sub_resource type="Gradient" id="Ouro"]
+colors = PackedColorArray(1, 0.81, 0.53, 1, 0.87, 0.61, 0.32, 1)
+
+[sub_resource type="GradientTexture2D" id="Marcador"]
+gradient = SubResource("Ouro")
+width = 10
+height = 16
+fill_from = Vector2(0, 0)
+fill_to = Vector2(0, 1)
+
+[sub_resource type="Theme" id="EstiloSlider"]
+HSlider/icons/grabber = SubResource("Marcador")
+HSlider/icons/grabber_highlight = SubResource("Marcador")
+HSlider/styles/slider = SubResource("Trilho")
+HSlider/styles/grabber_area = SubResource("Preenchimento")
+HSlider/styles/grabber_area_highlight = SubResource("Preenchimento")
+
+[node name="ConfiguracoesAudio" type="PanelContainer"]
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -182.0
+offset_right = 182.0
+offset_top = -106.0
+offset_bottom = 106.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("tema")
+script = ExtResource("audio")
+
+[node name="Conteudo" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Titulo" type="Label" parent="Conteudo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.79, 0.49, 1)
+theme_override_font_sizes/font_size = 18
+text = "Configurações de áudio"
+horizontal_alignment = 1
+
+[node name="Volumes" type="GridContainer" parent="Conteudo"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 6
+columns = 3
+
+[node name="MasterTitulo" type="Label" parent="Conteudo/Volumes"]
+layout_mode = 2
+text = "Volume geral"
+
+[node name="Master" type="HSlider" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(108, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = SubResource("EstiloSlider")
+value = 100.0
+
+[node name="MasterValor" type="Label" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="MusicTitulo" type="Label" parent="Conteudo/Volumes"]
+layout_mode = 2
+text = "Música"
+
+[node name="Music" type="HSlider" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(108, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = SubResource("EstiloSlider")
+value = 100.0
+
+[node name="MusicValor" type="Label" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="SFXTitulo" type="Label" parent="Conteudo/Volumes"]
+layout_mode = 2
+text = "Efeitos sonoros"
+
+[node name="SFX" type="HSlider" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(108, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = SubResource("EstiloSlider")
+value = 100.0
+
+[node name="SFXValor" type="Label" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="AmbientTitulo" type="Label" parent="Conteudo/Volumes"]
+layout_mode = 2
+text = "Ambiente"
+
+[node name="Ambient" type="HSlider" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(108, 22)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme = SubResource("EstiloSlider")
+value = 100.0
+
+[node name="AmbientValor" type="Label" parent="Conteudo/Volumes"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 2
+
+[node name="Acoes" type="HBoxContainer" parent="Conteudo"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Restaurar" type="Button" parent="Conteudo/Acoes"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Restaurar padrões"
+
+[node name="Voltar" type="Button" parent="Conteudo/Acoes"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Voltar"
+
+[connection signal="pressed" from="Conteudo/Acoes/Restaurar" to="." method="_restaurar"]
+[connection signal="pressed" from="Conteudo/Acoes/Voltar" to="." method="_voltar"]

@@ -14,6 +14,7 @@ func _ready() -> void:
 	video.finished.connect(_voltar_ao_menu)
 	botao_pular.pressed.connect(_voltar_ao_menu)
 	botao_pular.grab_focus()
+	AudioManager.preparar_creditos()
 	video.play()
 	# Se o vídeo não carregar ou não iniciar, não deixa o jogador preso numa tela preta.
 	await get_tree().create_timer(1.0).timeout

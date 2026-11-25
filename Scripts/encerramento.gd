@@ -185,6 +185,7 @@ func _particulas(centro: Vector2, extensao: Vector2, quantidade: int) -> CPUPart
 
 
 func _ultimo_silencio() -> void:
+	AudioManager.tocar(&"final_dissolucao")
 	_abrir_plano(ARENA, "O ÚLTIMO ECO", Vector2(640, 219), 1.10, Color(0.61, 0.50, 0.72))
 	_mover_camera(Vector2(640, 171), 1.40, 8.4)
 	var objetos := _palco.get_node("Objetos") as Node2D
@@ -290,6 +291,7 @@ func _camarim() -> void:
 
 
 func _ultima_nota() -> void:
+	AudioManager.tocar(&"final_nota")
 	_legendar("")
 	cartela.text = ""
 	_plano.kill()

@@ -82,6 +82,7 @@ func _physics_process(delta: float) -> void:
 			if _tempo_acao <= 0.0:
 				_acao = Acao.CARGA
 				_tempo_acao = DURACAO_CARGA
+				AudioManager.tocar(&"chefe_investida", global_position)
 				_acertou = false
 				_limpar_indicador()
 		Acao.CARGA:
@@ -115,6 +116,7 @@ func _iniciar_especial() -> void:
 		return
 	if not _reservar_inicio_ataque():
 		return
+	AudioManager.tocar(&"chefe_aviso", global_position)
 	_usar_onda = not _usar_onda
 	if onda:
 		_acao = Acao.AVISO_ONDA
@@ -234,6 +236,7 @@ func _atualizar_aviso_onda() -> void:
 
 
 func _disparar_onda() -> void:
+	AudioManager.tocar(&"chefe_onda", global_position)
 	_limpar_indicador()
 	var centro := global_position
 	var anel := Line2D.new()
@@ -334,6 +337,7 @@ func _mudar_fase(nova: int) -> void:
 	recarga_contato = 1.25 - 0.15 * float(nova - 1)
 	_animar("threat", 1.0, true)
 	_chacoalhar()
+	AudioManager.tocar(&"chefe_etapa", global_position)
 	fase_alterada.emit(nova)
 	if nova == 2:
 		reforcos_pedidos.emit(2)

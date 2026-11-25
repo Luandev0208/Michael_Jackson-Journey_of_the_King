@@ -88,6 +88,9 @@ var _tremor: Tween
 @onready var _camera: Camera2D = $Camera2D
 @onready var _offset_camera := _camera.offset
 
+const DISTANCIA_PASSO := 23.0
+var _distancia_passos := 0.0
+
 func _ready() -> void:
 	posicao_inicial = global_position
 	sprite.animation_finished.connect(_ao_terminar_animacao)
@@ -128,6 +131,8 @@ func _physics_process(delta: float) -> void:
 			if not _tocar_acao("Moonwalk", _quadros_atuais(), duracao_moonwalk):
 				sprite.stop()
 				sprite.play(_animacao, -2.0, true)
+			_distancia_passos = 0.0
+			AudioManager.tocar(&"moonwalk", colisor.global_position)
 			_deslizar(delta)
 		elif Input.is_action_just_pressed("Dash") and _recarga_dash <= 0.0 and _protecao_esquiva <= 0.0 and not direcao.is_zero_approx():
 			_tempo_dash = duracao_dash
@@ -139,6 +144,8 @@ func _physics_process(delta: float) -> void:
 			_levantar_poeira()
 			if not _tocar_acao("Dash", _quadros_atuais(), duracao_dash):
 				sprite.play(_animacao, 1.6)
+			_distancia_passos = 0.0
+			AudioManager.tocar(&"dash", colisor.global_position)
 			_avancar_dash(delta)
 		else:
 			if _tempo_mira <= 0.0 and not direcao.is_zero_approx():
@@ -181,7 +188,9 @@ func tempo_dash() -> float:
 
 func _andar(direcao: Vector2) -> void:
 	velocity = direcao * velocidade_movimento
+	var origem := global_position
 	move_and_slide()
+	_registrar_passo(origem.distance_to(global_position))
 	if _acao_visual and sprite.is_playing():
 		return
 	_acao_visual = false
@@ -208,6 +217,14 @@ func _andar(direcao: Vector2) -> void:
 			_usar_quadros(quadros)
 			sprite.animation = _animacao
 		sprite.stop()
+
+func _registrar_passo(distancia: float) -> void:
+	if distancia <= 0.08:
+		return
+	_distancia_passos += distancia
+	if _distancia_passos >= DISTANCIA_PASSO:
+		_distancia_passos = fmod(_distancia_passos, DISTANCIA_PASSO)
+		AudioManager.tocar_passo(colisor.global_position)
 
 func _quadros_atuais() -> SpriteFrames:
 	if figurino_sem_chapeu != null and (is_instance_valid(_chapeu) or _recuperacao_pendente):
@@ -271,6 +288,7 @@ func _rastro(tom: Color) -> void:
 func _chutar() -> void:
 	_passo_combo += 1
 	_golpe_final = _passo_combo == 3
+	AudioManager.tocar(&"combo_final" if _golpe_final else &"chute", colisor.global_position)
 	_tempo_combo = 0.0 if _golpe_final else janela_combo
 	if _golpe_final:
 		_passo_combo = 0
@@ -390,10 +408,13 @@ func _arremessar() -> void:
 	# O quadro de soltura já não tem chapéu. O projétil sai no mesmo instante.
 	_tocar_acao("Arremesso", _figurino, 0.0, 2)
 	_chapeu.iniciar(colisor, mira, textura_chapeu)
+	AudioManager.tocar(&"chapeu_lancamento", colisor.global_position)
 
 func _recolher_chapeu() -> void:
 	_chapeu = null
 	_recuperacao_pendente = vida > 0
+	if vida > 0:
+		AudioManager.tocar(&"chapeu_retorno", colisor.global_position)
 
 func receber_dano(ataque_confirmado := false) -> void:
 	if invencivel_dev or _tempo_protecao > 0.0 or vida <= 0:
@@ -405,10 +426,12 @@ func receber_dano(ataque_confirmado := false) -> void:
 			_tempo_recarga = minf(_tempo_recarga, recarga_apos_esquiva_perfeita)
 			_recarga_dash = 0.0
 			_tremer_camera(1.0)
+			AudioManager.tocar(&"esquiva_perfeita", colisor.global_position)
 			esquiva_perfeita.emit()
 		return
 	_tempo_protecao = protecao_apos_dano
 	vida -= 1
+	AudioManager.tocar(&"dano_michael", colisor.global_position)
 	vida_alterada.emit(vida)
 	if vida == 0:
 		velocity = Vector2.ZERO
@@ -459,6 +482,7 @@ func recuperar_uma_vida() -> bool:
 	if vida <= 0 or vida >= VIDA_MAXIMA:
 		return false
 	vida += 1
+	AudioManager.tocar(&"cura", colisor.global_position)
 	vida_alterada.emit(vida)
 	return true
 
@@ -472,6 +496,7 @@ func restaurar_recargas() -> void:
 	_tempo_recarga = 0.0
 
 func teletransportar(destino: Vector2) -> void:
+	_distancia_passos = 0.0
 	global_position = destino
 	velocity = Vector2.ZERO
 	_tempo_moonwalk = 0.0

@@ -33,6 +33,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 stream = ExtResource("2_video")
+bus = &"Cinematics"
 expand = true
 
 [node name="BotaoPular" type="Button" parent="."]

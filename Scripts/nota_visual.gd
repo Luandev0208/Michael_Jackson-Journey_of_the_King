@@ -108,6 +108,7 @@ func coletar() -> void:
 	if _coletada:
 		return
 	_coletada = true
+	AudioManager.tocar(&"nota_coletada", global_position)
 	_efeito_coleta()
 	queue_free()
 
