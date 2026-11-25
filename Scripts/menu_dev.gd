@@ -3,8 +3,12 @@ extends CanvasLayer
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const TEMA := preload("res://Assets/tema_menu.tres")
 const CENA_INIMIGO := preload("res://Scenes/inimigo.tscn")
+const PREVIA_AUDIO := preload("res://Scripts/previa_audio_dev.gd")
 
 var _painel: PanelContainer
+var _conteudo: VBoxContainer
+var _previa_audio: PREVIA_AUDIO
+var _botao_previa: Button
 var _status: Label
 var _invencivel: CheckButton
 var _ia: CheckButton
@@ -39,6 +43,10 @@ func _permitido() -> bool:
 func _input(evento: InputEvent) -> void:
 	if not evento is InputEventKey or not evento.pressed or evento.echo:
 		return
+	if is_instance_valid(_previa_audio) and _previa_audio.is_visible_in_tree() and evento.is_action_pressed("ui_cancel"):
+		_voltar_da_previa_audio()
+		get_viewport().set_input_as_handled()
+		return
 	if evento.keycode != KEY_F1 and evento.physical_keycode != KEY_F1:
 		return
 	if not is_instance_valid(_painel):
@@ -70,6 +78,8 @@ func _abrir() -> void:
 	_process(0.0)
 
 func _fechar() -> void:
+	_previa_audio.fechar()
+	_conteudo.show()
 	_painel.hide()
 	get_tree().paused = _pausa_anterior
 	set_process(false)
@@ -107,12 +117,14 @@ func _criar_painel() -> void:
 	_painel.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_painel.theme = TEMA
 	var corpo := VBoxContainer.new()
+	_conteudo = corpo
 	_painel.add_child(corpo)
 	corpo.add_theme_constant_override("separation", 8)
 	var cabecalho := HBoxContainer.new()
 	corpo.add_child(cabecalho)
 	var titulo := _rotulo(cabecalho, "Ferramentas de desenvolvimento", 17)
 	titulo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_botao_previa = _botao(cabecalho, "Prévia de áudio", _abrir_previa_audio, true)
 	_botao(cabecalho, "Fechar  ·  F1", _fechar)
 	_status = _rotulo(corpo, "", 12)
 	var colunas := HBoxContainer.new()
@@ -154,7 +166,20 @@ func _criar_painel() -> void:
 	_restaurar_pontos = _botao(testes, "Restaurar pontos", func(): _fase.dev_restaurar_pontos())
 	_completar_testes = _botao(testes, "Completar objetivos de teste", _completar_objetivos_teste)
 	_concluir = _botao(testes, "Concluir objetivo", _concluir_objetivo)
+	_previa_audio = PREVIA_AUDIO.new()
+	_previa_audio.hide()
+	_painel.add_child(_previa_audio)
+	_previa_audio.voltar_solicitado.connect(_voltar_da_previa_audio)
 	_painel.hide()
+
+func _abrir_previa_audio() -> void:
+	_conteudo.hide()
+	_previa_audio.abrir()
+
+func _voltar_da_previa_audio() -> void:
+	_previa_audio.fechar()
+	_conteudo.show()
+	_botao_previa.grab_focus()
 
 func _coluna(pai: HBoxContainer, titulo: String) -> VBoxContainer:
 	var coluna := VBoxContainer.new()
@@ -171,11 +196,13 @@ func _rotulo(pai: Container, texto: String, tamanho: int) -> Label:
 	pai.add_child(rotulo)
 	return rotulo
 
-func _botao(pai: Container, texto: String, acao: Callable) -> Button:
+func _botao(pai: Container, texto: String, acao: Callable, silencioso := false) -> Button:
 	var botao := Button.new()
 	botao.text = texto
 	botao.custom_minimum_size.y = 24.0
 	botao.add_theme_font_size_override("font_size", 12)
+	if silencioso:
+		botao.set_meta("sem_som_interface", true)
 	pai.add_child(botao)
 	botao.pressed.connect(acao)
 	return botao

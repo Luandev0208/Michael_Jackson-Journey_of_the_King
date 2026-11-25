@@ -316,7 +316,7 @@ func _sortear(evento: StringName, canal: StringName) -> AudioStream:
 
 
 func _observar_interface(no: Node) -> void:
-	if no is BaseButton and not no.pressed.is_connected(_clique):
+	if no is BaseButton and not no.has_meta("sem_som_interface") and not no.pressed.is_connected(_clique):
 		no.pressed.connect(_clique)
 
 
