@@ -50,9 +50,8 @@ const VELOCIDADE_BASE_ANIMACAO := 80.0
 @export var recarga_dash := 1.2
 
 var vida := VIDA_MAXIMA
+var atravessando_espelho := false
 var _derrota_tratada := false
-var posicao_inicial := Vector2.ZERO
-var invencivel_dev := false
 var frente := Vector2.DOWN
 var _animacao: StringName = &"Baixo"
 var _tempo_chute := 0.0
@@ -92,13 +91,12 @@ const DISTANCIA_PASSO := 23.0
 var _distancia_passos := 0.0
 
 func _ready() -> void:
-	posicao_inicial = global_position
 	sprite.animation_finished.connect(_ao_terminar_animacao)
 	add_child(Pausa.new())
 
 
 func _physics_process(delta: float) -> void:
-	if vida <= 0:
+	if vida <= 0 or atravessando_espelho:
 		return
 	_tempo_chute = maxf(0.0, _tempo_chute - delta)
 	_tempo_recarga = maxf(0.0, _tempo_recarga - delta)
@@ -417,7 +415,7 @@ func _recolher_chapeu() -> void:
 		AudioManager.tocar(&"chapeu_retorno", colisor.global_position)
 
 func receber_dano(ataque_confirmado := false) -> void:
-	if invencivel_dev or _tempo_protecao > 0.0 or vida <= 0:
+	if atravessando_espelho or _tempo_protecao > 0.0 or vida <= 0:
 		return
 	if _protecao_esquiva > 0.0:
 		if ataque_confirmado and _janela_perfeita > 0.0:
@@ -486,28 +484,17 @@ func recuperar_uma_vida() -> bool:
 	vida_alterada.emit(vida)
 	return true
 
-func restaurar_vida() -> void:
-	vida = VIDA_MAXIMA
-	vida_alterada.emit(vida)
 
-func restaurar_recargas() -> void:
-	_recarga_dash = 0.0
-	_tempo_chute = 0.0
-	_tempo_recarga = 0.0
-
-func teletransportar(destino: Vector2) -> void:
-	_distancia_passos = 0.0
-	global_position = destino
+func iniciar_travessia(direcao: Vector2) -> void:
+	atravessando_espelho = true
 	velocity = Vector2.ZERO
-	_tempo_moonwalk = 0.0
 	_tempo_dash = 0.0
-	_protecao_esquiva = 0.0
-	_janela_perfeita = 0.0
-	_brilho_esquiva = 0.0
-	_passo_combo = 0
-	_tempo_combo = 0.0
-	_acao_visual = false
+	_tempo_moonwalk = 0.0
 	_cancelar_ataque()
 	_encerrar_tremor()
-	_camera.reset_smoothing()
-	_camera.force_update_scroll()
+	if is_instance_valid(_chapeu):
+		_chapeu.queue_free()
+	if not direcao.is_zero_approx():
+		_virar(direcao)
+	sprite.modulate = Color.WHITE
+	sprite.play(_animacao)

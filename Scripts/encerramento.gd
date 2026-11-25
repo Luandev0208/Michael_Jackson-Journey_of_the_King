@@ -1,5 +1,7 @@
 extends Node2D
 
+const NOTA_VISUAL := preload("res://Scripts/nota_visual.gd")
+
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const Camarim := preload("res://Scripts/camarim.gd")
 const ARENA := preload("res://Scenes/ArenasUltimoEco/arena_restaurada.tscn")
@@ -303,19 +305,15 @@ func _ultima_nota() -> void:
 	_plano = create_tween().set_parallel().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_mover_camera(Vector2(320, 186), 1.01, 8.75)
 	_plano.tween_property(_palco.get_node("ReflexoMichael"), "modulate:a", 0.0, 1.7)
-	var nota := Polygon2D.new()
+	var nota := Sprite2D.new()
+	nota.name = "NotaRestaurada"
 	nota.position = Vector2(320, 175)
 	nota.z_index = 6
-	nota.polygon = PackedVector2Array([Vector2(0, -16), Vector2(14, 0), Vector2(0, 16), Vector2(-14, 0)])
-	nota.color = Color(0.39, 0.27, 0.56, 0.92)
+	nota.texture = NOTA_VISUAL.textura_da_nota()
+	nota.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	nota.scale = Vector2.ONE * NOTA_VISUAL.ESCALA_ICONE
 	nota.modulate.a = 0.0
 	_palco.add_child(nota)
-	var simbolo := Label.new()
-	simbolo.position = Vector2(-7, -16)
-	simbolo.text = "♪"
-	simbolo.add_theme_font_size_override("font_size", 21)
-	simbolo.add_theme_color_override("font_color", Color(1.0, 0.88, 0.56))
-	nota.add_child(simbolo)
 	var brilho := _luz(Vector2(320, 142), OURO, 0.92)
 	_plano.tween_property(nota, "modulate:a", 1.0, 1.4)
 	_plano.tween_property(nota, "position:y", 110.0, 4.5)

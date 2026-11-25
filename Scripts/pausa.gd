@@ -47,15 +47,12 @@ func _ready() -> void:
 func _unhandled_input(evento: InputEvent) -> void:
 	if not evento.is_action_pressed("ui_cancel") or evento.is_echo():
 		return
-	var menu_dev := get_node_or_null("/root/MenuDev/PainelDev") as Control
-	if menu_dev != null and menu_dev.visible:
-		return
 	if _configuracoes.visible:
 		_fechar_configuracoes()
 		get_viewport().set_input_as_handled()
 		return
 	var jogador := get_parent() as MichaelJogador
-	if jogador.vida <= 0 or (not jogador.can_process() and not _painel.visible):
+	if jogador.atravessando_espelho or jogador.vida <= 0 or (not jogador.can_process() and not _painel.visible):
 		return
 	if _painel.visible:
 		_retomar()

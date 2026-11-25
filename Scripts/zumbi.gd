@@ -23,23 +23,35 @@ func configurar_tipo(tipo: Tipo) -> void:
 			resistencia_empurrao = 0.5
 		Tipo.LENTO:
 			# Resistente: o chapéu não o interrompe e quase não o empurra. Pede chutes.
-			vida = 4
+			vida = 5
 			velocidade_patrulha = 23.0
 			velocidade_perseguicao = 53.0
-			preparacao_contato = 0.34
+			preparacao_contato = 0.58
+			recarga_contato = 1.36
+			_ajustar_raio_contato(24.0)
 			armadura_contra_chapeu = true
-			resistencia_empurrao = 0.55
+			resistencia_empurrao = 0.42
 		Tipo.RAPIDO:
-			# Frágil e veloz: o chapéu o derruba de longe antes que ele alcance Michael.
-			vida = 1
+			vida = 2
 			velocidade_patrulha = 37.0
 			velocidade_perseguicao = 96.0
 			preparacao_contato = 0.29
 			multiplicador_chapeu = 1.0
+			velocidade_investida = 211.0
+			recarga_contato = 1.05
 		Tipo.COMUM:
-			velocidade_perseguicao = 70.0
-			preparacao_contato = 0.29
-			recarga_contato = 0.76
+			vida = 3
+			raio_abandono = 220.0
+			_alcance_posto = 250.0
+			velocidade_perseguicao = 77.0
+			preparacao_contato = 0.32
+			recarga_contato = 0.80
+
+
+func _destino_perseguicao(distancia: float) -> Vector2:
+	if _tipo == Tipo.RAPIDO and distancia > 74.0:
+		return _flanquear(28.0)
+	return super._destino_perseguicao(distancia)
 
 func marcar_obrigatorio() -> void:
 	_alcance_posto = 420.0

@@ -216,7 +216,7 @@ func _liberar() -> void:
 	_painel.show()
 	var cor := Color(0.82, 0.62, 1.0)
 	if espelho_liberado():
-		_aviso.text = "Guardião derrotado · Passagem liberada"
+		_aviso.text = "Guardião do Espelho — Thriller derrotado"
 		AudioManager.tocar(&"vitoria")
 		FEEDBACK.faixa(_fase, "GUARDIÃO DERROTADO", "Passagem liberada", cor, 0.18, 1.8)
 	else:

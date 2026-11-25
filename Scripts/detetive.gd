@@ -24,20 +24,22 @@ func configurar(tipo: Tipo, obrigatorio: bool) -> void:
 	_tipo = tipo
 	match tipo:
 		Tipo.RAPIDO:
-			vida = 1
-			velocidade_perseguicao = 81.0
+			vida = 2
+			velocidade_perseguicao = 89.0
 			preparacao_contato = 0.30
 			multiplicador_chapeu = 1.0
 		Tipo.ESPECIAL:
 			# Fotógrafo: flash longo e visível, resiste ao chapéu e pede chutes.
 			vida = 4
-			velocidade_perseguicao = 48.0
+			velocidade_perseguicao = 56.0
 			preparacao_contato = 0.50
 			recarga_contato = 1.25
 			armadura_contra_chapeu = true
 			resistencia_empurrao = 0.6
+			_ajustar_raio_contato(22.0)
 		Tipo.COMUM:
-			velocidade_perseguicao = 68.0
+			vida = 3
+			velocidade_perseguicao = 73.0
 			preparacao_contato = 0.34
 	if obrigatorio:
 		# O perseguidor do encontro segue Michael mesmo se ele recuar pela rua.
@@ -56,7 +58,7 @@ func _ready() -> void:
 # Flanqueio: detetives comuns e rápidos contornam Michael pelo lado em vez de
 # se enfileirarem atrás dele; o fotógrafo mantém a aproximação direta.
 func _destino_perseguicao(distancia: float) -> Vector2:
-	if _tipo == Tipo.ESPECIAL or distancia < 64.0:
+	if _tipo == Tipo.ESPECIAL or distancia < 55.0:
 		return alvo.global_position
 	return _flanquear(minf(distancia - 40.0, 34.0))
 

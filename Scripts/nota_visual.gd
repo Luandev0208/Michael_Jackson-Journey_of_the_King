@@ -79,7 +79,7 @@ func _ready() -> void:
 	_brilho.modulate.a = 0.3
 	add_child(_brilho)
 	_icone = Sprite2D.new()
-	_icone.texture = _obter_nota()
+	_icone.texture = textura_da_nota()
 	_icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_icone.scale = Vector2(ESCALA_ICONE, ESCALA_ICONE)
 	_icone.position = Vector2(0.0, ALTURA_BASE)
@@ -161,7 +161,7 @@ func _efeito_coleta() -> void:
 	subida.chain().tween_callback(texto.queue_free)
 
 
-static func _obter_nota() -> ImageTexture:
+static func textura_da_nota() -> ImageTexture:
 	if _textura_nota == null:
 		var imagem := Image.create(16, 20, false, Image.FORMAT_RGBA8)
 		imagem.fill(Color(0.0, 0.0, 0.0, 0.0))

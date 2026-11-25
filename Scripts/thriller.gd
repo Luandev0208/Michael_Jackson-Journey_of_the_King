@@ -1,6 +1,7 @@
 extends Node2D
 
 const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
+const ESPELHO := preload("res://Scripts/espelho_magico.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const NOTAS: Array[Vector2i] = [
 	Vector2i(24, 54), Vector2i(18, 58), Vector2i(36, 54),
@@ -11,7 +12,6 @@ const NOTAS: Array[Vector2i] = [
 const CURAS_FIXAS: Array[Vector2i] = [Vector2i(24, 42), Vector2i(24, 23)]
 const CENA_CURA := preload("res://Scenes/cura_thriller.tscn")
 const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
-const MARCO_CENTRAL := Vector2i(24, 45)
 
 const Sepultura := preload("res://Scripts/sepultura_corrompida.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
@@ -27,6 +27,7 @@ var pontuacao: int:
 var _notas_coletadas := 0
 var _meta_notas := NOTA_MUSICAL.minimo_para_avancar(NOTAS.size())
 var concluida := false
+var _energia: Node2D
 
 @onready var piso: TileMapLayer = $Piso
 @onready var muros: TileMapLayer = $Muros
@@ -139,12 +140,15 @@ func _physics_process(_delta: float) -> void:
 	if aviso.visible:
 		var pendencia := "" if batalhas.espelho_liberado() else "Derrote os zumbis das passagens."
 		texto_aviso.text = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas, pendencia)
+	if _energia == null and _espelho_liberado():
+		_energia = ESPELHO.instalar(self, espelho.global_position - Vector2(0, 56))
 	if aviso.visible and Input.is_action_just_pressed("Interagir"):
 		concluir()
 
 
 func concluir() -> void:
-	if concluida or jogador.vida <= 0 or not dev_espelho_liberado():
+	var frente := espelho.global_position + Vector2(0, 60)
+	if concluida or jogador.vida <= 0 or not _espelho_liberado() or pes.global_position.distance_to(frente) > ALCANCE_ESPELHO:
 		return
 	concluida = true
 	FEEDBACK.encerrar(self)
@@ -158,34 +162,24 @@ func concluir() -> void:
 	botao.grab_focus()
 
 func _avancar() -> void:
-	var destino := PROGRESSAO.MENU
-	if ResourceLoader.exists(PROGRESSAO.SMOOTH_CRIMINAL, "PackedScene"):
-		destino = PROGRESSAO.SMOOTH_CRIMINAL
-	AudioManager.tocar(&"portal")
-	get_tree().change_scene_to_file(destino)
+	if not concluida or jogador.atravessando_espelho:
+		return
+	conclusao.hide()
+	atores.process_mode = Node.PROCESS_MODE_INHERIT
+	if _energia == null:
+		_energia = ESPELHO.instalar(self, espelho.global_position - Vector2(0, 56))
+	_energia.atravessar(jogador, espelho.global_position + Vector2(0, 25),
+		get_tree().change_scene_to_file.bind(PROGRESSAO.SMOOTH_CRIMINAL), _reabrir_resultado)
 
-func dev_posicao_final() -> Vector2:
-	return espelho.global_position + Vector2(0, 64)
 
-func dev_posicao_central() -> Vector2:
-	return piso.map_to_local(MARCO_CENTRAL) - Vector2(0, 10)
+func _reabrir_resultado() -> void:
+	atores.process_mode = Node.PROCESS_MODE_DISABLED
+	conclusao.show()
+	conclusao.get_node("Conteudo/Voltar").grab_focus()
 
-func dev_gerar_onda() -> void:
-	if not concluida:
-		encontros.gerar_onda_teste()
-
-func dev_espelho_liberado() -> bool:
+func _espelho_liberado() -> bool:
 	return batalhas.espelho_liberado() and _notas_coletadas >= _meta_notas
 
 func indicador_notas_suprimido() -> bool:
 	# Durante as ondas obrigatórias o indicador some para não poluir a tela.
 	return concluida or jogador.vida <= 0 or batalhas.ativa
-
-func dev_progresso() -> String:
-	return "Notas %d/%d (meta)  ·  Pontos %d" % [_notas_coletadas, _meta_notas, pontuacao]
-
-func dev_coletar_nota() -> void:
-	for nota in atores.get_children():
-		if nota.is_in_group("notas_musicais") and not nota.is_queued_for_deletion():
-			_coletar_nota(jogador, nota)
-			return

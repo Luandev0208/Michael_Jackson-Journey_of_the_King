@@ -1,12 +1,14 @@
 extends Node2D
 
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
+const ESPELHO := preload("res://Scripts/espelho_magico.gd")
+const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
 const TAMANHO_SALA := Vector2i(20, 14)
 const ALCANCE_ESPELHO := 52.0
 
-var _espelho_revelado := false
+var _energia: Node2D
 
-@onready var jogador: CharacterBody2D = $Moveis/Michael_Player
+@onready var jogador: MichaelJogador = $Moveis/Michael_Player
 @onready var frente_do_espelho: Marker2D = $FrenteDoEspelho
 @onready var mensagem: PanelContainer = $Interface/Mensagem
 @onready var texto: Label = $Interface/Mensagem/Texto
@@ -20,6 +22,8 @@ func _ready() -> void:
 	camera.limit_bottom = limites.y
 	camera.position.y = -125.0
 	camera.reset_smoothing()
+	_energia = ESPELHO.instalar(self, $Moveis/espelho_magico.global_position - Vector2(0, 59))
+	FEEDBACK.faixa(self, "Algo se move no espelho", "Atravesse-o para seguir as memórias.", Color(0.87, 0.75, 1.0), 0.0, 4.8)
 	_revelar_sala()
 
 
@@ -50,22 +54,14 @@ func _revelar_sala() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	var pes := jogador.global_position + Vector2(0, 12)
-	mensagem.visible = pes.distance_to(frente_do_espelho.global_position) <= ALCANCE_ESPELHO
-	if not mensagem.visible:
+	if jogador.atravessando_espelho:
 		return
-
-	if Input.is_action_just_pressed("Interagir"):
-		if _espelho_revelado:
-			AudioManager.tocar(&"portal")
-			get_tree().change_scene_to_file(PROGRESSAO.BILLIE_JEAN)
-			return
-		_espelho_revelado = true
-		AudioManager.tocar(&"restauracao", frente_do_espelho.global_position)
-
-	texto.text = "E — Interagir"
-	if _espelho_revelado:
-		texto.text = "As lembranças de Michael estão desaparecendo.\nE — Atravessar"
-
-func dev_posicao_final() -> Vector2:
-	return frente_do_espelho.global_position + Vector2(0, 10)
+	var apoio := frente_do_espelho.global_position
+	var distancia := jogador.colisor.global_position.distance_to(apoio)
+	_energia.intensidade = 0.25 * (1.0 - clampf(distancia / 115.0, 0.0, 1.0))
+	mensagem.visible = distancia <= ALCANCE_ESPELHO
+	texto.text = "[E] Entrar no espelho"
+	if mensagem.visible and Input.is_action_just_pressed("Interagir"):
+		mensagem.hide()
+		FEEDBACK.encerrar(self)
+		_energia.atravessar(jogador, apoio, get_tree().change_scene_to_file.bind(PROGRESSAO.BILLIE_JEAN))

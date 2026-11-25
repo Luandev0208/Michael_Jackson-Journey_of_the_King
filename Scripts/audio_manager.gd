@@ -6,6 +6,7 @@ const Catalogo := preload("res://Scripts/catalogo_audio.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const Perfil := preload("res://Scripts/perfil_musical.gd")
 const ROTAS_MUSICA: Array[StringName] = [&"MusicA", &"MusicB"]
+const PASTAS_ALTERNATIVAS := ["user://musicas/", "res://Assets/Audio/Alternativas/"]
 const CAMINHO_PREFERENCIAS := "user://audio.cfg"
 const CANAIS: Array[StringName] = [&"Master", &"Music", &"SFX", &"Ambient"]
 const VOLUME_PADRAO := 1.0
@@ -162,7 +163,7 @@ func _mudar_cena() -> void:
 		estado = Perfil.memoria(0.0)
 	elif caminho == PROGRESSAO.ULTIMO_ECO:
 		estado = Perfil.eco(1)
-	_trocar_faixa(_musica, _carregar(trilha), canal, TRANSICAO, estado)
+	_trocar_faixa(_musica, _carregar_trilha(caminho, trilha), canal, TRANSICAO, estado)
 	_trocar_faixa(_ambiente, _carregar(Catalogo.AMBIENTES.get(caminho, "")), &"Ambient", TRANSICAO)
 
 
@@ -229,6 +230,25 @@ func preparar_creditos() -> void:
 		voz.stop()
 	for voz in _espaciais:
 		voz.stop()
+
+
+func _carregar_trilha(cena: String, original: String) -> AudioStream:
+	if cena in Catalogo.MEMORIAS:
+		for pasta: String in PASTAS_ALTERNATIVAS:
+			var caminho := pasta + original.get_file()
+			if not FileAccess.file_exists(caminho):
+				continue
+			if _recursos.has(caminho):
+				return _recursos[caminho]
+			var arquivo := FileAccess.open(caminho, FileAccess.READ)
+			if arquivo == null or arquivo.get_buffer(4).get_string_from_ascii() != "OggS":
+				continue
+			arquivo.close()
+			var alternativa := AudioStreamOggVorbis.load_from_file(caminho)
+			if alternativa != null and alternativa.get_length() > 0.0:
+				_recursos[caminho] = alternativa
+				return alternativa
+	return _carregar(original)
 
 
 func _carregar(caminho: String) -> AudioStream:
@@ -394,7 +414,7 @@ func _sortear(evento: StringName, canal: StringName) -> AudioStream:
 
 
 func _observar_interface(no: Node) -> void:
-	if no is BaseButton and not no.has_meta("sem_som_interface") and not no.pressed.is_connected(_clique):
+	if no is BaseButton and not no.pressed.is_connected(_clique):
 		no.pressed.connect(_clique)
 
 

@@ -16,6 +16,14 @@ O jogo possui quatro fases. A primeira, inspirada em Billie Jean, acontece em um
 
 Durante o jogo, é possível explorar cenários, enfrentar inimigos, coletar notas musicais e encontrar itens de recuperação. Michael possui habilidades como chutes, combos, lançamento do chapéu, moonwalk e dash, que ajudam nos combates e nas esquivas.
 
+Use **WASD** ou as **setas** para andar e o **mouse** para mirar. **Clique esquerdo** chuta, **Espaço** lança o chapéu, **Ctrl esquerdo** faz o dash, **Shift** faz o moonwalk, **E** interage e **Esc** pausa.
+
+### Músicas alternativas locais
+
+Em uma cópia do projeto, coloque `billie_jean.ogg`, `thriller.ogg` ou `smooth_criminal.ogg` em `Assets/Audio/Alternativas/`. Para uma versão exportada, use a pasta `musicas` dentro da pasta de dados do jogo (`user://`). No editor da Godot, **Projeto → Abrir pasta de dados do usuário** mostra essa localização. Use arquivos Ogg Vorbis obtidos legalmente e reinicie o jogo após trocar uma faixa.
+
+Se a faixa alternativa estiver ausente ou não puder ser carregada, o jogo usa a composição original. As alternativas seguem os mesmos volumes, loops e efeitos de clareza das trilhas originais. A pasta de alternativas do projeto é ignorada pelo Git.
+
 ## 5. Sistema de vida e pontuação
 
 O jogador começa cada fase com quatro corações e três tentativas. Ao perder todos os corações, uma tentativa é descontada. Se perder as três, pode reiniciar a fase ou voltar ao menu. As notas musicais espalhadas pelos cenários valem 100 pontos cada.

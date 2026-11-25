@@ -11,31 +11,36 @@ var _tipo := "comum"
 
 func configurar(tipo: String) -> void:
 	_tipo = tipo
-	velocidade_perseguicao = 78.0
-	raio_deteccao = 150.0
-	raio_abandono = 220.0
-	_alcance_posto = 255.0
+	velocidade_perseguicao = 84.0
+	raio_deteccao = 170.0
+	raio_abandono = 245.0
+	_alcance_posto = 272.0
 	$Visual.sprite_frames = FIGURINOS[tipo]
 	match tipo:
 		"agil":
-			vida = 1
+			vida = 2
 			multiplicador_chapeu = 1.0
 			velocidade_perseguicao = 102.0
 			preparacao_contato = 0.32
 			recarga_contato = 1.25
+			velocidade_investida = 218.0
 		"seguranca":
-			vida = 4
-			velocidade_perseguicao = 66.0
-			preparacao_contato = 0.48
+			vida = 5
+			velocidade_perseguicao = 70.0
+			preparacao_contato = 0.56
 			recarga_contato = 1.35
+			_ajustar_raio_contato(24.0)
 			resistencia_empurrao = 0.28
 			armadura_contra_chapeu = true
+		_:
+			vida = 3
+			preparacao_contato = 0.34
 
 
 func _destino_perseguicao(distancia: float) -> Vector2:
-	if _tipo == "seguranca" or distancia <= 62.0:
+	if _tipo == "seguranca" or distancia <= 58.0:
 		return alvo.global_position
-	return _flanquear(38.0 if _tipo == "agil" else 24.0)
+	return _flanquear(48.0 if _tipo == "agil" else 30.0)
 
 
 func ouvir_alarme(origem: Vector2) -> void:

@@ -1,9 +1,11 @@
 extends Node2D
 
 const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
+const ESPELHO := preload("res://Scripts/espelho_magico.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const CAPANGA := preload("res://Scenes/capanga.tscn")
 const CHEFE := preload("res://Scenes/chefe_smooth.tscn")
+const ChefeSmooth := preload("res://Scripts/chefe_smooth.gd")
 const CURA := preload("res://Scenes/cura_thriller.tscn")
 const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
@@ -21,6 +23,14 @@ const POSICAO_VIP := Vector2(1018, 672)
 const FRENTE_ESPELHO := Vector2(768, 156)
 const ALCANCE_INTERACAO := 54.0
 const LIMITE_PALCO := Rect2(128, 128, 1280, 202)
+const DICAS := [
+	["Explore o salão e observe os aparelhos.", "Um aparelho musical ainda tem energia."],
+	["Procure a passagem reservada.", "Uma luz âmbar marca a catraca VIP."],
+	["O segurança protege o acesso ao palco.", "Desvie do golpe pesado e ataque na recuperação."],
+	["A música vem do palco.", "Procure a escadaria na extremidade norte."],
+	["Observe o ritmo antes de atacar.", "Espere a abertura após o último golpe da sequência."],
+	["As notas restantes contam para abrir o espelho.", "O brilho dourado acompanha as memórias recuperadas."],
+]
 
 var caminhos := AStarGrid2D.new()
 var objetivo := Objetivo.ENERGIA
@@ -33,6 +43,10 @@ var _progresso_luz := 0.0
 var _estagio_chefe := 1
 var _guarda_vencido := false
 var _marcador := Line2D.new()
+var _energia: Node2D
+var _dica := Label.new()
+var _objetivo_anterior := Objetivo.ENERGIA
+var _tempo_objetivo := 0.0
 
 @onready var piso: TileMapLayer = $Piso
 @onready var atores: Node2D = $Atores
@@ -59,6 +73,12 @@ func _ready() -> void:
 	hud.iniciar(jogador)
 	NOTA_MUSICAL.instalar_indicador(self)
 	_atualizar_notas()
+	missao.text = "Restaure a energia do salão"
+	_dica.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_dica.modulate = Color(0.89, 0.83, 0.93)
+	_dica.add_theme_font_size_override("font_size", 11)
+	missao.get_parent().add_child(_dica)
+	_dica.hide()
 	_marcador.points = PackedVector2Array([Vector2(0, -5), Vector2(4, 0), Vector2(0, 5), Vector2(-4, 0), Vector2(0, -5)])
 	_marcador.width = 2.0
 	_marcador.default_color = Color(1.0, 0.76, 0.38)
@@ -142,10 +162,22 @@ func _physics_process(delta: float) -> void:
 	if concluida or jogador.vida <= 0:
 		return
 	hud.atualizar_recargas(jogador)
+	_atualizar_dicas(delta)
 	_atualizar_vigilancia(delta)
 	if objetivo == Objetivo.PALCO and LIMITE_PALCO.has_point(pes.global_position):
 		_comecar_chefe()
 	_atualizar_interacao()
+
+
+func _atualizar_dicas(delta: float) -> void:
+	if objetivo != _objetivo_anterior:
+		_objetivo_anterior = objetivo
+		_tempo_objetivo = 0.0
+	_tempo_objetivo += delta
+	_marcador.modulate.a = 0.58 + 0.42 * (1.0 + sin(_tempo_objetivo * 3.1)) * 0.5
+	_dica.visible = _tempo_objetivo > 16.0 and not _espelho_liberado()
+	if _dica.visible:
+		_dica.text = DICAS[objetivo][int(_tempo_objetivo > 35.0)]
 
 
 func _atualizar_vigilancia(delta: float) -> void:
@@ -190,7 +222,7 @@ func _atualizar_interacao() -> void:
 			if pes.global_position.distance_to(FRENTE_ESPELHO) <= ALCANCE_INTERACAO:
 				var pendencia := "Derrote o líder dos capangas." if objetivo == Objetivo.CHEFE else ""
 				mensagem = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas, pendencia)
-				pode_interagir = dev_espelho_liberado()
+				pode_interagir = _espelho_liberado()
 	interacao.visible = not mensagem.is_empty()
 	texto_interacao.text = mensagem
 	if not pode_interagir or not Input.is_action_just_pressed("Interagir"):
@@ -199,12 +231,14 @@ func _atualizar_interacao() -> void:
 		Objetivo.ENERGIA:
 			objetivo = Objetivo.ACESSO_VIP
 			AudioManager.tocar(&"restauracao", jukebox.global_position)
+			FEEDBACK.faixa(self, "ENERGIA RESTAURADA", "O salão voltou a funcionar.", Color(1.0, 0.83, 0.48), 0.0, 1.4)
 			$Holofotes/Salao.ligar(true)
 			$Holofotes/VIP.ligar(true)
 			missao.text = "Energia ligada · abra a catraca VIP"
 			_marcador.global_position = POSICAO_VIP + Vector2(35, -12)
 		Objetivo.ACESSO_VIP:
 			_atualizar_portao(portao_vip, true)
+			AudioManager.tocar(&"restauracao", portao_vip.global_position)
 			_marcador.hide()
 			if _guarda_vencido:
 				_abrir_palco()
@@ -233,7 +267,8 @@ func _comecar_chefe() -> void:
 	objetivo = Objetivo.CHEFE
 	_atualizar_portao(portao_palco, false)
 	_marcador.hide()
-	missao.text = "Derrote o líder dos capangas"
+	missao.text = "Enfrente o guardião do palco"
+	nome_chefe.text = ChefeSmooth.NOME
 	var chefe := CHEFE.instantiate()
 	chefe.position = CASA_CHEFE
 	chefe.alvo = pes
@@ -260,7 +295,8 @@ func _atualizar_etapa_chefe(etapa: int) -> void:
 		$Holofotes/PalcoLeste.ligar(true)
 		_criar_capanga("agil", Vector2(560, 288), "ReforcoOeste")
 		_criar_capanga("comum", Vector2(1010, 296), "ReforcoLeste")
-	nome_chefe.text = "Líder · holofotes e reforços" if etapa == 2 else "Líder · investidas"
+	var aviso := "Holofotes e reforços" if etapa == 2 else "Investidas encadeadas"
+	FEEDBACK.faixa(self, aviso, "Espere a abertura no fim da sequência.", Color(1.0, 0.78, 0.55), 0.0, 1.2)
 
 
 func _derrotar_chefe() -> void:
@@ -294,11 +330,13 @@ func _atualizar_notas() -> void:
 
 
 func _atualizar_objetivo_final() -> void:
-	missao.text = "Líder derrotado · siga até o espelho" if dev_espelho_liberado() else "Líder derrotado · recolha as notas"
+	missao.text = "Siga até o espelho no palco" if _espelho_liberado() else "Recolha as notas que faltam"
+	if _energia == null and _espelho_liberado():
+		_energia = ESPELHO.instalar(self, FRENTE_ESPELHO - Vector2(0, 91))
 
 
 func concluir() -> void:
-	if concluida or jogador.vida <= 0 or not dev_espelho_liberado():
+	if concluida or jogador.vida <= 0 or not _espelho_liberado() or pes.global_position.distance_to(FRENTE_ESPELHO) > ALCANCE_INTERACAO:
 		return
 	concluida = true
 	FEEDBACK.encerrar(self)
@@ -310,36 +348,23 @@ func concluir() -> void:
 
 
 func _avancar() -> void:
-	AudioManager.tocar(&"portal")
-	get_tree().change_scene_to_file(PROGRESSAO.ULTIMO_ECO)
+	if not concluida or jogador.atravessando_espelho:
+		return
+	conclusao.hide()
+	atores.process_mode = Node.PROCESS_MODE_INHERIT
+	_energia.atravessar(jogador, FRENTE_ESPELHO - Vector2(0, 25),
+		get_tree().change_scene_to_file.bind(PROGRESSAO.ULTIMO_ECO), _reabrir_resultado)
 
 
-func dev_posicao_central() -> Vector2:
-	return Vector2(744, 657)
+func _reabrir_resultado() -> void:
+	atores.process_mode = Node.PROCESS_MODE_DISABLED
+	conclusao.show()
+	conclusao.get_node("Conteudo/Voltar").grab_focus()
 
 
-func dev_posicao_regiao_3() -> Vector2:
-	return Vector2(1185, 606)
-
-
-func dev_posicao_final() -> Vector2:
-	return FRENTE_ESPELHO - Vector2(0, 10)
-
-
-func dev_espelho_liberado() -> bool:
+func _espelho_liberado() -> bool:
 	return objetivo == Objetivo.ESPELHO and _notas_coletadas >= _meta_notas
 
 
 func indicador_notas_suprimido() -> bool:
 	return concluida or jogador.vida <= 0 or objetivo == Objetivo.CHEFE
-
-
-func dev_progresso() -> String:
-	return "%s · Notas %d/%d (meta)" % [missao.text, _notas_coletadas, _meta_notas]
-
-
-func dev_coletar_nota() -> void:
-	for no in atores.get_children():
-		if no is Area2D and no.has_meta("celula") and not no.is_queued_for_deletion():
-			_coletar_nota(jogador, no)
-			return

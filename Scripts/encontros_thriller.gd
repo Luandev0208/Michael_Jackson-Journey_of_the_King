@@ -112,17 +112,6 @@ func _criar_zumbi(celula: Vector2i, tipo: Zumbi.Tipo, regiao: int) -> Inimigo:
 	_fase.atores.add_child(zumbi)
 	return zumbi
 
-func gerar_onda_teste() -> void:
-	var vagas := mini(3, LIMITE_VIVOS - get_tree().get_nodes_in_group("inimigos").size())
-	var centro: Vector2i = _fase.piso.local_to_map(_fase.pes.global_position)
-	for deslocamento in [Vector2i(4, 0), Vector2i(-4, 0), Vector2i(0, 4), Vector2i(0, -4),
-			Vector2i(3, 3), Vector2i(-3, 3), Vector2i(3, -3), Vector2i(-3, -3)]:
-		if vagas <= 0:
-			break
-		var celula: Vector2i = centro + deslocamento
-		if _local_seguro(celula, 176.0):
-			_criar_zumbi(celula, Zumbi.Tipo.COMUM, setor)
-			vagas -= 1
 func gerar_da_sepultura(origem: Vector2i) -> bool:
 	if _fase.batalhas.ativa or get_tree().get_nodes_in_group("inimigos").size() >= LIMITE_VIVOS:
 		return false

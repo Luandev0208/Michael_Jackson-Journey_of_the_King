@@ -14,14 +14,14 @@ signal fase_alterada(fase: int)
 
 enum Acao { NORMAL, RUGIDO, AVISO_CARGA, CARGA, AVISO_ONDA, EXAUSTO }
 
-const VIDA_MAXIMA := 16
+const VIDA_MAXIMA := 17
 const LIMITE_FASE_2 := 0.70
 const LIMITE_FASE_3 := 0.38
-const RAIO_ONDA := 70.0
-const VELOCIDADE_CARGA := 210.0
+const RAIO_ONDA := 76.0
+const VELOCIDADE_CARGA := 225.0
 const DURACAO_CARGA := 0.55
 const RAIO_CARGA := 25.0
-const INTERVALOS_ESPECIAL := [3.6, 2.9, 2.25]
+const INTERVALOS_ESPECIAL := [3.15, 2.70, 2.10]
 
 var fase := 1
 var _acao := Acao.NORMAL
@@ -32,6 +32,7 @@ var _acertou := false
 var _esquivado := false
 var _aplicando_ataque_especial := false
 var _usar_onda := false
+var _ondas_pendentes := 0
 var _especial_concluido := false
 var _indicador: Node2D
 var _barra: Control
@@ -108,7 +109,7 @@ func _parado(delta: float) -> void:
 func _iniciar_especial() -> void:
 	var distancia := global_position.distance_to(alvo.global_position)
 	var onda := fase >= 2 and distancia < RAIO_ONDA + 18.0 and (_usar_onda or distancia < 52.0)
-	if fase == 2 and not _especial_concluido and not onda:
+	if fase >= 2 and not _especial_concluido and not onda:
 		_tempo_especial = 0.25
 		return
 	if not onda and distancia > VELOCIDADE_CARGA * DURACAO_CARGA + RAIO_CARGA:
@@ -121,6 +122,7 @@ func _iniciar_especial() -> void:
 	if onda:
 		_acao = Acao.AVISO_ONDA
 		_tempo_acao = 0.95 if fase == 2 else 0.80
+		_ondas_pendentes = 2 if fase == 3 else 1
 		_criar_indicador_onda()
 	else:
 		_acao = Acao.AVISO_CARGA
@@ -151,8 +153,8 @@ func _entrar_exausto(duracao: float) -> void:
 
 
 func _duracao_exausto(base: float) -> float:
-	var extra := 0.0 if fase < 3 else 0.5
-	return base + extra + (1.4 if _esquivado else 0.0)
+	var extra := 0.0 if fase < 3 else 0.32
+	return base * 0.92 + extra + (1.25 if _esquivado else 0.0)
 
 
 # ----- Avanço -----
@@ -254,6 +256,12 @@ func _disparar_onda() -> void:
 	_chacoalhar()
 	if alvo.global_position.distance_to(centro) <= RAIO_ONDA:
 		_tentar_acertar_jogador()
+	_ondas_pendentes -= 1
+	if _ondas_pendentes > 0:
+		_tempo_acao = 0.78
+		AudioManager.tocar(&"chefe_aviso", global_position)
+		_criar_indicador_onda()
+		return
 	_entrar_exausto(_duracao_exausto(1.4))
 
 
@@ -293,9 +301,11 @@ func _chacoalhar() -> void:
 func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
 	if vida <= 0 or not _especial_concluido:
 		return
+	if _acao != Acao.EXAUSTO and fonte == &"chute" and dano == 1:
+		return
 	match _acao:
 		Acao.EXAUSTO:
-			if fonte == &"chute":
+			if fonte == &"chute" and dano > 1:
 				dano += 1
 		Acao.NORMAL:
 			pass
@@ -313,12 +323,6 @@ func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> voi
 		_mudar_fase(3)
 
 
-func dev_eliminar() -> void:
-	if vida > 0:
-		_especial_concluido = true
-		receber_dano(vida)
-
-
 func atordoar(tempo: float) -> void:
 	# O atordoamento comum só vale quando ele está livre; os ataques têm super armadura.
 	if _acao == Acao.NORMAL:
@@ -330,7 +334,7 @@ func _mudar_fase(nova: int) -> void:
 	_limpar_indicador()
 	_acao = Acao.RUGIDO
 	_especial_concluido = false
-	_usar_onda = nova == 2
+	_usar_onda = true
 	multiplicador_chapeu = 0.67
 	_tempo_acao = 1.0
 	velocidade_perseguicao = 52.0 + 10.0 * float(nova - 1)
@@ -397,7 +401,7 @@ func _desenhar_barra() -> void:
 	for marca in [LIMITE_FASE_2, LIMITE_FASE_3]:
 		_barra.draw_rect(Rect2(caixa.position.x + caixa.size.x * marca - 1.0, caixa.position.y, 2.0, caixa.size.y), Color(0.14, 0.07, 0.23))
 	var fonte := ThemeDB.fallback_font
-	var titulo := "GUARDIÃO DO ESPELHO  ·  FASE %d" % fase
+	var titulo := "Guardião do Espelho — Thriller"
 	var tom := Color(0.95, 0.88, 1.0)
 	if _acao == Acao.EXAUSTO:
 		titulo += "  ·  VULNERÁVEL"

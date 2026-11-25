@@ -1,6 +1,7 @@
 extends Node2D
 
 const FEEDBACK := preload("res://Scripts/feedback_vitoria.gd")
+const ESPELHO := preload("res://Scripts/espelho_magico.gd")
 const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const TheSilence := preload("res://Scripts/the_silence.gd")
 const NOTAS := preload("res://Scripts/nota_musical.gd")
@@ -23,7 +24,6 @@ const APOIOS := {
 	"altar": Vector2(54, 22),
 	"relicario": Vector2(24, 16),
 }
-const TITULOS := ["Apagamento", "Fratura", "Último eco"]
 const CORES_FASE := [Color(0.90, 0.77, 0.50), Color(0.40, 0.76, 1.0), Color(0.79, 0.56, 1.0)]
 
 var caminhos := AStarGrid2D.new()
@@ -34,6 +34,7 @@ var _notas_coletadas := 0
 var _pisos: Array[Node2D] = []
 var _objetos: Array[Node2D] = []
 var _portal := Vector2.ZERO
+var _energia: Node2D
 var _preenchimento := StyleBoxFlat.new()
 
 @onready var atores: Node2D = $Atores
@@ -154,7 +155,8 @@ func _physics_process(_delta: float) -> void:
 	hud.atualizar_recargas(jogador)
 	if restaurada:
 		var perto := _perto_do_portal()
-		aviso.visible = perto
+		aviso.show()
+		aviso_texto.text = "[E] Entrar no espelho" if perto else "Memórias restauradas · volte ao espelho"
 		if perto and Input.is_action_just_pressed("Interagir"):
 			concluir()
 	elif chefe.estado == TheSilence.Estado.ESPERA and Input.is_action_just_pressed("Interagir"):
@@ -166,7 +168,7 @@ func _physics_process(_delta: float) -> void:
 func _fase_alterada(etapa: int) -> void:
 	AudioManager.atualizar_intensidade(self, etapa)
 	_mostrar_arena(etapa - 1)
-	titulo.text = "The Silence  ·  %d/3 — %s" % [etapa, TITULOS[etapa - 1]]
+	titulo.text = "The Silence"
 	titulo.modulate = CORES_FASE[etapa - 1]
 	_preenchimento.bg_color = CORES_FASE[etapa - 1]
 	if etapa > 1:
@@ -210,21 +212,14 @@ func _atualizar_notas() -> void:
 func _restaurar_arena() -> void:
 	restaurada = true
 	AudioManager.tocar(&"vitoria")
-	FEEDBACK.faixa(self, "O SILÊNCIO FOI DERROTADO", "A arena foi restaurada · A música voltou", Color(1.0, 0.9, 0.55), 0.16, 3.6)
+	FEEDBACK.faixa(self, "THE SILENCE DERROTADO", "As memórias foram restauradas.\nRetorne ao espelho para concluir sua jornada.", Color(1.0, 0.9, 0.55), 0.16, 4.4)
 	jogador._tremer_camera(1.4)
 	_mostrar_arena(3)
 	painel_chefe.hide()
 	chefe._mostrar_efeito(&"onda_restauracao", chefe.global_position, 128.0)
 	chefe._mostrar_efeito(&"restauracao_particulas", chefe.global_position, 100.0)
-	aviso_texto.text = "E — Atravessar o portal restaurado"
-
-
-func dev_espelho_liberado() -> bool:
-	return restaurada
-
-
-func dev_posicao_final() -> Vector2:
-	return _portal
+	_energia = ESPELHO.instalar(self, _portal - Vector2(0, 104))
+	_energia.intensidade = 0.38
 
 
 func _perto_do_portal() -> bool:
@@ -234,13 +229,17 @@ func _perto_do_portal() -> bool:
 func concluir() -> void:
 	if not _pronta or concluida or not restaurada or jogador.vida <= 0 or not _perto_do_portal():
 		return
+	concluida = true
+	aviso.hide()
+	_energia.atravessar(jogador, _portal - Vector2(0, 20), _abrir_encerramento)
+
+
+func _abrir_encerramento() -> Error:
 	var cena := ENCERRAMENTO.instantiate()
 	cena.notas_coletadas = _notas_coletadas
 	cena.total_notas = CELULAS_NOTAS.size()
-	concluida = true
-	AudioManager.tocar(&"portal")
 	var erro := get_tree().change_scene_to_node(cena)
 	if erro != OK:
 		concluida = false
 		cena.free()
-		push_error("Não foi possível abrir o encerramento: %s" % error_string(erro))
+	return erro

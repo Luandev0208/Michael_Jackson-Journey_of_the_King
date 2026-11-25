@@ -219,11 +219,6 @@ func receber_dano(dano: int, _empurrao := Vector2.ZERO, fonte := &"chute") -> vo
 	_aplicar_dano(dano, fonte)
 
 
-func dev_eliminar() -> void:
-	if vida > 0:
-		_aplicar_dano(vida, &"chute")
-
-
 func _aplicar_dano(dano: int, fonte: StringName) -> void:
 	super.receber_dano(dano, Vector2.ZERO, fonte)
 	vida_alterada.emit(maxi(vida, 0))

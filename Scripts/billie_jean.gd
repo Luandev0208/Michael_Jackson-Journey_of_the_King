@@ -5,6 +5,9 @@ const TENTATIVAS := preload("res://Scripts/tentativas.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const NOTA_MUSICAL := preload("res://Scripts/nota_musical.gd")
 const DETETIVE := preload("res://Scenes/detetive.tscn")
+const GUARDIAO := preload("res://Scenes/guardiao_billie.tscn")
+const GuardiaoBillie := preload("res://Scripts/guardiao_billie.gd")
+const ESPELHO := preload("res://Scripts/espelho_magico.gd")
 const TIPO := preload("res://Scripts/detetive.gd").Tipo
 const Barreira := preload("res://Scripts/barreira_memoria.gd")
 const HALO_POSTE := preload("res://Assets/BillieJean/halo_poste.png")
@@ -67,6 +70,11 @@ var _meta_notas := NOTA_MUSICAL.minimo_para_avancar(NOTAS.size())
 var _avanco := ""
 var _tempo_avanco := 0.0
 var _espera_spawn := 0.0
+var _guardiao: GuardiaoBillie
+var _guardiao_derrotado := false
+var _energia: Node2D
+var _painel_guardiao: ProgressBar
+var _instrucao_guardiao: Label
 
 @onready var chao: TileMapLayer = $Chao
 @onready var pisos: TileMapLayer = $PisosLuminosos
@@ -157,9 +165,14 @@ func _physics_process(delta: float) -> void:
 		if not _encontro_iniciado and pes.global_position.y <= regiao.inicio and _espera_spawn <= 0.0:
 			_tentar_iniciar_encontro()
 		_verificar_passagem()
-	aviso_espelho.visible = pes.global_position.distance_to(espelho.global_position + Vector2(0, 20)) <= 54.0
+	elif _guardiao == null and not _guardiao_derrotado and pes.global_position.y <= 333.0:
+		_iniciar_guardiao()
+	var perto := pes.global_position.distance_to(espelho.global_position + Vector2(0, 20)) <= 54.0
+	aviso_espelho.visible = perto
 	if aviso_espelho.visible:
 		var pendencia := "" if _memorias_restauradas() else "Restaure as memórias da cidade."
+		if _memorias_restauradas() and not _guardiao_derrotado:
+			pendencia = "Derrote o Guardião do Espelho."
 		$Interface/Espelho/Texto.text = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas, pendencia)
 		if Input.is_action_just_pressed("Interagir"):
 			concluir()
@@ -285,12 +298,71 @@ func _liberar_passagem() -> void:
 	_atualizar_objetivo()
 
 
+func _iniciar_guardiao() -> void:
+	_guardiao = GUARDIAO.instantiate() as GuardiaoBillie
+	_guardiao.position = Vector2(992, 303)
+	_guardiao.alvo = pes
+	_guardiao.caminhos = caminhos
+	atores.add_child(_guardiao)
+	_criar_hud_guardiao()
+	_guardiao.vida_alterada.connect(func(vida: int): _painel_guardiao.value = vida)
+	_guardiao.postura_alterada.connect(func(texto: String): _instrucao_guardiao.text = texto)
+	_guardiao.derrotado.connect(_derrotar_guardiao)
+	_atualizar_objetivo()
+
+
+func _criar_hud_guardiao() -> void:
+	var caixa := PanelContainer.new()
+	caixa.theme = preload("res://Assets/tema_menu.tres")
+	$Interface.add_child(caixa)
+	caixa.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	caixa.offset_left = -125.0
+	caixa.offset_right = 125.0
+	caixa.offset_top = -130.0
+	caixa.offset_bottom = -66.0
+	caixa.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var linhas := VBoxContainer.new()
+	caixa.add_child(linhas)
+	var nome := Label.new()
+	nome.text = _guardiao.NOME
+	nome.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	nome.add_theme_font_size_override("font_size", 13)
+	linhas.add_child(nome)
+	_painel_guardiao = ProgressBar.new()
+	_painel_guardiao.max_value = _guardiao.vida
+	_painel_guardiao.value = _guardiao.vida
+	_painel_guardiao.show_percentage = false
+	_painel_guardiao.custom_minimum_size.y = 8.0
+	var preenchimento := StyleBoxFlat.new()
+	preenchimento.bg_color = Color(0.85, 0.59, 0.27)
+	preenchimento.set_corner_radius_all(3)
+	_painel_guardiao.add_theme_stylebox_override("fill", preenchimento)
+	linhas.add_child(_painel_guardiao)
+	_instrucao_guardiao = Label.new()
+	_instrucao_guardiao.text = "Espere a abertura entre os flashes"
+	_instrucao_guardiao.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_instrucao_guardiao.add_theme_font_size_override("font_size", 11)
+	linhas.add_child(_instrucao_guardiao)
+
+
+func _derrotar_guardiao() -> void:
+	_guardiao_derrotado = true
+	_painel_guardiao.get_parent().get_parent().hide()
+	AudioManager.tocar(&"vitoria")
+	FEEDBACK.faixa(self, "GUARDIÃO DERROTADO", "O espelho está livre.", Color(1.0, 0.87, 0.56), 0.13)
+	_atualizar_objetivo()
+
+
 func _atualizar_objetivo() -> void:
 	if _memorias_restauradas():
-		titulo.text = "Memória restaurada · 3/3"
-		if dev_espelho_liberado():
+		titulo.text = "Memórias restauradas · 3/3"
+		if _espelho_liberado():
 			espelho.modulate = Color.WHITE
 			detalhe.text = "O espelho está aberto. Siga ao norte."
+			if _energia == null:
+				_energia = ESPELHO.instalar(self, espelho.global_position - Vector2(0, 62))
+		elif not _guardiao_derrotado:
+			detalhe.text = "Enfrente o guardião ao norte."
 		else:
 			detalhe.text = NOTA_MUSICAL.aviso_espelho(_meta_notas - _notas_coletadas)
 		return
@@ -322,80 +394,24 @@ func _atualizar_notas() -> void:
 
 
 func concluir() -> void:
-	if concluida or jogador.vida <= 0 or not dev_espelho_liberado():
+	var apoio := espelho.global_position + Vector2(0, 20)
+	if concluida or jogador.vida <= 0 or not _espelho_liberado() or pes.global_position.distance_to(apoio) > 54.0:
 		return
 	concluida = true
-	AudioManager.tocar(&"portal")
-	get_tree().change_scene_to_file(PROGRESSAO.THRILLER)
+	aviso_espelho.hide()
+	FEEDBACK.encerrar(self)
+	_energia.atravessar(jogador, apoio, get_tree().change_scene_to_file.bind(PROGRESSAO.THRILLER),
+		func(): concluida = false)
 
 
 func _memorias_restauradas() -> bool:
 	return _regiao == REGIOES.size()
 
 
-func dev_espelho_liberado() -> bool:
-	return _memorias_restauradas() and _notas_coletadas >= _meta_notas
+func _espelho_liberado() -> bool:
+	return _memorias_restauradas() and _guardiao_derrotado and _notas_coletadas >= _meta_notas
 
 
 func indicador_notas_suprimido() -> bool:
 	# Durante a perseguição o indicador some para não competir com os detetives.
 	return concluida or jogador.vida <= 0 or (_encontro_iniciado and _detetives_restantes > 0)
-
-
-func dev_posicao_central() -> Vector2:
-	return Vector2(992, 1032)
-
-
-func dev_posicao_regiao_3() -> Vector2:
-	return Vector2(992, 674)
-
-
-func dev_posicao_final() -> Vector2:
-	return espelho.global_position + Vector2(0, 32)
-
-
-func dev_restaurar_pontos() -> void:
-	for celula: Vector2i in _pisos_acesos:
-		_acender_piso(celula)
-	for indice in REGIOES.size():
-		_restaurar_ponto(indice)
-
-
-func dev_completar_objetivos() -> void:
-	if not _inicio_pronto:
-		return
-	for detetive: Inimigo in get_tree().get_nodes_in_group("inimigos"):
-		if detetive.has_meta("obrigatorio") and detetive.vida > 0:
-			detetive.receber_dano(detetive.vida)
-	dev_restaurar_pontos()
-	while not _memorias_restauradas():
-		_liberar_passagem()
-
-
-func dev_gerar_onda() -> void:
-	if not _inicio_pronto or get_tree().get_node_count_in_group("inimigos") >= 8:
-		return
-	var celula := chao.local_to_map(jogador.global_position)
-	var consulta := PhysicsShapeQueryParameters2D.new()
-	var forma := CircleShape2D.new()
-	forma.radius = 13.0
-	consulta.shape = forma
-	consulta.collision_mask = 7
-	for deslocamento in [Vector2i(3, 0), Vector2i(-3, 0), Vector2i(0, 3), Vector2i(0, -3)]:
-		var vaga: Vector2i = celula + deslocamento
-		if caminhos.is_in_boundsv(vaga) and not caminhos.is_point_solid(vaga):
-			consulta.transform.origin = chao.map_to_local(vaga)
-			if get_world_2d().direct_space_state.intersect_shape(consulta, 1).is_empty():
-				_gerar_detetive(TIPO.COMUM, consulta.transform.origin)
-				return
-
-
-func dev_coletar_nota() -> void:
-	for nota in atores.get_children():
-		if nota is Area2D and nota.name.begins_with("Nota_") and not nota.is_queued_for_deletion():
-			_coletar_nota(jogador, nota)
-			return
-
-
-func dev_progresso() -> String:
-	return "Memórias %d/3  ·  Notas %d/%d (meta)" % [_restauradas.count(true), _notas_coletadas, _meta_notas]
