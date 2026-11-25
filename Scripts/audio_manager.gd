@@ -4,6 +4,8 @@ signal volumes_alterados
 
 const Catalogo := preload("res://Scripts/catalogo_audio.gd")
 const PROGRESSAO := preload("res://Scripts/progressao.gd")
+const Perfil := preload("res://Scripts/perfil_musical.gd")
+const ROTAS_MUSICA: Array[StringName] = [&"MusicA", &"MusicB"]
 const CAMINHO_PREFERENCIAS := "user://audio.cfg"
 const CANAIS: Array[StringName] = [&"Master", &"Music", &"SFX", &"Ambient"]
 const VOLUME_PADRAO := 1.0
@@ -34,10 +36,16 @@ var _relogio := 0.0
 var _salvar_em := -1.0
 var _pausado := false
 var _aleatorio := RandomNumberGenerator.new()
+var _perfis: Dictionary[StringName, Perfil] = {}
+var _tempo_recuo_musical := 0.0
+var _latencia_saida := 0.0
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_latencia_saida = AudioServer.get_output_latency()
+	for rota: StringName in ROTAS_MUSICA:
+		_perfis[rota] = Perfil.new(rota)
 	for camada in [_musica, _ambiente]:
 		for i in 2:
 			var voz := AudioStreamPlayer.new()
@@ -76,6 +84,10 @@ func _process(delta: float) -> void:
 		for voz in _efeitos:
 			if voz.bus != &"UI":
 				voz.stream_paused = pausado
+	if not pausado:
+		_tempo_recuo_musical = maxf(0.0, _tempo_recuo_musical - delta)
+		for perfil: Perfil in _perfis.values():
+			perfil.atualizar(delta, _tempo_recuo_musical > 0.0)
 
 
 func _exit_tree() -> void:
@@ -136,16 +148,67 @@ func _mudar_cena() -> void:
 	var cena := get_tree().current_scene
 	if cena == null:
 		return
-	if not cena.tree_exiting.is_connected(_limpar_cena):
-		cena.tree_exiting.connect(_limpar_cena, CONNECT_ONE_SHOT)
+	if cena.tree_exiting.is_connected(_limpar_cena):
+		return
+	cena.tree_exiting.connect(_limpar_cena, CONNECT_ONE_SHOT)
 	var caminho := cena.scene_file_path
 	if caminho == PROGRESSAO.CREDITOS:
 		preparar_creditos()
 		return
 	var trilha: String = Catalogo.TRILHAS.get(caminho, "")
 	var canal := &"Cinematics" if trilha.begins_with("Cinematics/") else &"Music"
-	_trocar_faixa(_musica, _carregar(trilha), canal, TRANSICAO)
+	var estado := Perfil.NEUTRO
+	if caminho in Catalogo.MEMORIAS:
+		estado = Perfil.memoria(0.0)
+	elif caminho == PROGRESSAO.ULTIMO_ECO:
+		estado = Perfil.eco(1)
+	_trocar_faixa(_musica, _carregar(trilha), canal, TRANSICAO, estado)
 	_trocar_faixa(_ambiente, _carregar(Catalogo.AMBIENTES.get(caminho, "")), &"Ambient", TRANSICAO)
+
+
+func atualizar_clareza(cena: Node, coletadas: int, meta: int) -> void:
+	if _cena_musical_atual(cena) and cena.scene_file_path in Catalogo.MEMORIAS and meta > 0:
+		_atualizar_perfil_atual(Perfil.memoria(float(coletadas) / float(meta)))
+
+
+func atualizar_intensidade(cena: Node, etapa: int) -> void:
+	if _cena_musical_atual(cena) and cena.scene_file_path == PROGRESSAO.ULTIMO_ECO:
+		_atualizar_perfil_atual(Perfil.eco(etapa))
+
+
+func _cena_musical_atual(cena: Node) -> bool:
+	return cena == get_tree().current_scene and cena.tree_exiting.is_connected(_limpar_cena)
+
+
+func _atualizar_perfil_atual(estado: Vector2) -> void:
+	if _musica.atual != null and _perfis.has(_musica.atual.bus):
+		_perfis[_musica.atual.bus].definir(estado)
+
+
+func encerrar_trilha_cinematica(cena: Node) -> void:
+	if cena != get_tree().current_scene:
+		return
+	if _musica.atual != null and _musica.atual.bus == &"Cinematics":
+		_trocar_faixa(_musica, null, &"Cinematics", 0.22)
+	for voz in _efeitos:
+		if voz.bus == &"Cinematics":
+			voz.stop()
+
+
+func tempo_cinematica() -> float:
+	var voz := _musica.atual
+	if DisplayServer.get_name() == "headless" or voz == null or voz.bus != &"Cinematics" or not voz.playing:
+		return -1.0
+	return maxf(0.0, voz.get_playback_position() + AudioServer.get_time_since_last_mix() - _latencia_saida)
+
+
+func avancar_cinematica(sequencia: Tween, delta: float) -> void:
+	if sequencia == null or not sequencia.is_valid():
+		return
+	var tempo := tempo_cinematica()
+	# O relógio de áudio prevalece quando há trilha. Sem ela, o roteiro usa o delta.
+	var passo := delta if tempo < 0.0 else maxf(0.0, tempo - sequencia.get_total_elapsed_time())
+	sequencia.custom_step(passo)
 
 
 func _limpar_cena() -> void:
@@ -156,6 +219,7 @@ func _limpar_cena() -> void:
 		if evento not in [&"ui_clique", &"portal"]:
 			voz.stop()
 	_ultimo_toque.clear()
+	_tempo_recuo_musical = 0.0
 
 
 func preparar_creditos() -> void:
@@ -181,7 +245,7 @@ func _carregar(caminho: String) -> AudioStream:
 	return som
 
 
-func _trocar_faixa(camada: Camada, faixa: AudioStream, canal: StringName, duracao: float) -> void:
+func _trocar_faixa(camada: Camada, faixa: AudioStream, canal: StringName, duracao: float, estado := Perfil.NEUTRO) -> void:
 	if duracao <= 0.0:
 		if camada.transicao != null:
 			camada.transicao.kill()
@@ -190,7 +254,9 @@ func _trocar_faixa(camada: Camada, faixa: AudioStream, canal: StringName, duraca
 		for voz in camada.vozes:
 			_liberar_faixa(voz)
 		return
-	if faixa == camada.faixa and (faixa == null or (camada.atual.playing and camada.atual.bus == canal)):
+	if faixa == camada.faixa and (faixa == null or (camada.atual.playing and camada.atual.bus == _rota(camada.atual, canal))):
+		if canal == &"Music" and faixa != null:
+			_perfis[camada.atual.bus].definir(estado)
 		return
 	if camada.transicao != null:
 		camada.transicao.kill()
@@ -200,15 +266,19 @@ func _trocar_faixa(camada: Camada, faixa: AudioStream, canal: StringName, duraca
 	if faixa != null:
 		# Se a trilha ainda está saindo, reaproveita sua voz quando o destino volta a ser o mesmo.
 		for voz in camada.vozes:
-			if voz.playing and voz.get_meta("faixa", null) == faixa and voz.bus == canal:
+			if voz.playing and voz.get_meta("faixa", null) == faixa and voz.bus == _rota(voz, canal):
 				camada.atual = voz
+				if canal == &"Music":
+					_perfis[voz.bus].definir(estado)
 				break
 		if camada.atual == null:
 			var voz := camada.vozes[1] if anterior == camada.vozes[0] else camada.vozes[0]
 			if anterior == null and camada.vozes[0].playing:
 				voz = camada.vozes[1]
 			voz.stop()
-			voz.bus = canal
+			voz.bus = _rota(voz, canal)
+			if canal == &"Music":
+				_perfis[voz.bus].definir(estado, true)
 			voz.volume_db = PISO_DB
 			voz.stream = faixa if canal == &"Cinematics" else _para_loop(faixa)
 			voz.set_meta("faixa", faixa)
@@ -223,6 +293,12 @@ func _trocar_faixa(camada: Camada, faixa: AudioStream, canal: StringName, duraca
 		var ganho := 1.0 if voz == camada.atual else 0.0
 		camada.transicao.tween_method(_aplicar_ganho.bind(voz), db_to_linear(voz.volume_db), ganho, duracao)
 	camada.transicao.chain().tween_callback(_limpar_faixas.bind(camada))
+
+
+func _rota(voz: AudioStreamPlayer, canal: StringName) -> StringName:
+	if canal == &"Music":
+		return ROTAS_MUSICA[_musica.vozes.find(voz)]
+	return canal
 
 
 func _para_loop(faixa: AudioStream) -> AudioStream:
@@ -295,6 +371,8 @@ func tocar(evento: StringName, posicao := Vector2.INF) -> bool:
 				voz.global_position = posicao
 			voz.play()
 			_ultimo_toque[evento] = _relogio
+			if evento == &"chefe_aviso":
+				_tempo_recuo_musical = 0.28
 			return true
 	return false
 

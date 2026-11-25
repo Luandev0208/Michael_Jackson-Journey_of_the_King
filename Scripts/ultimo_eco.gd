@@ -164,6 +164,7 @@ func _physics_process(_delta: float) -> void:
 
 
 func _fase_alterada(etapa: int) -> void:
+	AudioManager.atualizar_intensidade(self, etapa)
 	_mostrar_arena(etapa - 1)
 	titulo.text = "The Silence  ·  %d/3 — %s" % [etapa, TITULOS[etapa - 1]]
 	titulo.modulate = CORES_FASE[etapa - 1]

@@ -287,6 +287,7 @@ func _coletar_nota(_corpo: Node2D, nota: Area2D) -> void:
 
 
 func _atualizar_notas() -> void:
+	AudioManager.atualizar_clareza(self, _notas_coletadas, _meta_notas)
 	hud.atualizar_pontos(_notas_coletadas, NOTAS.size(), pontuacao, _meta_notas)
 	if objetivo == Objetivo.ESPELHO:
 		_atualizar_objetivo_final()

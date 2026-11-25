@@ -23,6 +23,8 @@ const AMBIENTES := {
 	PROGRESSAO.ULTIMO_ECO: "Ambient/ultimo_eco.ogg",
 }
 
+const MEMORIAS := [PROGRESSAO.BILLIE_JEAN, PROGRESSAO.THRILLER, PROGRESSAO.SMOOTH_CRIMINAL]
+
 # Cada evento pode ter várias gravações. As que ainda não existem são ignoradas.
 const EFEITOS := {
 	&"passo_madeira": ["passo_madeira_01.wav", "passo_madeira_02.wav"],

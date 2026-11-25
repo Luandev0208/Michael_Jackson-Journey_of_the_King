@@ -69,12 +69,17 @@ func _ready() -> void:
 		[DURACAO, _mostrar_conclusao],
 	]
 	_sequencia = create_tween()
+	_sequencia.pause()
 	var anterior := 0.0
 	for momento in momentos:
 		var instante := float(momento[0])
 		_sequencia.tween_interval(instante - anterior)
 		_sequencia.tween_callback(momento[1])
 		anterior = instante
+
+
+func _process(delta: float) -> void:
+	AudioManager.avancar_cinematica(_sequencia, delta)
 
 
 # Usa o estado serializado das cenas para copiar só a arte e suas transformações.
@@ -365,6 +370,7 @@ func _mostrar_conclusao() -> void:
 	if not _em_exibicao:
 		return
 	_em_exibicao = false
+	AudioManager.encerrar_trilha_cinematica(self)
 	_sequencia.kill()
 	_parar_plano()
 	if _texto != null:

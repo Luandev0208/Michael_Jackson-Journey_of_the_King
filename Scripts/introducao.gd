@@ -173,8 +173,13 @@ func _luz(pai: Node2D, posicao: Vector2, cor: Color, tamanho: float, intensidade
 	return luz
 
 
+func _process(delta: float) -> void:
+	AudioManager.avancar_cinematica(_sequencia, delta)
+
+
 func _iniciar_sequencia() -> void:
 	_sequencia = create_tween()
+	_sequencia.pause()
 	var anterior := 0.0
 	var planos := [
 		[0.0, _abertura],
