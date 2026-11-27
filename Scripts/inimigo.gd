@@ -2,6 +2,7 @@ class_name Inimigo
 extends CharacterBody2D
 
 signal derrotado
+const AnimacaoInimigo := preload("res://Scripts/animacao_inimigo.gd")
 
 @export var distancia_patrulha := 28.0
 @export var velocidade_patrulha := 25.0
@@ -37,6 +38,12 @@ var _atordoamento := 0.0
 
 func _ready() -> void:
 	_origem = global_position.x
+	if _sprite != null:
+		_usar_arte(_sprite.sprite_frames)
+
+
+func _usar_arte(quadros: SpriteFrames) -> void:
+	_sprite.sprite_frames = AnimacaoInimigo.ampliar(quadros)
 
 func _physics_process(delta: float) -> void:
 	if vida <= 0:
@@ -91,14 +98,21 @@ func _atacar_por_contato(delta: float) -> void:
 			visual.modulate = Color(1.0, 0.71, 0.47)
 			_animar("prepare", _preparacao_restante + delta, iniciando)
 			return
-		_tempo_contato = recarga_contato
+		_tempo_contato = _recarga_depois_do_golpe()
 		_preparacao_restante = -1.0
-		_animando_ataque = _animar("attack", 0.0, true)
+		var pesado := preparacao_contato >= 0.49
+		_animando_ataque = _animar("pesado" if pesado else "attack", 0.29 if pesado else 0.22, true)
+		if _animando_ataque and not pesado and _sprite.sprite_frames.get_frame_count(_sprite.animation) > 1:
+			_sprite.set_frame_and_progress(1, 0.0)
 		_efeito_ataque()
 		AudioManager.tocar(&"ataque_inimigo", global_position)
 		jogador.receber_dano(true)
 		return
 	_preparacao_restante = -1.0
+
+
+func _recarga_depois_do_golpe() -> float:
+	return recarga_contato
 
 func _reservar_inicio_ataque() -> bool:
 	var quadro := Engine.get_physics_frames()
@@ -143,6 +157,12 @@ func _atualizar_animacao(movimento: Vector2) -> void:
 	if _sprite == null or _tempo_impacto > 0.0 or _preparacao_restante > 0.0:
 		return
 	if _animando_ataque and _sprite.is_playing():
+		return
+	if _animando_ataque:
+		_animando_ataque = false
+		if _animar("retomada", 0.24, true):
+			return
+	if String(_sprite.animation).begins_with("retomada_") and _sprite.is_playing():
 		return
 	_animando_ataque = false
 	var andando := movimento.length_squared() > 0.01

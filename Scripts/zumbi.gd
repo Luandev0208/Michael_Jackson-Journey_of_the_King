@@ -38,6 +38,7 @@ func configurar_tipo(tipo: Tipo) -> void:
 			preparacao_contato = 0.29
 			multiplicador_chapeu = 1.0
 			velocidade_investida = 211.0
+			varia_investida = true
 			recarga_contato = 1.05
 		Tipo.COMUM:
 			vida = 3

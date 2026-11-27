@@ -29,7 +29,7 @@
 [ext_resource type="Script" uid="uid://c21mq547bty8k" path="res://Scripts/batalhas_thriller.gd" id="batalhas"]
 [ext_resource type="Script" uid="uid://bl02dc2pg4f2f" path="res://Scripts/thriller.gd" id="fase"]
 [ext_resource type="PackedScene" path="res://Scenes/michael.tscn" id="michael"]
-[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/Thriller/thriller.tres" id="figurino"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/Combate/thriller.tres" id="figurino"]
 [ext_resource type="Texture2D" path="res://Assets/Michael/Animacoes/Efeitos/chapeu_em_voo_preto.png" id="chapeu_visual"]
 [ext_resource type="Texture2D" uid="uid://bq2kakn16g2fj" path="res://Assets/Thriller/objetos/cerca_decorativa.png" id="objeto_cerca_decorativa"]
 [ext_resource type="Texture2D" uid="uid://cfha1qkap7lag" path="res://Assets/Thriller/objetos/portao_fechado.png" id="objeto_portao_fechado"]

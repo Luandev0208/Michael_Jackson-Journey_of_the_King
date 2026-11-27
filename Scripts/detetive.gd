@@ -28,6 +28,8 @@ func configurar(tipo: Tipo, obrigatorio: bool) -> void:
 			velocidade_perseguicao = 89.0
 			preparacao_contato = 0.30
 			multiplicador_chapeu = 1.0
+			velocidade_investida = 188.0
+			varia_investida = true
 		Tipo.ESPECIAL:
 			# Fotógrafo: flash longo e visível, resiste ao chapéu e pede chutes.
 			vida = 4

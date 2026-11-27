@@ -7,6 +7,7 @@ const PROGRESSAO := preload("res://Scripts/progressao.gd")
 const Perfil := preload("res://Scripts/perfil_musical.gd")
 const ROTAS_MUSICA: Array[StringName] = [&"MusicA", &"MusicB"]
 const PASTAS_ALTERNATIVAS := ["user://musicas/", "res://Assets/Audio/Alternativas/"]
+const GANHO_FAIXA_ALTERNATIVA_DB := -17.0
 const CAMINHO_PREFERENCIAS := "user://audio.cfg"
 const CANAIS: Array[StringName] = [&"Master", &"Music", &"SFX", &"Ambient"]
 const VOLUME_PADRAO := 1.0
@@ -14,6 +15,7 @@ const TRANSICAO := 0.65
 const PISO_DB := -80.0
 const VOZES_2D := 12
 const VOZES_1D := 8
+const AVISOS_PRIORITARIOS: Array[StringName] = [&"chefe_aviso", &"chefe_etapa"]
 const LIMITE_POR_EVENTO := 2
 const INTERVALO_EFEITO := 0.055
 
@@ -246,6 +248,7 @@ func _carregar_trilha(cena: String, original: String) -> AudioStream:
 			arquivo.close()
 			var alternativa := AudioStreamOggVorbis.load_from_file(caminho)
 			if alternativa != null and alternativa.get_length() > 0.0:
+				alternativa.set_meta("faixa_alternativa", true)
 				_recursos[caminho] = alternativa
 				return alternativa
 	return _carregar(original)
@@ -310,7 +313,9 @@ func _trocar_faixa(camada: Camada, faixa: AudioStream, canal: StringName, duraca
 	for voz in camada.vozes:
 		if not voz.playing:
 			continue
-		var ganho := 1.0 if voz == camada.atual else 0.0
+		var ganho := 0.0
+		if voz == camada.atual:
+			ganho = db_to_linear(GANHO_FAIXA_ALTERNATIVA_DB) if faixa.has_meta("faixa_alternativa") else 1.0
 		camada.transicao.tween_method(_aplicar_ganho.bind(voz), db_to_linear(voz.volume_db), ganho, duracao)
 	camada.transicao.chain().tween_callback(_limpar_faixas.bind(camada))
 
@@ -376,12 +381,18 @@ func tocar(evento: StringName, posicao := Vector2.INF) -> bool:
 	if tocando >= LIMITE_POR_EVENTO:
 		return false
 
-	var vozes: Array = _espaciais if posicao.is_finite() and canal == &"SFX" else _efeitos
-	for voz in vozes:
-		if not voz.playing:
+	var espacial := posicao.is_finite() and canal == &"SFX"
+	var vozes: Array = _espaciais if espacial else _efeitos
+	var reservada := AVISOS_PRIORITARIOS.find(evento) if espacial else -1
+	var primeira := reservada if reservada >= 0 else (AVISOS_PRIORITARIOS.size() if espacial else 0)
+	var limite := reservada + 1 if reservada >= 0 else vozes.size()
+	for i in range(primeira, limite):
+		var voz: Node = vozes[i]
+		if not voz.playing or reservada >= 0:
 			var faixa := _sortear(evento, canal)
 			if faixa == null:
 				return false
+			voz.stop()
 			voz.set_meta("evento", evento)
 			voz.bus = canal
 			voz.stream = faixa

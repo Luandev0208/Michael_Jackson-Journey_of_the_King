@@ -5,7 +5,13 @@ extends Inimigo
 @export var velocidade_perseguicao := 58.0
 @export var distancia_contato := 21.0
 
+const DURACAO_INVESTIDA := 0.34
+const ALCANCE_IMPACTO := 20.0
+
 var velocidade_investida := 0.0
+var varia_investida := false
+var _proxima_e_finta := true
+var _tempo_finta := 0.0
 var _alcance_posto := 224.0
 var _preparando_investida := false
 var _investindo := false
@@ -34,6 +40,13 @@ func _mover(delta: float) -> void:
 		super._mover(delta)
 		return
 
+	if _tempo_finta > 0.0:
+		_tempo_finta -= delta
+		var lado := -1.0 if get_instance_id() % 2 != 0 else 1.0
+		move_and_collide(_direcao_investida.orthogonal() * lado * 67.0 * delta)
+		if _tempo_finta <= 0.0:
+			_anunciar_investida()
+		return
 	if _preparando_investida or _investindo:
 		_executar_investida(delta)
 		return
@@ -84,6 +97,18 @@ func _linha_livre_ate_alvo() -> bool:
 
 
 func _preparar_investida() -> void:
+	if varia_investida:
+		_proxima_e_finta = not _proxima_e_finta
+		if not _proxima_e_finta:
+			_tempo_finta = 0.22
+			_direcao_investida = global_position.direction_to(alvo.global_position)
+			_olhar_para(_direcao_investida)
+			_animar("finta", _tempo_finta, true)
+			return
+	_anunciar_investida()
+
+
+func _anunciar_investida() -> void:
 	_preparando_investida = true
 	_tempo_investida = 0.43
 	_direcao_investida = global_position.direction_to(alvo.global_position)
@@ -92,9 +117,13 @@ func _preparar_investida() -> void:
 	_olhar_para(_direcao_investida)
 	_animar("prepare", _tempo_investida, true)
 	_trilha_investida = Line2D.new()
-	_trilha_investida.points = PackedVector2Array([Vector2.ZERO, _direcao_investida * 66.0])
-	_trilha_investida.width = 13.0
-	_trilha_investida.default_color = Color(1.0, 0.59, 0.37, 0.53)
+	var percurso := _direcao_investida * velocidade_investida * DURACAO_INVESTIDA
+	var parede := KinematicCollision2D.new()
+	if test_move(global_transform, percurso, parede):
+		percurso = parede.get_travel()
+	_trilha_investida.points = PackedVector2Array([Vector2.ZERO, percurso])
+	_trilha_investida.width = ALCANCE_IMPACTO * 2.0
+	_trilha_investida.default_color = Color(1.0, 0.59, 0.37, 0.38)
 	_trilha_investida.z_index = 1
 	add_child(_trilha_investida)
 	AudioManager.tocar(&"ataque_inimigo", global_position)
@@ -106,28 +135,29 @@ func _executar_investida(delta: float) -> void:
 		if _tempo_investida <= 0.0:
 			_preparando_investida = false
 			_investindo = true
-			_tempo_investida = 0.34
+			_tempo_investida = DURACAO_INVESTIDA
 			_trilha_investida.queue_free()
-			_animar("attack", _tempo_investida, true)
+			_animar("corrida", _tempo_investida, true)
 		return
 	var parede := move_and_collide(_direcao_investida * velocidade_investida * delta)
-	var atingiu := global_position.distance_to(alvo.global_position) < 20.0 and _linha_livre_ate_alvo()
+	var atingiu := global_position.distance_to(alvo.global_position) < ALCANCE_IMPACTO and _linha_livre_ate_alvo()
 	if atingiu:
 		alvo.get_parent().receber_dano(true)
 	if parede or atingiu or _tempo_investida <= 0.0:
 		_investindo = false
 		_tempo_contato = recarga_contato
 		_atordoamento = 0.34
+		_animar("retomada", _atordoamento, true)
 		_recalcular = 0.0
 
 
 func _atacar_por_contato(delta: float) -> void:
-	if not _preparando_investida and not _investindo:
+	if not _preparando_investida and not _investindo and _tempo_finta <= 0.0:
 		super._atacar_por_contato(delta)
 
 
 func _atualizar_animacao(movimento: Vector2) -> void:
-	if not _preparando_investida and not _investindo:
+	if not _preparando_investida and not _investindo and _tempo_finta <= 0.0:
 		super._atualizar_animacao(movimento)
 
 
@@ -144,6 +174,7 @@ func _derrotar() -> void:
 func _interromper_investida() -> void:
 	_preparando_investida = false
 	_investindo = false
+	_tempo_finta = 0.0
 	if is_instance_valid(_trilha_investida):
 		_trilha_investida.queue_free()
 
@@ -181,12 +212,22 @@ func _flanquear(largura: float) -> Vector2:
 	var sentido := global_position.direction_to(alvo.global_position)
 	var lado := 1.0 if get_instance_id() % 2 == 0 else -1.0
 	var desvio := sentido.orthogonal() * lado * largura
+	var aliados := get_tree().get_nodes_in_group(&"inimigos")
+	var melhor := alvo.global_position
+	var melhor_pressao := INF
 	for variante: Vector2 in [desvio, -desvio]:
 		var ponto := alvo.global_position + variante
 		var celula := Vector2i((ponto / caminhos.cell_size).floor())
-		if caminhos.region.has_point(celula) and not caminhos.is_point_solid(celula):
-			return ponto
-	return alvo.global_position
+		if not caminhos.region.has_point(celula) or caminhos.is_point_solid(celula):
+			continue
+		var pressao := 0.0
+		for aliado in aliados:
+			if aliado != self and aliado.get_parent() == get_parent():
+				pressao += maxf(0.0, 55.0 - ponto.distance_to(aliado.global_position))
+		if pressao < melhor_pressao:
+			melhor_pressao = pressao
+			melhor = ponto
+	return melhor
 
 
 func _seguir(destino: Vector2, rapidez: float, delta: float) -> void:

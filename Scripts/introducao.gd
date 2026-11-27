@@ -8,7 +8,7 @@ const CENAS: Array[PackedScene] = [
 	preload("res://Scenes/thriller.tscn"),
 	preload("res://Scenes/smooth_criminal.tscn"),
 ]
-const FIGURINO := preload("res://Assets/Michael/Variantes/michael_terno_claro_sem_chapeu_spriteframes.tres")
+const FIGURINO := preload("res://Assets/Michael/Animacoes/Combate/camarim.tres")
 const THE_SILENCE := preload("res://Assets/UltimoEco/Boss/the_silence_fase_3.tres")
 const EFEITOS := preload("res://Assets/UltimoEco/Efeitos/the_silence_efeitos.tres")
 const DETETIVE := preload("res://Assets/Inimigos/BillieJean/DetetiveComum/spriteframes.tres")

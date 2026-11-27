@@ -5,8 +5,8 @@
 [ext_resource type="PackedScene" path="res://Scenes/the_silence_chefe.tscn" id="chefe"]
 [ext_resource type="PackedScene" path="res://Scenes/hud_memoria.tscn" id="hud"]
 [ext_resource type="Theme" path="res://Assets/tema_menu.tres" id="tema"]
-[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/SmoothCriminal/michael_terno_claro_com_chapeu.tres" id="figurino"]
-[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/SmoothCriminal/michael_terno_claro_sem_chapeu.tres" id="sem_chapeu"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/Combate/smooth.tres" id="figurino"]
+[ext_resource type="SpriteFrames" path="res://Assets/Michael/Animacoes/Combate/smooth_sem_chapeu.tres" id="sem_chapeu"]
 [ext_resource type="Texture2D" path="res://Assets/Michael/Animacoes/Efeitos/chapeu_em_voo_branco.png" id="chapeu"]
 
 [node name="UltimoEco" type="Node2D"]

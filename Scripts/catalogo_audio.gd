@@ -37,6 +37,7 @@ const EFEITOS := {
 	&"dash": ["dash.wav"],
 	&"moonwalk": ["moonwalk.wav"],
 	&"chute": ["chute_01.wav", "chute_02.wav"],
+	&"soco": ["soco.wav"],
 	&"combo_final": ["combo_final.wav"],
 	&"impacto": ["impacto_01.wav", "impacto_02.wav"],
 	&"chapeu_lancamento": ["chapeu_lancamento.wav"],

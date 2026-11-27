@@ -3,11 +3,11 @@ extends "res://Scripts/capanga.gd"
 signal vida_alterada(restante: int)
 signal etapa_alterada(etapa: int)
 
-enum Estado { BUSCA, AVISO, INVESTIDA, INTERVALO, RECUPERACAO }
+enum Estado { BUSCA, AVISO, INVESTIDA, INTERVALO, RECUPERACAO, FINTA }
 
 const ARTE := preload("res://Assets/SmoothCriminal/Inimigos/Chefe/spriteframes.tres")
 const NOME := "Guardião do Espelho — Smooth Criminal"
-const VIDA_MAXIMA := 15
+const VIDA_MAXIMA := 22
 const VELOCIDADE_INVESTIDA := 310.0
 const ALCANCE_INVESTIDA := 126.0
 const ALCANCE_GOLPE := 38.0
@@ -25,8 +25,12 @@ var _golpe_correndo := false
 var _alternar_investida := true
 var _encadear := false
 var _primeiro_golpe_concluido := false
+var _ataques := 0
+var _lado_finta := 1.0
+var _complementos := 0
 var _alcance_corrida := 0.0
 var _velocidade_corrida := 0.0
+var _golpes_na_abertura := 0
 var _aviso := Line2D.new()
 
 
@@ -35,7 +39,7 @@ func _ready() -> void:
 	vida = VIDA_MAXIMA
 	resistencia_empurrao = 0.0
 	armadura_contra_chapeu = true
-	_sprite.sprite_frames = ARTE
+	_usar_arte(ARTE)
 	_aviso.z_index = 1
 	_aviso.width = 5.0
 	_aviso.default_color = Color(1.0, 0.63, 0.32, 0.8)
@@ -50,21 +54,28 @@ func ativar() -> void:
 func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
 	if not em_combate or vida <= 0 or not _primeiro_golpe_concluido:
 		return
-	if _estado != Estado.RECUPERACAO and fonte == &"chute" and dano == 1:
-		return
+	if _estado != Estado.RECUPERACAO and fonte == &"chute":
+		var de_frente := global_position.direction_to(alvo.global_position).dot(_direcao_golpe) > 0.42
+		if dano == 1 or (etapa >= 2 and de_frente and _estado in [Estado.AVISO, Estado.INVESTIDA, Estado.INTERVALO]):
+			return
 	multiplicador_chapeu = 1.0 if _estado == Estado.RECUPERACAO else 0.45
+	var antes := vida
 	super.receber_dano(dano, empurrao, fonte)
 	vida_alterada.emit(maxi(vida, 0))
 	if vida <= 0:
 		_aviso.clear_points()
 		return
-	var nova_etapa := 3 if vida <= 5 else (2 if vida <= 10 else 1)
+	var nova_etapa := 3 if vida <= 7 else (2 if vida <= 15 else 1)
 	if nova_etapa != etapa:
 		etapa = nova_etapa
 		_primeiro_golpe_concluido = false
 		_recuperar(0.8)
 		AudioManager.tocar(&"chefe_etapa", global_position)
 		etapa_alterada.emit(etapa)
+	elif etapa >= 2 and _estado == Estado.RECUPERACAO and vida < antes:
+		_golpes_na_abertura += 1
+		if _golpes_na_abertura >= 2 and global_position.distance_to(alvo.global_position) < 43.0:
+			_iniciar_finta()
 
 
 func _mover(delta: float) -> void:
@@ -77,7 +88,10 @@ func _mover(delta: float) -> void:
 			var investida := etapa == 3 or (etapa == 2 and _alternar_investida)
 			var alcance := (94.0 if etapa == 3 else 66.0) if investida else 29.0
 			if distancia <= alcance and _caminho_livre(alvo.global_position):
-				_preparar_golpe(investida)
+				if etapa >= 2 and _ataques % 3 == 1:
+					_iniciar_finta()
+				else:
+					_preparar_golpe(investida)
 			else:
 				_seguir(alvo.global_position, VELOCIDADES_BUSCA[etapa - 1], delta)
 		Estado.AVISO:
@@ -88,11 +102,13 @@ func _mover(delta: float) -> void:
 					AudioManager.tocar(&"chefe_investida", global_position)
 					_distancia_restante = _alcance_corrida
 					_atingiu = false
-					_animar("special", _alcance_corrida / _velocidade_corrida, true)
+					_animar("corrida", _alcance_corrida / _velocidade_corrida, true)
 				else:
 					AudioManager.tocar(&"chefe_golpe", global_position)
 					_acertar_se_proximo(ALCANCE_GOLPE, 0.42)
 					_finalizar_golpe(1.18)
+					if _estado == Estado.RECUPERACAO:
+						_animar("pesado", 0.24, true)
 		Estado.INVESTIDA:
 			var passo := minf(_velocidade_corrida * delta, _distancia_restante)
 			_distancia_restante -= passo
@@ -104,6 +120,11 @@ func _mover(delta: float) -> void:
 		Estado.INTERVALO:
 			if _tempo <= 0.0:
 				_preparar_golpe(false, true)
+		Estado.FINTA:
+			if _tempo <= 0.0:
+				_preparar_golpe(true)
+			else:
+				move_and_collide(_direcao_golpe.orthogonal() * _lado_finta * 105.0 * delta)
 		Estado.RECUPERACAO:
 			if _tempo <= 0.0:
 				_estado = Estado.BUSCA
@@ -114,9 +135,12 @@ func _preparar_golpe(investida: bool, complemento := false) -> void:
 	if not _reservar_inicio_ataque():
 		return
 	AudioManager.tocar(&"chefe_aviso", global_position)
+	if not complemento:
+		_ataques += 1
+		_complementos = 0
 	if etapa == 2 and not complemento:
 		_alternar_investida = not _alternar_investida
-	_encadear = not complemento and investida and etapa >= 2
+	_encadear = (not complemento and investida and etapa >= 2) or (complemento and etapa == 3 and _complementos == 1)
 	_golpe_correndo = investida
 	_alcance_corrida = ALCANCE_INVESTIDA if etapa == 3 else 82.0
 	_velocidade_corrida = VELOCIDADE_INVESTIDA if etapa == 3 else 240.0
@@ -134,9 +158,18 @@ func _preparar_golpe(investida: bool, complemento := false) -> void:
 	_aviso.points = PackedVector2Array([Vector2.ZERO, ponta])
 
 
+func _iniciar_finta() -> void:
+	_estado = Estado.FINTA
+	_tempo = 0.32
+	_direcao_golpe = global_position.direction_to(alvo.global_position)
+	_lado_finta *= -1.0
+	_animar("finta", _tempo, true)
+
+
 func _finalizar_golpe(duracao: float) -> void:
 	if _encadear and global_position.distance_to(alvo.global_position) <= 73.0 and _caminho_livre(alvo.global_position):
 		_estado = Estado.INTERVALO
+		_complementos += 1
 		_tempo = 0.29
 		_encadear = false
 		_animar("prepare", _tempo, true)
@@ -147,6 +180,7 @@ func _finalizar_golpe(duracao: float) -> void:
 
 func _recuperar(duracao: float, animacao := "recover") -> void:
 	_encadear = false
+	_golpes_na_abertura = 0
 	_aviso.clear_points()
 	_estado = Estado.RECUPERACAO
 	_tempo = duracao
@@ -193,6 +227,6 @@ func _atualizar_animacao(movimento: Vector2) -> void:
 				_animar("threat" if _golpe_correndo else "prepare", maxf(_tempo, 0.01), true)
 			Estado.INVESTIDA:
 				_olhar_para(_direcao_golpe)
-				_animar("special", maxf(_distancia_restante / _velocidade_corrida, 0.01), true)
+				_animar("corrida", maxf(_distancia_restante / _velocidade_corrida, 0.01), true)
 			Estado.RECUPERACAO:
 				_animar("recover", maxf(_tempo, 0.01), true)

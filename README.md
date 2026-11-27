@@ -16,7 +16,7 @@ O jogo possui quatro fases. A primeira, inspirada em Billie Jean, acontece em um
 
 Durante o jogo, é possível explorar cenários, enfrentar inimigos, coletar notas musicais e encontrar itens de recuperação. Michael possui habilidades como chutes, combos, lançamento do chapéu, moonwalk e dash, que ajudam nos combates e nas esquivas.
 
-Use **WASD** ou as **setas** para andar e o **mouse** para mirar. **Clique esquerdo** chuta, **Espaço** lança o chapéu, **Ctrl esquerdo** faz o dash, **Shift** faz o moonwalk, **E** interage e **Esc** pausa.
+Use **WASD** ou as **setas** para andar e o **mouse** para mirar. Pressione o **botão esquerdo** em sequência para encadear soco, chute e giro. **Espaço** lança o chapéu, **Ctrl esquerdo** faz o dash, **Shift** faz o moonwalk, **E** interage e **Esc** pausa.
 
 ### Músicas alternativas locais
 

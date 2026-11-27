@@ -38,6 +38,7 @@ var _esquivou := false
 var _aplicando_ataque := false
 var _alternar := false
 var _aviso: Node2D
+var _marca_rastro := Vector2.INF
 
 
 func _ready() -> void:
@@ -69,9 +70,14 @@ func _physics_process(delta: float) -> void:
 				var movimento := global_position - origem
 				_olhar_para(movimento)
 				_animar("move" if movimento.length_squared() > 0.01 else "idle")
+				if fase >= 2 and movimento.length_squared() > 0.01:
+					_deixar_rastro()
 			else:
 				_animar("idle")
 		Estado.AVISO:
+			if is_instance_valid(_aviso):
+				var sobreaviso := _tempo <= 0.18
+				_aviso.modulate.a = 1.0 if sobreaviso else 0.69 + 0.18 * sin(_tempo * 19.0)
 			if _tempo <= 0.0:
 				_executar_ataque()
 		Estado.IMPACTO:
@@ -157,8 +163,9 @@ func _raio() -> float:
 
 func _executar_ataque() -> void:
 	_limpar_aviso()
-	_animar("attack", 0.35, true)
+	_animar("pesado", 0.35, true)
 	if _ataque == Ataque.INVESTIDA:
+		_animar("corrida", ALCANCE_INVESTIDA / VELOCIDADE_INVESTIDA, true)
 		_distancia_restante = ALCANCE_INVESTIDA
 		_mudar_estado(Estado.INVESTIDA)
 		AudioManager.tocar(&"chefe_investida", global_position)
@@ -175,6 +182,7 @@ func _investir(delta: float) -> void:
 	var passo := minf(_distancia_restante, VELOCIDADE_INVESTIDA * delta)
 	_distancia_restante -= passo
 	var colisao := move_and_collide(_direcao * passo)
+	_deixar_rastro()
 	if not _acertou and global_position.distance_to(alvo.global_position) <= LARGURA_INVESTIDA:
 		_acertou = _tentar_acertar(global_position)
 	if colisao != null or _distancia_restante <= 0.0 or _esquivou:
@@ -227,7 +235,7 @@ func _aplicar_dano(dano: int, fonte: StringName) -> void:
 	var nova_fase := 3 if vida <= 5 else (2 if vida <= 10 else 1)
 	if nova_fase > fase:
 		fase = nova_fase
-		_sprite.sprite_frames = FIGURINOS[fase - 1]
+		_usar_arte(FIGURINOS[fase - 1])
 		_animar("phase_change", 1.1, true)
 		_tempo = 1.1
 		_mudar_estado(Estado.TRANSICAO)
@@ -243,7 +251,26 @@ func _ao_fim_animacao() -> void:
 func _derrotar() -> void:
 	_limpar_aviso()
 	_mudar_estado(Estado.DERROTA)
+	_mostrar_efeito(&"restauracao_particulas", global_position, 80.0)
 	super._derrotar()
+
+
+func _deixar_rastro() -> void:
+	if global_position.distance_squared_to(_marca_rastro) < 20.0 * 20.0:
+		return
+	_marca_rastro = global_position
+	var rastro := Sprite2D.new()
+	rastro.texture = _sprite.sprite_frames.get_frame_texture(_sprite.animation, _sprite.frame)
+	rastro.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	rastro.centered = _sprite.centered
+	rastro.offset = _sprite.offset
+	rastro.z_index = 1
+	rastro.modulate = Color(0.62, 0.47, 0.97, 0.24)
+	get_parent().add_child(rastro)
+	rastro.global_transform = _sprite.global_transform
+	var dissolver := rastro.create_tween()
+	dissolver.tween_property(rastro, "modulate:a", 0.0, 0.24)
+	dissolver.tween_callback(rastro.queue_free)
 
 
 func _limpar_aviso() -> void:

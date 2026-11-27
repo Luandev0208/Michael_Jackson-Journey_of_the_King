@@ -12,9 +12,9 @@ signal vida_alterada(restante: int, maximo: int)
 signal reforcos_pedidos(quantidade: int)
 signal fase_alterada(fase: int)
 
-enum Acao { NORMAL, RUGIDO, AVISO_CARGA, CARGA, AVISO_ONDA, EXAUSTO }
+enum Acao { NORMAL, RUGIDO, AVISO_CARGA, CARGA, AVISO_ONDA, EXAUSTO, AVISO_VARREDURA }
 
-const VIDA_MAXIMA := 17
+const VIDA_MAXIMA := 23
 const LIMITE_FASE_2 := 0.70
 const LIMITE_FASE_3 := 0.38
 const RAIO_ONDA := 76.0
@@ -22,6 +22,8 @@ const VELOCIDADE_CARGA := 225.0
 const DURACAO_CARGA := 0.55
 const RAIO_CARGA := 25.0
 const INTERVALOS_ESPECIAL := [3.15, 2.70, 2.10]
+const ALCANCE_VARREDURA := 59.0
+const ARCO_VARREDURA := deg_to_rad(57.0)
 
 var fase := 1
 var _acao := Acao.NORMAL
@@ -34,6 +36,7 @@ var _aplicando_ataque_especial := false
 var _usar_onda := false
 var _ondas_pendentes := 0
 var _especial_concluido := false
+var _ciclo_especial := 0
 var _indicador: Node2D
 var _barra: Control
 var _jogador: MichaelJogador
@@ -84,6 +87,7 @@ func _physics_process(delta: float) -> void:
 				_acao = Acao.CARGA
 				_tempo_acao = DURACAO_CARGA
 				AudioManager.tocar(&"chefe_investida", global_position)
+				_animar("corrida", DURACAO_CARGA, true)
 				_acertou = false
 				_limpar_indicador()
 		Acao.CARGA:
@@ -93,6 +97,12 @@ func _physics_process(delta: float) -> void:
 			_atualizar_aviso_onda()
 			if _tempo_acao <= 0.0:
 				_disparar_onda()
+		Acao.AVISO_VARREDURA:
+			_parado(delta)
+			if is_instance_valid(_indicador):
+				_indicador.modulate.a = lerpf(0.45, 1.0, 1.0 - clampf(_tempo_acao / 0.76, 0.0, 1.0))
+			if _tempo_acao <= 0.0:
+				_varrer()
 		Acao.EXAUSTO:
 			_parado(delta)
 			visual.modulate = Color(0.62, 0.78, 1.0) if _tempo_impacto <= 0.0 else visual.modulate
@@ -109,6 +119,7 @@ func _parado(delta: float) -> void:
 func _iniciar_especial() -> void:
 	var distancia := global_position.distance_to(alvo.global_position)
 	var onda := fase >= 2 and distancia < RAIO_ONDA + 18.0 and (_usar_onda or distancia < 52.0)
+	var varredura := distancia < ALCANCE_VARREDURA + 5.0 and _ciclo_especial % 3 == 1 and _especial_concluido and _linha_livre_ate_alvo()
 	if fase >= 2 and not _especial_concluido and not onda:
 		_tempo_especial = 0.25
 		return
@@ -117,13 +128,17 @@ func _iniciar_especial() -> void:
 		return
 	if not _reservar_inicio_ataque():
 		return
+	_ciclo_especial += 1
 	AudioManager.tocar(&"chefe_aviso", global_position)
 	_usar_onda = not _usar_onda
-	if onda:
+	if varredura:
+		_preparar_varredura()
+	elif onda:
 		_acao = Acao.AVISO_ONDA
 		_tempo_acao = 0.95 if fase == 2 else 0.80
 		_ondas_pendentes = 2 if fase == 3 else 1
 		_criar_indicador_onda()
+		_animar("prepare", _tempo_acao, true)
 	else:
 		_acao = Acao.AVISO_CARGA
 		_tempo_acao = 0.85 if fase == 1 else (0.70 if fase == 2 else 0.60)
@@ -132,6 +147,35 @@ func _iniciar_especial() -> void:
 		_animar("threat", _tempo_acao, true)
 	_preparacao_restante = -1.0
 	_esquivado = false
+
+
+func _preparar_varredura() -> void:
+	_acao = Acao.AVISO_VARREDURA
+	_tempo_acao = 0.76
+	_direcao_carga = global_position.direction_to(alvo.global_position)
+	if _direcao_carga.is_zero_approx():
+		_direcao_carga = Vector2.DOWN
+	_olhar_para(_direcao_carga)
+	_animar("prepare", _tempo_acao, true)
+	_limpar_indicador()
+	var leque := Polygon2D.new()
+	var forma := PackedVector2Array([Vector2.ZERO])
+	for i in 15:
+		forma.append(_direcao_carga.rotated(lerpf(-ARCO_VARREDURA, ARCO_VARREDURA, i / 14.0)) * ALCANCE_VARREDURA)
+	leque.polygon = forma
+	leque.color = Color(1.0, 0.47, 0.25, 0.36)
+	leque.z_index = 1
+	add_child(leque)
+	_indicador = leque
+
+
+func _varrer() -> void:
+	var desvio := alvo.global_position - global_position
+	if desvio.length() <= ALCANCE_VARREDURA and (desvio.length() < 7.0 or desvio.normalized().dot(_direcao_carga) >= cos(ARCO_VARREDURA)):
+		_tentar_acertar_jogador()
+	AudioManager.tocar(&"chefe_golpe", global_position)
+	_entrar_exausto(_duracao_exausto(1.48))
+	_animar("pesado", 0.25, true)
 
 
 func _terminar_acao() -> void:
@@ -191,7 +235,6 @@ func _carregar() -> void:
 	_empurrao = Vector2.ZERO
 	velocity = _direcao_carga * VELOCIDADE_CARGA
 	_olhar_para(_direcao_carga)
-	_animar("walk")
 	visual.modulate = Color(1.0, 0.71, 0.47)
 	var bateu := move_and_slide() and get_slide_collision_count() > 0
 	if not _acertou and global_position.distance_to(alvo.global_position) <= RAIO_CARGA:
@@ -263,6 +306,7 @@ func _disparar_onda() -> void:
 		_criar_indicador_onda()
 		return
 	_entrar_exausto(_duracao_exausto(1.4))
+	_animar("pesado", 0.25, true)
 
 
 func _tentar_acertar_jogador() -> bool:
@@ -301,8 +345,10 @@ func _chacoalhar() -> void:
 func receber_dano(dano: int, empurrao := Vector2.ZERO, fonte := &"chute") -> void:
 	if vida <= 0 or not _especial_concluido:
 		return
-	if _acao != Acao.EXAUSTO and fonte == &"chute" and dano == 1:
-		return
+	if _acao != Acao.EXAUSTO and fonte == &"chute":
+		var de_frente := global_position.direction_to(alvo.global_position).dot(_direcao_carga) > 0.40
+		if dano == 1 or (de_frente and _acao in [Acao.AVISO_CARGA, Acao.CARGA, Acao.AVISO_VARREDURA]):
+			return
 	match _acao:
 		Acao.EXAUSTO:
 			if fonte == &"chute" and dano > 1:
